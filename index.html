@@ -342,7 +342,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.37.4";
+const APP_VERSION="v0.37.5";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1110,8 +1110,8 @@ function typeChecks(p,type){ // 재원생/일반회원 체크박스(둘 중 하�
 }
 function bindTypeChecks(p,onChange){
   const t1=$("#"+p+"T1"),t2=$("#"+p+"T2");
-  // 전화번호 필수 표시(*)와 예시 글: 일반회원은 필수, 재원생은 선택(v0.37.4)
-  const ph=()=>{const r=$("#"+p+"PhReq"),i=$("#"+p+"Phone");if(!r||!i)return;const stu=t1.checked;r.style.display=stu?"none":"";i.setAttribute("aria-required",stu?"false":"true");i.placeholder=stu?"없으면 비워 두십시오":"010-0000-0000"};
+  // 전화번호 필수 표시(*)와 예시 글: 일반회원은 필수, 재원생은 선택(v0.37.4, 재원생 예시 글은 v0.37.5에서 없앰)
+  const ph=()=>{const r=$("#"+p+"PhReq"),i=$("#"+p+"Phone");if(!r||!i)return;const stu=t1.checked;r.style.display=stu?"none":"";i.setAttribute("aria-required",stu?"false":"true");i.placeholder=stu?"":"010-0000-0000"};
   const oc=onChange;onChange=()=>{ph();oc&&oc()};setTimeout(ph,0);
   t1.onchange=()=>{if(t1.checked)t2.checked=false;else t1.checked=true;onChange&&onChange()};
   t2.onchange=()=>{if(t2.checked)t1.checked=false;else t2.checked=true;onChange&&onChange()};
