@@ -631,6 +631,14 @@ select test.ok((public.product_info('stu', '명부다수', '1001'))->>'locked' =
 select test.ok(not coalesce(((public.product_info('stu', '명부밖학생', '1235'))->>'locked')::boolean, false), '명부에 없는 이름은 틀려도 잠그지 않음');
 select public.product_info('stu', '명부밖학생', '1236'), public.product_info('stu', '명부밖학생', '1237'), public.product_info('stu', '명부밖학생', '1238'), public.product_info('stu', '명부밖학생', '1239');
 select test.ok((public.product_info('stu', '명부밖학생', '1234'))->>'roster' = 'false' and not ((public.product_info('stu', '명부밖학생', '1234')) ? 'locked'), '명부에 없는 이름은 여러 번 물어도 잠기지 않음');
+-- 31. 027: 명부 학생은 예약이 없어도 내 예약 조회
+reset role;
+insert into public.roster (reg_no, name, pw_hash) values ('Z1', '예약없는생', public.hash_pw('2468'));
+set role anon;
+select test.ok((public.my_reservations('예약없는생', '2468')) @> '{"ok":true,"list":[],"user_type":"stu"}'::jsonb, '명부 학생은 예약이 없어도 조회됨(재원생)');
+select test.ok((public.my_reservations('예약없는생', '1357'))->>'ok' = 'false', '뒤 4자리가 틀리면 조회 안 됨');
+select test.ok((public.my_reservations('명부에없음', '2468'))->>'ok' = 'false', '명부에 없고 예약도 없으면 조회 안 됨');
+select test.ok((public.my_codes('예약없는생', '2468'))->'codes' = 'null'::jsonb or (public.my_codes('예약없는생', '2468'))->'codes' is null, '예약이 없으면 출입 비밀번호는 주지 않음');
 reset role;
 set role authenticated;
 select test.ok((public.admin_set_roster_check(false))->>'check' = 'false', '명부 확인 끄기');
