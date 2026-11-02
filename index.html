@@ -343,7 +343,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.38.2";
+const APP_VERSION="v0.38.3";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -981,14 +981,14 @@ async function openPriceSheet(){
   const inner=x=>x?'<div class="card" style="margin:10px 0">'+x.replace('<div style="margin-top:10px">','<div>')+'</div>':'';
   const ext=inner(P.fee?'<b>1회 이용료</b><div class="plrow" style="border-top:0;padding-bottom:0"><span>1회(1시간)</span><b>'+won(P.fee)+'</b></div>':'')+inner(sub("정액권","flat",ef,"하루"))+inner(sub("횟수권","count",ec,"총"));
   const group=(title,col,x,mt)=>'<div class="cardgroup" style="margin-top:'+(mt||12)+'px"><div class="part" style="margin:12px 4px 2px;color:var('+col+');font-size:20px;font-weight:800">'+title+'</div>'+x+'</div>'; // 제목 15px → 20px(v0.35.1)
-  if(ext)h+=group("일반회원","--ext-text",ext);
+  // 정액권·횟수권 설명은 따로 된 큰 상자 하나에, 가격보다 위(v0.38.2·v0.38.3): 판매 중인 종류만
+  const hasF=ef.length||sf.length,hasC=ec.length||sc.length,hasExp=hasF||hasC;
+  if(hasExp)h+=group("정액권·횟수권 안내","--ink",(hasF?inner('<span class="badge big flat" style="margin-left:0">정액권</span><div class="pexp" style="margin:6px 0 0">'+FL+'</div>'):'')+(hasC?inner('<span class="badge big count" style="margin-left:0">횟수권</span><div class="pexp" style="margin:6px 0 0">'+CN+'</div>'):''));
+  if(ext)h+=group("일반회원","--ext-text",ext,hasExp?36:12);
   // 재원생도 같은 모양(v0.28.1), 일반회원과 간격을 더 두고 재원생 전용 강조(v0.34.1)
   // 재원생 정액권·횟수권(v0.38.0): 재원생 전용 안내는 큰 상자 제목 바로 아래 한 번
-  if(sf.length||sc.length)h+=group("재원생","--stu-text",'<div class="stuonly" style="margin:6px 0 0">🎓 아래 상품은 <u>현실용음악학원 재원생</u>만 이용할 수 있습니다.</div>'+inner(sub("정액권","flat",sf,"하루"))+inner(sub("횟수권","count",sc,"총")),ext?36:12);
+  if(sf.length||sc.length)h+=group("재원생","--stu-text",'<div class="stuonly" style="margin:6px 0 0">🎓 아래 상품은 <u>현실용음악학원 재원생</u>만 이용할 수 있습니다.</div>'+inner(sub("정액권","flat",sf,"하루"))+inner(sub("횟수권","count",sc,"총")),ext||hasExp?36:12);
   if(!ext&&!sf.length&&!sc.length)h+='<p class="hint">이용료가 아직 등록되지 않았습니다. 관리자에게 문의하십시오.</p>';
-  // 정액권·횟수권 설명은 따로 된 큰 상자 하나에(v0.38.2): 판매 중인 종류만
-  const hasF=ef.length||sf.length,hasC=ec.length||sc.length;
-  if(hasF||hasC)h+=group("정액권·횟수권 안내","--ink",(hasF?inner('<span class="badge big flat" style="margin-left:0">정액권</span><div class="pexp" style="margin:6px 0 0">'+FL+'</div>'):'')+(hasC?inner('<span class="badge big count" style="margin-left:0">횟수권</span><div class="pexp" style="margin:6px 0 0">'+CN+'</div>'):''),36);
   if(pi&&pi.ok&&pi.number)h+=box("입금 계좌","--ink",payBoxHtml(Object.assign({},pi,{fee:""})));
   h+='<p class="hint" style="text-align:center;margin-top:14px">정액권·횟수권 구매와 문의는 관리자에게 전화하십시오.</p>'+
     '<a class="btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none;background:#1e8e4e;color:#fff" href="tel:'+PHONE.replace(/-/g,"")+'">관리자에게 전화 ('+PHONE+')</a>';
