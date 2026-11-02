@@ -70,6 +70,12 @@ input:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px soli
 .pwnote .pwk{font-size:22px;line-height:1}
 .pwnote b{display:block;font-size:15.5px;color:var(--stu-text);line-height:1.4}
 .pwnote span:not(.pwk){display:block;font-size:13.5px;color:var(--ink);margin-top:2px}
+.stuchk{display:flex;gap:8px;align-items:flex-start;margin:6px 0 6px;padding:9px 12px;border-radius:10px;font-size:13.5px;line-height:1.5;color:var(--ink)}
+.stuchk .ic{flex:none;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;margin-top:1px}
+.stuchk.ok{border:1.5px solid var(--stu-btn);background:color-mix(in srgb,var(--stu-btn) 9%,transparent)}
+.stuchk.ok .ic{background:var(--stu-btn)}.stuchk.ok b{color:var(--stu-text)}
+.stuchk.no{border:1.5px solid var(--danger);background:color-mix(in srgb,var(--danger) 8%,transparent)}
+.stuchk.no .ic{background:var(--danger)}.stuchk.no b{color:var(--danger)}
 .pwnote small{display:block;font-size:12px;color:var(--sub);margin-top:4px}
 .btn{min-height:50px;width:100%;border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;cursor:pointer;margin-top:14px}
 .btn.ext{background:var(--ext-btn);color:var(--ext-ink)}
@@ -324,7 +330,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.36.2";
+const APP_VERSION="v0.37.0";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -519,6 +525,15 @@ const DONE_NOTE='<p class="hint" style="margin-top:10px">위의 내용은 ‘내
 function doneHtml(title,name,prod,date,hour,note){
   return '<svg class="ck" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="36"/><path d="M26 44l12 12 22-26"/></svg><h2>'+title+'</h2><div class="card rcard"><div class="nm">'+esc(name)+(prod?'<i class="badge '+prod+'">'+PROD[prod]+'</i>':"")+'</div><div class="dt">'+dateLabel(date)+'</div><div class="tm">'+hourLabel(hour)+'</div></div>'+(note||"")+'<button class="btn" id="ok">확인</button>';
 }
+// 재원생 예약 창: 이름+비밀번호를 넣으면 명부 확인 결과를 보여 줌(v0.37.0, 서버 026). 명부 확인이 꺼져 있으면 r.roster가 없어 아무것도 안 보임
+function stuCheckHtml(r,D){
+  if(!r)return"";
+  if(r.locked)return'<div class="stuchk no">시도 횟수를 초과했습니다. 15분 뒤에 다시 시도하십시오.</div>';
+  if(r.roster===undefined)return"";
+  const p=r.product,flat=p&&p.kind==="flat"&&p.start<=D&&D<=p.end;
+  if(r.roster||flat)return'<div class="stuchk ok"><span class="ic" aria-hidden="true">✓</span><span><b>재원생입니다.</b> 예약하실 수 있습니다.</span></div>';
+  return'<div class="stuchk no"><span class="ic" aria-hidden="true">!</span><span><b>재원생 명부에서 확인되지 않습니다.</b> 이름과 비밀번호를 다시 확인하십시오. 계속 안 되면 학원('+PHONE+')으로 문의하십시오.</span></div>';
+}
 function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
   $("#sheet").classList.toggle("tmr",D===allowedDates()[1]);$("#sheet").classList.add("daycol");
   $("#sheet").innerHTML=
@@ -558,18 +573,20 @@ function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
       if(my!==bseq)return;
       info={key:n+"|"+pw,r};
       if(!$("#rBadge"))return;
+      const pre=EXT?"":stuCheckHtml(r,D); // 재원생 명부 확인 결과(v0.37.0, 서버 026)
+      $("#rBadge").innerHTML=pre;
       if(kindOf(r)==="general"){ // 상품 없는 등록 일반회원도 이름+비밀번호가 맞으면 배지(v0.23.0)
-        $("#rBadge").innerHTML='<i class="badge" style="color:var(--ext-text);border-color:currentColor;background:transparent;margin-left:0">일반회원</i>';return}
+        $("#rBadge").innerHTML=pre+'<i class="badge" style="color:var(--ext-text);border-color:currentColor;background:transparent;margin-left:0">일반회원</i>';return}
       if(!r||!r.product)return;
       const p=r.product;
       if(kindOf(r)==="expired"){ // 상품이 이 날짜 전에 끝남(끝난 뒤 7일까지) → 일반 예약으로 잡힌다고 미리 알림(v0.21.15, 7일은 v0.21.19·서버 017)
         setExpired(p);
-        $("#rBadge").innerHTML='<div class="msg warn" style="margin:6px 0 0">⚠ '+esc(prodWarn)+' 계속 '+prodWarnKind+'으로 이용하시려면 관리자에게 문의하십시오.</div>';
+        $("#rBadge").innerHTML=pre+'<div class="msg warn" style="margin:6px 0 0">⚠ '+esc(prodWarn)+' 계속 '+prodWarnKind+'으로 이용하시려면 관리자에게 문의하십시오.</div>';
         return;
       }
       if(!(p.start<=D&&D<=p.end))return;
       const remain=p.kind==="count"?prodLeftText(p,D):(D===allowedDates()[0]?"오늘":"내일")+" 이용 "+prodLeftText(p,D);
-      $("#rBadge").innerHTML='<i class="badge '+p.kind+'">'+PROD[p.kind]+'</i><b style="font-size:13px;margin-left:6px;color:var('+(EXT?'--ext-text':'--stu-text')+')">'+remain+'</b><span style="font-weight:400;font-size:12px;color:var(--sub);margin-left:6px">'+sh(p.start)+' ~ '+sh(p.end)+' · '+leftText(p)+'</span>'+soonHtml(p);
+      $("#rBadge").innerHTML=pre+'<i class="badge '+p.kind+'">'+PROD[p.kind]+'</i><b style="font-size:13px;margin-left:6px;color:var('+(EXT?'--ext-text':'--stu-text')+')">'+remain+'</b><span style="font-weight:400;font-size:12px;color:var(--sub);margin-left:6px">'+sh(p.start)+' ~ '+sh(p.end)+' · '+leftText(p)+'</span>'+soonHtml(p);
     },350);
   };
   $("#rName").oninput=badge;$("#rPw").oninput=badge;

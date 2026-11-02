@@ -619,8 +619,23 @@ select test.ok((public.admin_roster_status())->'unlinked' @> '[{"name":"정액�
 reset role;
 update public.users set type = 'ext' where name = '명부연결';
 select test.ok((select roster_no from public.users where name = '명부연결') is null, '일반회원으로 바꾸면 명부 연결이 풀림');
+-- 30. 026: 예약 창에서 재원생 확인 미리 보기(product_info의 roster)
+set role anon;
+select test.ok((public.product_info('stu', '명부다수', '1001'))->>'roster' = 'true', '명부와 맞으면 roster=true');
+select test.ok((public.product_info('stu', '명부다수', '1001'))->'product' is not null, '정액권 정보도 함께 줌');
+select test.ok((public.product_info('stu', '명부밖학생', '1234'))->>'roster' = 'false', '명부에 없는 이름은 roster=false');
+select test.ok(not ((public.product_info('ext', '명부다수', '1001')) ? 'roster'), '일반회원 창에는 roster를 주지 않음');
+select test.ok((public.product_info('stu', '명부다수', '9999'))->>'roster' = 'false', '뒤 4자리가 틀리면 roster=false');
+select public.product_info('stu', '명부다수', '9998'), public.product_info('stu', '명부다수', '9997'), public.product_info('stu', '명부다수', '9996'), public.product_info('stu', '명부다수', '9995');
+select test.ok((public.product_info('stu', '명부다수', '1001'))->>'locked' = 'true', '명부 이름의 뒤 4자리를 5번 틀리면 잠금');
+select test.ok(not coalesce(((public.product_info('stu', '명부밖학생', '1235'))->>'locked')::boolean, false), '명부에 없는 이름은 틀려도 잠그지 않음');
+select public.product_info('stu', '명부밖학생', '1236'), public.product_info('stu', '명부밖학생', '1237'), public.product_info('stu', '명부밖학생', '1238'), public.product_info('stu', '명부밖학생', '1239');
+select test.ok((public.product_info('stu', '명부밖학생', '1234'))->>'roster' = 'false' and not ((public.product_info('stu', '명부밖학생', '1234')) ? 'locked'), '명부에 없는 이름은 여러 번 물어도 잠기지 않음');
+reset role;
 set role authenticated;
 select test.ok((public.admin_set_roster_check(false))->>'check' = 'false', '명부 확인 끄기');
+reset role; set role anon;
+select test.ok(not ((public.product_info('stu', '명부밖학생', '1234')) ? 'roster'), '명부 확인을 끄면 roster를 주지 않음');
 reset role; set role anon;
 select test.ok((public.reserve('2027-03-11', 13, '명부밖학생', '1234', true, 'stu'))->>'ok' = 'true', '끄면 전처럼 아무 재원생이나 예약됨');
 reset role; reset app.fake_now;
