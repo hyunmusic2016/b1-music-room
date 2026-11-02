@@ -197,13 +197,11 @@ div#rBadge:not(:empty){margin-top:6px}
 /* 내 예약 결과 맨 위: 이름 + 구분 배지 + 정액권/횟수권 배지(v0.18.8) */
 .titlerow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:20px 0 10px;min-height:40px}
 .titlerow h2{margin:0}
-.myres{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 10px;border:1.5px solid var(--stu-btn);border-left-width:5px;border-radius:12px;padding:9px 12px;margin:8px 0 0;background:var(--surface)}
-.myres.ext{border-color:var(--ext-line)}
+.myres{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 10px;border:1.5px solid var(--accent-strong);border-left-width:5px;border-radius:12px;padding:9px 12px;margin:8px 0 0;background:var(--surface)}
+/* v0.38.5: 예약 카드 색은 날짜 색(오늘 하늘, 내일 보라 = .tmr 변수) */
 .myres .md{font-size:13.5px;font-weight:700;color:var(--sub)}
-.myres .md .dw{display:inline-block;font-size:11.5px;font-weight:800;padding:0 7px;border-radius:999px;margin-right:5px;color:#fff;background:var(--stu-btn);vertical-align:1px}
-.myres.ext .md .dw{background:var(--ext-btn)}
-.myres .mt{font-size:20px;font-weight:800;line-height:1.3;color:var(--stu-text);font-variant-numeric:tabular-nums}
-.myres.ext .mt{color:var(--ext-text)}
+.myres .md .dw{display:inline-block;font-size:11.5px;font-weight:800;padding:0 7px;border-radius:999px;margin-right:5px;color:var(--accent-ink);background:var(--accent);vertical-align:1px}
+.myres .mt{font-size:20px;font-weight:800;line-height:1.3;color:var(--accent-text);font-variant-numeric:tabular-nums}
 .myres .mt .badge{font-size:11px;vertical-align:3px}
 .myres .mb{display:flex;gap:6px}
 .myres .note{flex-basis:100%;font-size:12px;color:var(--sub)}
@@ -343,7 +341,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.38.4";
+const APP_VERSION="v0.38.5";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -922,7 +920,7 @@ $("#mFind").onclick=async()=>{
   // 예약 하나하나를 작은 카드로: 왼쪽 오늘/내일·날짜 + 시간(20px), 오른쪽 [예약 변경][취소](v0.37.1, v0.37.3에서 줄임)
   const ds=allowedDates();
   h+=now.map(x=>{const c=x.ext?'ext':'stu',dw=x.date===ds[0]?'오늘':x.date===ds[1]?'내일':'';
-    return '<div class="myres '+c+'"><div><div class="md">'+(dw?'<span class="dw">'+dw+'</span>':'')+dateLabel(x.date)+'</div>'+
+    return '<div class="myres '+c+(x.date===ds[1]?' tmr':'')+'"><div><div class="md">'+(dw?'<span class="dw">'+dw+'</span>':'')+dateLabel(x.date)+'</div>'+
     '<div class="mt">'+hourLabel(x.hour)+(x.prod?' <span class="badge '+x.prod+'">'+PROD[x.prod]+'</span>':'')+'</div></div>'+
     (!x.started?'<div class="mb"><button class="btn ghost small" data-m="'+x.id+'">예약 변경</button><button class="btn danger small" data-c="'+x.id+'">취소</button></div>':'<div class="note">이용 중인 예약입니다. 변경·취소는 관리자에게 문의하십시오.</div>')+'</div>'}).join("");
   const hasUp=now.some(x=>x.status==="confirmed");
