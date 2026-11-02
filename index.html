@@ -122,6 +122,8 @@ textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니�
 .plrow.pick:hover:not(:disabled),.plrow.pick:focus-visible{background:var(--line)}
 .plrow.pick:disabled{opacity:.45;cursor:not-allowed}
 .pickgo{color:var(--accent-text);font-weight:900;margin-left:4px}
+.badge.big{font-size:14px;padding:3px 12px} /* 이용료 안내 창의 정액권·횟수권 배지(v0.34.1) */
+.stuonly{border:2px solid var(--stu-btn);color:var(--stu-text);border-radius:10px;padding:8px 10px;margin:8px 0 2px;font-size:14px;font-weight:700;line-height:1.5}
 .hr1{display:inline-block;border-radius:6px;padding:0 6px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:12.5px;margin-left:4px;vertical-align:1px}
 .btn2 .btn{margin:0} /* 모든 [수정] 버튼은 개나리색으로 통일합니다. */
 .btn.small{min-height:40px;width:auto;padding:0 14px;margin:0;white-space:nowrap;flex:none}
@@ -314,7 +316,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.34.0";
+const APP_VERSION="v0.34.1";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -894,7 +896,7 @@ async function openPriceSheet(){
   const won=v=>Number(v).toLocaleString("ko-KR")+'원';
   const rows=(l,word)=>l.map(x=>'<div class="plrow"><span>'+word+' <b style="font-size:inherit">'+x.n+'회</b> · 30일</span><b>'+won(x.price)+'</b></div>').join("");
   const box=(title,col,inner)=>'<div class="card" style="margin:12px 0 0"><div class="part" style="margin-top:0;color:var('+col+')">'+title+'</div>'+inner+'</div>';
-  const sub=(name,cls,exp,l,word)=>l.length?'<div style="margin-top:10px"><span class="badge '+cls+'" style="margin-left:0">'+name+'</span><div class="pexp" style="margin:6px 0 0">'+exp+'</div>'+rows(l,word)+'</div>':'';
+  const sub=(name,cls,exp,l,word,note)=>l.length?'<div style="margin-top:10px"><span class="badge big '+cls+'" style="margin-left:0">'+name+'</span>'+(note||'')+'<div class="pexp" style="margin:6px 0 0">'+exp+'</div>'+rows(l,word)+'</div>':'';
   // 손님용 자세한 설명(v0.27.1, 관리자 화면은 짧은 설명)
   const ul=a=>'<ul style="margin:4px 0 2px;padding-left:18px">'+a.map(x=>'<li>'+x+'</li>').join("")+'</ul>';
   const FL='<b>시작일부터 30일 동안, 매일 정해진 횟수만큼</b> 예약할 수 있는 상품입니다.'+ul([
@@ -912,9 +914,10 @@ async function openPriceSheet(){
   // 일반회원: 큰 상자 하나 안에 1회 이용료·정액권·횟수권 상자 3개(v0.28.0, 비어 있는 상자는 숨김)
   const inner=x=>x?'<div class="card" style="margin:10px 0">'+x.replace('<div style="margin-top:10px">','<div>')+'</div>':'';
   const ext=inner(P.fee?'<b>1회 이용료</b><div class="plrow" style="border-top:0;padding-bottom:0"><span>1회(1시간)</span><b>'+won(P.fee)+'</b></div>':'')+inner(sub("정액권","flat",FL,ef,"하루"))+inner(sub("횟수권","count",CN,ec,"총"));
-  const group=(title,col,x)=>'<div class="cardgroup" style="margin-top:12px"><div class="part" style="margin:12px 4px 2px;color:var('+col+')">'+title+'</div>'+x+'</div>';
+  const group=(title,col,x,mt)=>'<div class="cardgroup" style="margin-top:'+(mt||12)+'px"><div class="part" style="margin:12px 4px 2px;color:var('+col+')">'+title+'</div>'+x+'</div>';
   if(ext)h+=group("일반회원","--ext-text",ext);
-  if(sf.length)h+=group("재원생","--stu-text",inner(sub("정액권","flat",FL,sf,"하루"))); // 재원생도 같은 모양(v0.28.1)
+  // 재원생도 같은 모양(v0.28.1), 일반회원과 간격을 더 두고 재원생 전용 강조(v0.34.1)
+  if(sf.length)h+=group("재원생","--stu-text",inner(sub("정액권","flat",FL,sf,"하루",'<div class="stuonly">🎓 이 상품은 <u>현실용음악학원 재원생</u>만 이용할 수 있습니다.</div>')),ext?36:12);
   if(!ext&&!sf.length)h+='<p class="hint">이용료가 아직 등록되지 않았습니다. 관리자에게 문의하십시오.</p>';
   if(pi&&pi.ok&&pi.number)h+=box("입금 계좌","--ink",payBoxHtml(Object.assign({},pi,{fee:""})));
   h+='<p class="hint" style="text-align:center;margin-top:14px">정액권·횟수권 구매와 문의는 관리자에게 전화하십시오.</p>'+
