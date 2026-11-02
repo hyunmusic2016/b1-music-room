@@ -123,7 +123,7 @@ textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니�
 .plrow.pick:disabled{opacity:.45;cursor:not-allowed}
 .pickgo{color:var(--accent-text);font-weight:900;margin-left:4px}
 .badge.big{font-size:14px;padding:3px 12px} /* 이용료 안내 창의 정액권·횟수권 배지(v0.34.1) */
-.stuonly{border:2px solid var(--stu-btn);color:var(--stu-text);border-radius:10px;padding:8px 10px;margin:8px 0 2px;font-size:14px;font-weight:700;line-height:1.5}
+.stuonly{text-align:center;border:2px solid var(--stu-btn);color:var(--stu-text);border-radius:10px;padding:8px 10px;margin:8px 0 2px;font-size:14px;font-weight:700;line-height:1.5}
 .hr1{display:inline-block;border-radius:6px;padding:0 6px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:12.5px;margin-left:4px;vertical-align:1px}
 .btn2 .btn{margin:0} /* 모든 [수정] 버튼은 개나리색으로 통일합니다. */
 .btn.small{min-height:40px;width:auto;padding:0 14px;margin:0;white-space:nowrap;flex:none}
@@ -316,7 +316,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.35.1";
+const APP_VERSION="v0.35.2";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
