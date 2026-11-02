@@ -343,7 +343,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.38.0";
+const APP_VERSION="v0.38.1";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -696,20 +696,24 @@ function openAdminSheet(h){const D=curDateA;
   const renderWho=()=>{
     if(!found){$("#rBadge").innerHTML="";$("#rWho").innerHTML="";return}
     const us=found.users;
-    if(us.length===1&&pick===null)pick=us[0].id;
+    const rnos0=(found.roster||[]).map(x=>x.no);
+    // 등록 이용자 한 명뿐이고 같은 이름의 명부 학생(이용자 등록 안 함)이 없을 때만 자동 선택(v0.38.1)
+    if(us.length===1&&!rnos0.length&&pick===null)pick=us[0].id;
     const sel=us.find(u=>u.id===pick);
     // 명부 표시(v0.37.6): 등록 이용자가 명부와 연결돼 있으면 [명부 확인], 등록 안 한 명부 학생이면 "재원생 · 명부 확인 · 등록번호"
     const rtag='<span class="rtag">📋 명부 확인</span>',rnos=(found.roster||[]).map(x=>x.no);
     const rosterOnly=rnos.length?'<b style="color:var(--stu-text)">재원생</b> '+rtag+' <span style="color:var(--sub)">등록번호 '+rnos.map(esc).join(', ')+' · 이용자 등록 안 됨</span>':'';
     $("#rBadge").innerHTML=sel?whoInfo(sel,D)+(found.rosterLinked&&found.rosterLinked.has(sel.id)?' '+rtag:'')
-      :(pick===null&&us.length?'<span style="color:var(--sub)">같은 이름이 '+us.length+'명입니다. 아래에서 선택하십시오.</span>'
+      :pick===-1?rosterOnly
+      :(pick===null&&us.length?'<span style="color:var(--sub)">같은 이름이 '+(us.length+(rnos.length?1:0))+'명입니다. 아래에서 선택하십시오.</span>'
         :(rosterOnly&&!uExt?rosterOnly:'<span style="color:var(--sub)">등록되지 않은 이름'+(found.rosterOk&&!rnos.length?' · 재원생 명부에도 없음':'')+'</span>'));
     const radio=(v,html)=>'<label class="who"><input type="radio" name="who" value="'+v+'"'+(pick===v?' checked':'')+'><span>'+html+'</span></label>';
-    let html=us.length?us.map(u=>radio(u.id,whoInfo(u,D)+(found.rosterLinked&&found.rosterLinked.has(u.id)?' '+rtag:'')+(u.phone4?' · 전화 뒤 '+esc(u.phone4):'')+(u.part?' · '+esc(u.part):''))).join("")+radio(0,'목록에 없는 사람 (미등록)'+(rnos.length?' · '+rtag+' 등록번호 '+rnos.map(esc).join(', '):'')):'';
+    let html=us.length?us.map(u=>radio(u.id,whoInfo(u,D)+(found.rosterLinked&&found.rosterLinked.has(u.id)?' '+rtag:'')+(u.phone4?' · 전화 뒤 '+esc(u.phone4):'')+(u.part?' · '+esc(u.part):''))).join("")+(rnos.length?radio(-1,'<b style="color:var(--stu-text)">재원생</b> '+rtag+' 등록번호 '+rnos.map(esc).join(', ')+' · 이용자 등록 안 됨'):'')+radio(0,'목록에 없는 사람 (미등록)'):'';
+    if(pick===-1&&us.length)html+='<p class="hint">이용자 등록이 안 된 재원생: 일반예약은 하루 1회'+(found.day_taken?' (이 날 예약 있음)':'')+'. 비밀번호가 없어 ‘내 예약’에서는 보이지 않습니다.</p>';
     if(!us.length||pick===0)html+='<div style="display:flex;gap:18px;margin-top:10px"><label class="check" style="margin:0"><input type="checkbox" id="rT1"'+(uExt?'':' checked')+'><span style="font-size:15px;font-weight:700">재원생</span></label><label class="check" style="margin:0"><input type="checkbox" id="rT2"'+(uExt?' checked':'')+'><span style="font-size:15px;font-weight:700">일반회원</span></label></div>'+
       '<p class="hint">'+(uExt?'등록되지 않은 일반회원은 슈퍼패스로만 예약할 수 있습니다.':'등록되지 않은 재원생: 일반예약은 하루 1회'+(found.day_taken?' (이 날 예약 있음)':'')+'.')+' 비밀번호가 없어 ‘내 예약’에서는 보이지 않습니다.</p>';
     $("#rWho").innerHTML=html;
-    document.querySelectorAll('#rWho input[name="who"]').forEach(x=>x.onchange=()=>{pick=+x.value;renderWho();placeSheet()});
+    document.querySelectorAll('#rWho input[name="who"]').forEach(x=>x.onchange=()=>{pick=+x.value;if(pick===-1)uExt=false;$("#rMsg").innerHTML="";renderWho();placeSheet()});
     if($("#rT1")){$("#rT1").onchange=()=>{uExt=!$("#rT1").checked;renderWho()};$("#rT2").onchange=()=>{uExt=$("#rT2").checked;renderWho()}}
   };
   const lookup=async()=>{
@@ -734,9 +738,9 @@ function openAdminSheet(h){const D=curDateA;
     if(stale||!found){clearTimeout(ft);await lookup()}
     if(!$("#rMsg"))return; // 그사이 창을 닫은 경우
     if(!found){err(NET_MSG);done();return}
-    if(pick===null&&found.users.length>1){err("같은 이름의 이용자가 여러 명입니다. 목록에서 선택하십시오.");done();return}
+    if(pick===null&&(found.users.length>1||(found.users.length&&(found.roster||[]).length))){err("같은 이름의 이용자가 여러 명입니다. 목록에서 선택하십시오.");done();return}
     const sup=mS.checked;
-    const r=await rpc("admin_reserve",{p_date:D,p_hour:h,p_name:name,p_user_id:pick>0?pick:null,p_ext:uExt,p_super:sup});
+    const r=await rpc("admin_reserve",{p_date:D,p_hour:h,p_name:name,p_user_id:pick>0?pick:null,p_ext:pick===-1?false:uExt,p_super:sup});
     if(!$("#rMsg"))return;
     if(!r.ok){
       err(r.msg);done();
