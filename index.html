@@ -195,6 +195,16 @@ div#rBadge:not(:empty){margin-top:6px}
 /* 내 예약 결과 맨 위: 이름 + 구분 배지 + 정액권/횟수권 배지(v0.18.8) */
 .titlerow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:20px 0 10px;min-height:40px}
 .titlerow h2{margin:0}
+.myres{border:2.5px solid var(--stu-btn);border-radius:14px;padding:14px 14px 12px;margin:12px 0 0;text-align:center;background:var(--surface)}
+.myres.ext{border-color:var(--ext-line)}
+.myres .md{font-size:18px;font-weight:800;color:var(--stu-text)}
+.myres.ext .md,.myres.ext .mt{color:var(--ext-text)}
+.myres .md .dw{display:inline-block;font-size:13px;font-weight:800;padding:1px 8px;border-radius:999px;margin-right:6px;vertical-align:2px;color:#fff;background:var(--stu-btn)}
+.myres.ext .md .dw{background:var(--ext-btn)}
+.myres .mt{font-size:32px;font-weight:900;line-height:1.2;margin-top:2px;color:var(--stu-text);font-variant-numeric:tabular-nums}
+.myres .ms{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:6px;font-size:13px;font-weight:700}
+.myres .ms .ok{color:var(--ok)}.myres .ms .badge{margin-left:0}
+.part .cnt{font-size:13px;font-weight:700;color:var(--sub);margin-left:4px}
 .mhead{text-align:center;padding-bottom:10px;margin-bottom:4px;border-bottom:1px solid var(--line)}
 .mhead b{display:block;font-size:22px;font-weight:900}
 .mhead .bdg{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-top:4px}
@@ -330,7 +340,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.37.0";
+const APP_VERSION="v0.37.1";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -892,7 +902,13 @@ $("#mFind").onclick=async()=>{
   // 예약 현황에는 아직 끝나지 않은 확정 예약만. 취소된 예약·시간이 지난 예약은 오늘 것이라도 바로 아래 '예약 기록'으로(v0.25.3)
   const now=r.list.filter(x=>x.status==="confirmed"&&!x.ended),past=r.list.filter(x=>!now.includes(x));
   if(!now.length)h+='<div class="msg ok">예정된 예약이 없습니다.</div>';
-  h+=now.map(x=>'<div class="item"><div class="row" style="flex-wrap:wrap"><div><b>'+dateLabel(x.date)+' '+hourLabel(x.hour)+'</b>'+(x.prod?'<span class="badge '+x.prod+'">'+PROD[x.prod]+'</span>':"")+'<div class="hint '+(x.status==="cancelled"?"status-cancel":"")+'">'+stLabel(x.status)+(x.reason?" · "+esc(x.reason):"")+'</div></div>'+(x.status==="confirmed"&&!x.started?'<div style="display:flex;gap:6px"><button class="btn ghost small" data-m="'+x.id+'">예약 변경</button><button class="btn danger small" data-c="'+x.id+'">취소</button></div>':"")+'</div></div>').join("");
+  // 예약 하나하나를 큰 카드로: 오늘/내일 · 날짜, 큰 시간, 구분 색 테두리, 아래에 [예약 변경][취소](v0.37.1)
+  const ds=allowedDates();
+  h+=now.map(x=>{const c=x.ext?'ext':'stu',dw=x.date===ds[0]?'오늘':x.date===ds[1]?'내일':'';
+    return '<div class="myres '+c+'"><div class="md">'+(dw?'<span class="dw">'+dw+'</span>':'')+dateLabel(x.date)+'</div>'+
+    '<div class="mt">'+hourLabel(x.hour)+'</div>'+
+    '<div class="ms"><span class="ok">예약 확정</span>'+(x.prod?'<span class="badge '+x.prod+'">'+PROD[x.prod]+'</span>':'')+'</div>'+
+    (!x.started?'<div class="btn2" style="margin-top:12px"><button class="btn ghost" data-m="'+x.id+'">예약 변경</button><button class="btn danger" data-c="'+x.id+'">취소</button></div>':'<div class="hint" style="margin-top:6px">이용 중인 예약입니다. 변경·취소는 관리자에게 문의하십시오.</div>')+'</div>'}).join("");
   const hasUp=now.some(x=>x.status==="confirmed");
   // 일반회원의 상품 없는(일반) 확정 예약이 끝나기 전까지 입금 계좌·1회 이용료(출입 비밀번호처럼, v0.25.0)
   const hasPay=now.some(x=>x.status==="confirmed"&&x.ext&&!x.prod);
@@ -904,8 +920,10 @@ $("#mFind").onclick=async()=>{
   $("#mForm").classList.add("hidden");
   $("#mBackSlot").innerHTML='<button class="btn ghost small" id="mBack">← 다시 조회</button>'; // 제목 "내 예약 확인"과 같은 줄 오른쪽
   // 위 칸: 이름·구분·상품 / 아래 칸: "예약 현황" 제목 + 예약 목록 + 출입 비밀번호(v0.19.5)
-  $("#mOut").innerHTML='<div class="card">'+head+ph+'</div>'+
-    '<div class="card"><div class="part" style="margin-top:0">예약 현황</div>'+h+(hasPay?payCardHtml("mPay"):'')+(hasUp?'<div id="mCodes"></div>':'')+'</div>'+histHtml(past,r.old_products||[]);
+  // v0.37.1: 이름 → 예약 현황(가장 크게) → 정액권·횟수권 순서
+  $("#mOut").innerHTML='<div class="card">'+head.replace('class="mhead'+(ph?'':' solo')+'"','class="mhead solo"')+'</div>'+
+    '<div class="card"><div class="part" style="margin-top:0">예약 현황'+(now.length?' <span class="cnt">'+now.length+'건</span>':'')+'</div>'+h+(hasPay?payCardHtml("mPay"):'')+(hasUp?'<div id="mCodes"></div>':'')+'</div>'+
+    (ph?'<div class="card"><div class="part" style="margin-top:0">정액권·횟수권</div>'+ph.replace(/^<div class="card">/,'<div>')+'</div>':'')+histHtml(past,r.old_products||[]);
   $("#mBack").onclick=()=>{mineReset();$("#mName").focus()};
   if(hasPay)loadPayBox("#mPay",()=>my===mineSeq);
   if(hasUp)showCodes("#mCodes",name,pw,()=>my===mineSeq);
