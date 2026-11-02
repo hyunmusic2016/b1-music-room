@@ -342,7 +342,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.38.10";
+const APP_VERSION="v0.38.11";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -778,7 +778,7 @@ function showUserDone(title,u){
   $("#sheet").innerHTML='<svg class="ck" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="36"/><path d="M26 44l12 12 22-26"/></svg><h2>'+title+'</h2>'+
     '<div class="card"><div style="font-size:22px;font-weight:900;color:var('+col+')">'+esc(u.name)+'</div>'+
     '<div><span class="badge" style="color:var('+col+');border-color:currentColor;background:transparent;margin-left:0">'+tgtLabel(u.type)+'</span></div>'+
-    '<div class="hint">'+esc(u.phone||"")+(u.part?' · '+esc(u.part):'')+'</div>'+
+    '<div class="hint">'+esc(fmtPhone(u.phone)||u.phone||"")+(u.part?' · '+esc(u.part):'')+'</div>'+
     (q?'<div style="margin-top:6px;font-size:14px"><span class="badge '+q.kind+'" style="margin-left:0">'+PROD[q.kind]+'</span> '+prodLine(q)+'</div>':'')+'</div>'+
     '<button class="btn" id="ok">확인</button>';
   $("#bg").classList.add("open");burst(kind);$("#ok").onclick=closeSheet;$("#ok").focus();
@@ -1127,7 +1127,7 @@ function typeChecks(p,type){ // 재원생/일반회원 체크박스(둘 중 하�
 function bindTypeChecks(p,onChange){
   const t1=$("#"+p+"T1"),t2=$("#"+p+"T2");
   // 전화번호 필수 표시(*)와 예시 글: 일반회원은 필수, 재원생은 선택(v0.37.4, 재원생 예시 글은 v0.37.5에서 없앰)
-  const ph=()=>{const r=$("#"+p+"PhReq"),i=$("#"+p+"Phone");if(!r||!i)return;const stu=t1.checked;r.style.display=stu?"none":"";i.setAttribute("aria-required",stu?"false":"true");i.placeholder=stu?"":"010-0000-0000"};
+  const ph=()=>{const r=$("#"+p+"PhReq"),i=$("#"+p+"Phone");if(!r||!i)return;const stu=t1.checked;r.style.display=stu?"none":"";i.setAttribute("aria-required",stu?"false":"true");i.placeholder=stu?"":"01000000000"};
   const oc=onChange;onChange=()=>{ph();oc&&oc()};setTimeout(ph,0);
   t1.onchange=()=>{if(t1.checked)t2.checked=false;else t1.checked=true;onChange&&onChange()};
   t2.onchange=()=>{if(t2.checked)t1.checked=false;else t2.checked=true;onChange&&onChange()};
@@ -1136,7 +1136,7 @@ function userFields(p,u){
   u=u||{};const req='<span class="req" aria-hidden="true">*</span>';
   return '<div class="cols c2"><div><label for="'+p+'Name">이름 (본명) '+req+'</label><input type="text" id="'+p+'Name" aria-required="true" autocomplete="off" value="'+esc(u.name||"")+'"></div><div><label for="'+p+'Pw">비밀번호 4자리 '+(u.name?'':req)+'</label><input type="password" id="'+p+'Pw" inputmode="numeric" maxlength="4" autocomplete="off"'+(u.name?' placeholder="변경 시에만 입력"':' aria-required="true"')+'></div></div>'+
     '<div id="'+p+'Roster" class="rbox hidden"></div>'+ // 재원생 명부 연결(v0.36.0)
-    '<div class="cols c2"><div><label for="'+p+'Phone">전화번호 <span id="'+p+'PhReq">'+req+'</span></label><input type="tel" id="'+p+'Phone" aria-required="true" inputmode="tel" autocomplete="off" placeholder="010-0000-0000" value="'+esc(u.phone||"")+'"></div><div><label for="'+p+'Part">파트</label><input type="text" id="'+p+'Part" maxlength="20" autocomplete="off" placeholder="예: 드럼" value="'+esc(u.part||"")+'"></div></div>'+
+    '<div class="cols c2"><div><label for="'+p+'Phone">전화번호 <span id="'+p+'PhReq">'+req+'</span></label><input type="tel" id="'+p+'Phone" class="phone" aria-required="true" inputmode="numeric" maxlength="11" autocomplete="off" placeholder="01000000000" value="'+esc(String(u.phone||"").replace(/\D/g,""))+'"></div><div><label for="'+p+'Part">파트</label><input type="text" id="'+p+'Part" maxlength="20" autocomplete="off" placeholder="예: 드럼" value="'+esc(u.part||"")+'"></div></div>'+
     '<label for="'+p+'Memo">메모</label><input type="text" id="'+p+'Memo" maxlength="100" autocomplete="off" value="'+esc(u.memo||"")+'">';
 }
 function readUserFields(p,isNew){ // 화면에서 먼저 형식만 확인합니다(최종 확인은 서버).
@@ -1146,7 +1146,7 @@ function readUserFields(p,isNew){ // 화면에서 먼저 형식만 확인합니�
   if(((isNew&&!rno)||pw)&&!/^\d{4}$/.test(pw))return {err:"비밀번호는 숫자 4자리입니다."};
   // 재원생은 전화번호를 비워 둘 수 있음(v0.37.4, 서버 029). 적었으면 형식 확인
   const stu=$("#"+p+"T1")&&$("#"+p+"T1").checked,raw=$("#"+p+"Phone").value.trim();
-  if(!phone&&!(stu&&!raw))return {err:stu?"전화번호를 올바르게 입력하시거나 비워 두십시오. (예: 010-1234-5678)":"전화번호를 올바르게 입력하십시오. (예: 010-1234-5678)"};
+  if(!phone&&!(stu&&!raw))return {err:stu?"전화번호를 올바르게 입력하시거나 비워 두십시오. (예: 01012345678)":"전화번호를 올바르게 입력하십시오. (예: 01012345678)"};
   return {name,pw,rno,phone:phone||"",part:$("#"+p+"Part").value.trim(),memo:$("#"+p+"Memo").value.trim()};
 }
 /* 재원생 명부 연결(v0.36.0, 서버 025): 이용자 등록·이용자 수정 공용(작업 원칙 10).
@@ -1218,6 +1218,8 @@ function priceCalcHtml(p){
 function updPrices(){document.querySelectorAll(".pcalc").forEach(el=>{const p=el.id.slice(0,-5);el.innerHTML=priceCalcHtml(p)})}
 // 캡처 단계로 들음: 코드에서 보내는 input/change(버블 없음, 예: 가격표에서 고르기)도 받기 위해
 ["input","change"].forEach(t=>document.addEventListener(t,e=>{if(e.target.closest&&e.target.closest("#adminPane"))setTimeout(updPrices,0)},true));
+/* 전화번호 칸(.phone)은 숫자만 입력(하이픈 등은 바로 지움, 11자리까지)(v0.38.11). 보여 줄 때는 010-0000-0000(서버 저장 값·fmtPhone) */
+document.addEventListener("input",e=>{const el=e.target;if(!el.classList||!el.classList.contains("phone"))return;const d=el.value.replace(/\D/g,"").slice(0,11);if(d!==el.value)el.value=d},true);
 /* 금액 칸(.pp: 1회 이용료·이용료 표 가격)은 입력하는 동안 1,000 단위 쉼표를 붙임(v0.38.10). 숫자만 남기고 커서는 같은 숫자 뒤에 둠.
    서버는 쉼표·"원"을 빼고 저장하므로 저장 값은 그대로 숫자. */
 document.addEventListener("input",e=>{
@@ -1293,7 +1295,7 @@ function statusItem(u,kind,extra,btn){
   const col=u.type==="ext"?'--ext-text':'--stu-text',q=kind==="none"?u.last:u.current;
   const line=kind==="none"?(q?'<div class="hint">만료된 '+PROD[q.kind]+': '+q.end+' 종료</div>':''):'<div class="hint">'+prodLine(q)+'</div>';
   return '<div class="item uitem" data-sv="'+u.id+'" data-n="'+esc(normName(u.name))+'" role="button" tabindex="0" aria-label="'+esc(u.name)+' 정보 보기"><div class="row" style="align-items:center"><div style="flex:1;min-width:0"><b style="color:var('+col+')">'+esc(u.name)+'</b><span class="badge" style="color:var('+col+');border-color:currentColor;background:transparent">'+tgtLabel(u.type)+'</span>'+(kind!=="none"?'<span class="badge '+q.kind+'">'+PROD[q.kind]+'</span>':'')+(u.status==="blacklisted"?'<span class="badge black">블랙리스트</span>':u.black_count>0?'<span class="badge black hist">블랙리스트 이력</span>':'')+
-    '<div class="hint">'+esc(u.phone||"전화번호 없음")+(u.part?' · '+esc(u.part):'')+'</div>'+(u.memo?'<div class="hint">'+esc(u.memo)+'</div>':'')+line+(extra||'')+'</div>'+
+    '<div class="hint">'+esc(fmtPhone(u.phone)||u.phone||"전화번호 없음")+(u.part?' · '+esc(u.part):'')+'</div>'+(u.memo?'<div class="hint">'+esc(u.memo)+'</div>':'')+line+(extra||'')+'</div>'+
     '<div style="display:flex;gap:6px;flex:none;align-items:center">'+(btn||'')+'<button class="btn small" style="background:#1e8e4e;color:#fff" data-sc="'+u.id+'"'+(u.phone?'':' disabled')+'>통화</button><span class="chev" aria-hidden="true">›</span></div></div></div>';
 }
 /* 이용자 현황(v0.19.3): 정액권·횟수권·일반을 각각 접기·펼치기(처음엔 접힘), 맨 위 이름 검색 + [전부 펼치기]/[전부 접기].
@@ -1426,7 +1428,7 @@ function userViewHtml(){
     (u.status==="blacklisted"?'<label>블랙리스트 사유 <small class="hint">등록 '+esc(dOnly(u.black_at||u.status_at))+'</small></label><div class="ro">'+(u.black_reason?esc(u.black_reason):'<span class="hint" style="margin:0">없음</span>')+'</div>':
      '')+
     '<div class="cols c2">'+ro("이름 (본명)",u.name)+'<div><label>비밀번호 4자리</label><div class="ro">●●●●</div></div></div>'+
-    '<div class="cols c2">'+ro("전화번호",u.phone)+ro("파트",u.part)+'</div>'+
+    '<div class="cols c2">'+ro("전화번호",fmtPhone(u.phone)||u.phone)+ro("파트",u.part)+'</div>'+
     '<label>메모</label><div class="ro">'+(u.memo?esc(u.memo):'<span class="hint" style="margin:0">없음</span>')+'</div>'+
     '</div><div class="card"><div class="part" style="margin-top:0">정액권·횟수권<small>'+(c?PROD[c.kind]+' 사용 중':'없음')+'</small></div>'+prod+
     '</div><div class="card"><button class="btn edit" id="vEdit" style="margin:0">수정</button></div></div>'+
