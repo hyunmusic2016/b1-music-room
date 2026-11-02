@@ -203,6 +203,7 @@ div#rBadge:not(:empty){margin-top:6px}
 .myres .md .dw{display:inline-block;font-size:11.5px;font-weight:800;padding:0 7px;border-radius:999px;margin-right:5px;color:var(--accent-ink);background:var(--accent);vertical-align:1px}
 .myres .mt{font-size:20px;font-weight:800;line-height:1.3;color:var(--accent-text);font-variant-numeric:tabular-nums}
 .myres .mt .badge{font-size:11px;vertical-align:3px}
+.myres .mt .nm{font-size:16px;font-weight:800;margin-left:4px}
 .myres .mb{display:flex;gap:6px}
 .myres .note{flex-basis:100%;font-size:12px;color:var(--sub)}
 .part .cnt{font-size:13px;font-weight:700;color:var(--sub);margin-left:4px}
@@ -341,7 +342,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.38.5";
+const APP_VERSION="v0.38.6";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1800,7 +1801,12 @@ function renderProxy(){
 /* 예약 목록: 앞으로의 예약(가까운 순)과 지난 예약(펼쳐 보기, 최근 순) */
 function resItem(r){
   const done=r.status==="confirmed"&&r.ended; // 오늘 이미 끝난 예약은 흐리게 + "이용 시간 지남"(v0.35.3)
-  return '<div class="item"'+(done?' style="opacity:.6"':'')+'><div class="row" style="flex-wrap:wrap"><div><b style="color:'+(r.ext?'var(--ext-text)':'var(--stu-text)')+'">'+esc(r.name)+'</b>'+(r.prod?'<span class="badge '+r.prod+'">'+PROD[r.prod]+'</span>':"")+(r.super?'<span class="badge super">슈퍼패스</span>':"")+'<div class="hint">'+dateLabel(r.date)+' '+hourLabel(r.hour)+' · <span class="'+(r.status==="cancelled"?"status-cancel":"")+'">'+(done?'이용 시간 지남':stLabel(r.status))+'</span>'+(r.reason?" · "+esc(r.reason):"")+'</div></div>'+(r.status==="confirmed"&&!r.ended?'<div style="display:flex;gap:6px"><button class="btn danger small" data-ac="'+r.id+'">취소</button></div>':"")+'</div></div>';
+  // v0.38.6: 내 예약 현황과 같은 카드 모양·날짜 색(오늘 하늘, 내일 보라). 이름은 구분 색(재원생 청록/일반회원 테라코타)
+  const ds=allowedDates(),dw=r.date===ds[0]?'오늘':r.date===ds[1]?'내일':'';
+  return '<div class="myres'+(r.date===ds[1]?' tmr':'')+'"'+(done?' style="opacity:.6"':'')+'><div><div class="md">'+(dw?'<span class="dw">'+dw+'</span>':'')+dateLabel(r.date)+'</div>'+
+    '<div class="mt">'+hourLabel(r.hour)+' <b class="nm" style="color:'+(r.ext?'var(--ext-text)':'var(--stu-text)')+'">'+esc(r.name)+'</b>'+(r.prod?'<span class="badge '+r.prod+'">'+PROD[r.prod]+'</span>':"")+(r.super?'<span class="badge super">슈퍼패스</span>':"")+'</div>'+
+    (done||r.reason?'<div class="hint" style="margin-top:2px">'+(done?'이용 시간 지남':'')+(r.reason?(done?' · ':'')+esc(r.reason):'')+'</div>':'')+'</div>'+
+    (r.status==="confirmed"&&!r.ended?'<div class="mb"><button class="btn danger small" data-ac="'+r.id+'">취소</button></div>':"")+'</div>';
 }
 /* 지난 예약·취소된 예약을 날짜별로 묶어 한 줄씩(날짜는 최근 순, 같은 날은 시간 순) */
 function dayGroups(list,cancelled,id){
