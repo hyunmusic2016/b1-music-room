@@ -124,6 +124,9 @@ textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니�
 .pickgo{color:var(--accent-text);font-weight:900;margin-left:4px}
 .badge.big{font-size:14px;padding:3px 12px} /* 이용료 안내 창의 정액권·횟수권 배지(v0.34.1) */
 .stuonly{text-align:center;border:2px solid var(--stu-btn);color:var(--stu-text);border-radius:10px;padding:8px 10px;margin:8px 0 2px;font-size:14px;font-weight:700;line-height:1.5}
+.rbox{border:1.5px dashed var(--accent-strong);border-radius:10px;padding:10px 12px;margin:10px 0 2px;font-size:14px} /* 재원생 명부 연결(v0.36.0) */
+.rbox .rtitle{font-weight:700;margin-bottom:4px}
+.tokenbox{font-family:ui-monospace,Menlo,monospace;font-size:14px;word-break:break-all;background:var(--line);border-radius:8px;padding:10px;margin:8px 0}
 .hr1{display:inline-block;border-radius:6px;padding:0 6px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:12.5px;margin-left:4px;vertical-align:1px}
 .btn2 .btn{margin:0} /* 모든 [수정] 버튼은 개나리색으로 통일합니다. */
 .btn.small{min-height:40px;width:auto;padding:0 14px;margin:0;white-space:nowrap;flex:none}
@@ -316,7 +319,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.35.3";
+const APP_VERSION="v0.36.0";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -520,7 +523,7 @@ function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
    '<div><label for="rPw">비밀번호 4자리</label><input type="password" id="rPw" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="숫자 4자리"></div></div>'+
    '<div id="rBadge"></div>'+
    ('<p class="hint warn">'+(EXT?'통화 시 등록하신 이름을 입력하십시오.':'원생 본명을 입력하십시오. 원생이 아닌 경우 관리자가 예약을 취소할 수 있습니다.')+'</p>')+
-   ('<p class="hint">비밀번호: '+(EXT?'연락하신 전화번호 뒤 4자리를 입력하십시오.':'예약 변경, 취소 시 필요합니다.')+'</p>')+
+   ('<p class="hint">비밀번호: '+(EXT?'연락하신 전화번호 뒤 4자리를 입력하십시오.':'학원에 등록된 전화번호 뒤 4자리를 입력하십시오(원생 번호가 없으면 보호자 번호).')+'</p>')+
    ('<label class="check"><input type="checkbox" id="rC"><span>예약 확인·변경·취소를 위한 이름·비밀번호 수집에 동의합니다. 예약 기록은 이용일로부터 '+KEEP_DAYS+'일 뒤 삭제됩니다(정액권·횟수권 예약은 상품 종료 '+KEEP_DAYS+'일 뒤).</span></label>')+
    '<div id="rMsg"></div><button class="btn'+(EXT?' ext':' stu')+'" id="rGo">예약하기</button>';
   $("#bg").classList.add("open");$("#rName").focus();
@@ -1015,6 +1018,7 @@ async function reloadOnce(){
   if(adminTab==="proxy")await loadBoard();
   if(setPage==="door"){const c=await rpc("admin_door_codes");A.codes=c.ok?c.codes:null}
   if(setPage==="pay"||setPage==="fee"){const c=await rpc("pay_info");A.pay=c.ok?c:null}
+  if(setPage==="roster"){const c=await rpc("admin_roster_status");A.roster=c&&c.ok?c:{ok:false,msg:c&&c.msg}}
   if(setPage==="fee"){const c=await rpc("price_info");A.prices=c.ok?c:{ok:false,ext_flat:[],ext_count:[],stu_flat:[]};A.priceDraft=null;A.feeDraft=null}
   A.loaded=true;
   if(adminOn)renderAdmin();
@@ -1069,15 +1073,49 @@ function bindTypeChecks(p,onChange){
 function userFields(p,u){
   u=u||{};const req='<span class="req" aria-hidden="true">*</span>';
   return '<div class="cols c2"><div><label for="'+p+'Name">이름 (본명) '+req+'</label><input type="text" id="'+p+'Name" aria-required="true" autocomplete="off" value="'+esc(u.name||"")+'"></div><div><label for="'+p+'Pw">비밀번호 4자리 '+(u.name?'':req)+'</label><input type="password" id="'+p+'Pw" inputmode="numeric" maxlength="4" autocomplete="off"'+(u.name?' placeholder="변경 시에만 입력"':' aria-required="true"')+'></div></div>'+
+    '<div id="'+p+'Roster" class="rbox hidden"></div>'+ // 재원생 명부 연결(v0.36.0)
     '<div class="cols c2"><div><label for="'+p+'Phone">전화번호 '+req+'</label><input type="tel" id="'+p+'Phone" aria-required="true" inputmode="tel" autocomplete="off" placeholder="010-0000-0000" value="'+esc(u.phone||"")+'"></div><div><label for="'+p+'Part">파트</label><input type="text" id="'+p+'Part" maxlength="20" autocomplete="off" placeholder="예: 드럼" value="'+esc(u.part||"")+'"></div></div>'+
     '<label for="'+p+'Memo">메모</label><input type="text" id="'+p+'Memo" maxlength="100" autocomplete="off" value="'+esc(u.memo||"")+'">';
 }
 function readUserFields(p,isNew){ // 화면에서 먼저 형식만 확인합니다(최종 확인은 서버).
   const name=norm($("#"+p+"Name").value.trim()),pw=$("#"+p+"Pw").value,phone=fmtPhone($("#"+p+"Phone").value);
+  const rb=$("#"+p+"Roster"),rno=rb&&!rb.classList.contains("hidden")?(rb.dataset.no||""):""; // 명부에서 고른 등록번호(있으면 비밀번호 대신)
   if(!validName(name))return {err:"이름을 한글 2~5자 또는 영문으로 입력하십시오."};
-  if((isNew||pw)&&!/^\d{4}$/.test(pw))return {err:"비밀번호는 숫자 4자리입니다."};
+  if(((isNew&&!rno)||pw)&&!/^\d{4}$/.test(pw))return {err:"비밀번호는 숫자 4자리입니다."};
   if(!phone)return {err:"전화번호를 올바르게 입력하십시오. (예: 010-1234-5678)"};
-  return {name,pw,phone,part:$("#"+p+"Part").value.trim(),memo:$("#"+p+"Memo").value.trim()};
+  return {name,pw,rno,phone,part:$("#"+p+"Part").value.trim(),memo:$("#"+p+"Memo").value.trim()};
+}
+/* 재원생 명부 연결(v0.36.0, 서버 025): 이용자 등록·이용자 수정 공용(작업 원칙 10).
+   재원생이고 이름이 있으면 명부(구글 시트 수강생대장)에서 같은 이름을 찾아 등록번호로 고르게 함.
+   고르면 비밀번호 칸이 잠기고, 서버가 명부의 전화번호 뒤 4자리를 비밀번호로 씀. 이미 연결된 이용자는 연결 상태만 보여 줌. */
+function bindRoster(p,u){
+  const box=$("#"+p+"Roster"),pw=$("#"+p+"Pw");if(!box)return;let t,seq=0;
+  const ph0=pw.placeholder;
+  const setPick=no=>{box.dataset.no=no||"";pw.disabled=!!no;if(no){pw.value="";pw.placeholder="명부의 전화번호 뒤 4자리"}else pw.placeholder=ph0};
+  const draw=async()=>{
+    if(!$("#"+p+"T1").checked){box.classList.add("hidden");setPick("");return}
+    box.classList.remove("hidden");
+    if(u&&u.roster_no){
+      box.innerHTML='<div class="rtitle">📋 재원생 명부 연결됨 · 등록번호 '+esc(u.roster_no)+(u.roster_in?'':' <span style="color:var(--danger)">(지금 명부에 없음)</span>')+'</div><div class="hint" style="margin:0">비밀번호는 구글 시트의 전화번호 뒤 4자리를 따릅니다(시트에서 바꾸십시오).</div>';
+      box.dataset.no="";pw.disabled=true;pw.value="";pw.placeholder="명부의 전화번호 뒤 4자리";return;
+    }
+    const n=norm($("#"+p+"Name").value.trim());
+    if(!validName(n)){box.innerHTML='<p class="hint" style="margin:0">이름을 넣으면 재원생 명부에서 찾습니다.</p>';setPick("");return}
+    const my=++seq;const r=await rpc("admin_roster_find",{p_name:n});if(my!==seq||!$("#"+p+"Roster"))return;
+    if(!r||!r.ok){box.classList.add("hidden");setPick("");return} // 025 전이거나 오류면 지금처럼 비밀번호 직접 입력
+    const rows=r.rows||[];
+    if(!rows.length){box.innerHTML='<p class="hint" style="margin:0">재원생 명부에 없는 이름입니다. 비밀번호를 직접 입력하십시오.</p>';setPick("");return}
+    const usable=x=>!x.linked||(u&&x.linked===u.id),free=rows.filter(usable),def=free.length===1?free[0].no:"";
+    box.innerHTML='<div class="rtitle">📋 재원생 명부에서 찾았습니다</div>'+
+      rows.map(x=>'<label class="check" style="margin:4px 0"><input type="radio" name="'+p+'RPick" value="'+esc(x.no)+'"'+(usable(x)?'':' disabled')+'><span>등록번호 '+esc(x.no)+(usable(x)?'':' · 이미 등록됨')+'</span></label>').join("")+
+      '<label class="check" style="margin:4px 0"><input type="radio" name="'+p+'RPick" value=""><span>명부와 연결하지 않음(비밀번호 직접 입력)</span></label>'+
+      '<p class="hint" style="margin:4px 0 0">연결하면 비밀번호는 명부의 전화번호 뒤 4자리로 자동 설정되고, 시트에서 번호가 바뀌면 함께 바뀝니다.</p>';
+    box.querySelectorAll('input[type=radio]').forEach(rd=>{rd.checked=rd.value===def;rd.onchange=()=>setPick(rd.value)});
+    setPick(def);
+  };
+  $("#"+p+"Name").addEventListener("input",()=>{clearTimeout(t);t=setTimeout(draw,400)});
+  [$("#"+p+"T1"),$("#"+p+"T2")].forEach(c=>c&&c.addEventListener("change",draw));
+  draw();
 }
 function daysVal(id){const v=$("#"+id).value.trim();return /^\d{1,3}$/.test(v)&&+v>=1?+v:0} // 1~999일, 잘못된 값은 0
 function numInput(id,label,v,max){return '<label for="'+id+'">'+label+'</label><input type="text" id="'+id+'" inputmode="numeric" maxlength="'+String(max).length+'" autocomplete="off" placeholder="숫자" value="'+(v||"")+'">'}
@@ -1140,13 +1178,13 @@ function bindUser(){
   };
   if(!$("#uGo"))return;
   const sync=bindNewProd("u",()=>$("#uT2").checked); // 재원생이면 횟수권 선택 불가, 종류에 따라 하루/총 횟수 칸 전환
-  bindTypeChecks("u",sync);
+  bindTypeChecks("u",sync);bindRoster("u");
   $("#uGo").onclick=async()=>{
     const err=m=>{uFlash="";const ok=$("#sec-ext .card .msg.ok");if(ok)ok.remove();$("#uMsg").innerHTML='<div class="msg err">'+esc(m)+'</div>'};
     const type=$("#uT1").checked?"stu":"ext",f=readUserFields("u",true);if(f.err){err(f.err);return}
     const np=readNewProd("u");if(np.err){err(np.err);return}
     $("#uGo").disabled=true;
-    const r=await rpc("admin_create_user",{p:{type,name:f.name,pw:f.pw,phone:f.phone,part:f.part,memo:f.memo,
+    const r=await rpc("admin_create_user",{p:{type,name:f.name,pw:f.rno?undefined:f.pw,roster_no:f.rno||undefined,phone:f.phone,part:f.part,memo:f.memo,
       prod:np.kind==="none"?null:{kind:np.kind,start:np.start,days:np.days,limit:np.limit,total:np.total}}});
     if($("#uGo"))$("#uGo").disabled=false;
     if(r.auth){adminExpired();return}
@@ -1389,6 +1427,7 @@ function bindUserEdit(){
   if(u.status==="blacklisted"&&$("#ueT1"))$("#ueT1").disabled=true; // 블랙리스트인 동안 재원생으로 바꿀 수 없음(서버도 막음)
   const syncNew=c?null:bindNewProd("ue",()=>$("#ueT2").checked);
   bindTypeChecks("ue",()=>{if(syncNew)syncNew()}); // 재원생으로 바꾸면 새 횟수권 선택 불가
+  bindRoster("ue",u);
   $("#ueSave").onclick=async()=>{
     const err=m=>{$("#ueMsg").innerHTML='<div class="msg err">'+esc(m)+'</div>'};
     const f=readUserFields("ue",false);if(f.err){err(f.err);return}
@@ -1408,6 +1447,12 @@ function bindUserEdit(){
     if(r.auth){adminExpired();return}
     if(!r.ok){err(r.msg);return}
     let done=r.user;
+    if(f.rno&&!u.roster_no&&p.type==="stu"){ // 명부에서 골랐으면 저장 뒤 명부와 연결(비밀번호가 명부의 뒤 4자리로 바뀜)
+      const k=await rpc("admin_link_roster",{p_user_id:u.id,p_no:f.rno});
+      if(k.auth){adminExpired();return}
+      if(!k.ok){err("이용자 정보는 저장했지만 명부와 연결하지 못했습니다. "+k.msg);return}
+      done=k.user;
+    }
     if($("#eBReason")&&$("#eBReason").value.trim()!==(u.black_reason||"")){ // 블랙리스트 사유가 바뀌었으면 함께 저장
       const b=await rpc("admin_set_black_reason",{p_id:u.id,p_reason:$("#eBReason").value});
       if(b.auth){adminExpired();return}
@@ -1486,6 +1531,64 @@ function bindFee(){
     A.prices=r;A.priceDraft=null;A.feeDraft=null;A.pay=Object.assign({},A.pay,{fee:r.fee});
     redraw();$("#feMsg").innerHTML='<div class="msg ok">이용료를 저장하였습니다.'+(r.updated_at?' (수정 날짜: '+priceDate(r.updated_at)+')':'')+'</div>';
   };
+}
+/* 설정 > 이용자 관리 > 재원생 명부 연동(v0.36.0, 서버 025): 구글 시트 "수강생대장"에서 Apps Script가 보내는 명부의 상태,
+   명부 확인 켜기/끄기, 연동 열쇠 만들기(한 번만 보임), 명부와 연결 안 된 재원생 연결, 명부에서 빠진 연결 재원생. */
+function rosterTime(t){try{return new Date(t).toLocaleString("ko-KR",{timeZone:"Asia/Seoul",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit"})}catch(e){return t}}
+function rosterHtml(){
+  const R=A.roster;if(!R)return '<p class="hint">불러오는 중입니다…</p>';
+  if(!R.ok)return '<div class="msg err">명부 연동 정보를 불러오지 못했습니다. Supabase에 025를 실행했는지 확인하십시오.'+(R.msg?' ('+esc(R.msg)+')':'')+'</div>';
+  const pb=k=>k?'<span class="badge '+k+'">'+PROD[k]+'</span>':'';
+  return (uFlash?'<div class="msg ok">'+esc(uFlash)+'</div>':'')+
+   '<div class="card"><div class="part" style="margin-top:0">명부 상태</div>'+
+     '<p style="margin:0 0 6px">마지막 반영: <b>'+(R.synced_at?esc(rosterTime(R.synced_at)):'아직 반영된 적이 없습니다')+'</b> · 명부 <b>'+R.count+'명</b></p>'+
+     '<p style="margin:0 0 10px">명부 확인: <b style="color:var('+(R.check?'--stu-text':'--danger')+')">'+(R.check?'켜짐':'꺼짐')+'</b></p>'+
+     '<button class="btn'+(R.check?' ghost':'')+'" id="rcToggle">'+(R.check?'명부 확인 끄기':'명부 확인 켜기')+'</button>'+
+     '<p class="hint">켜면 재원생 예약하기는 명부에 있는 학생(이름 + 전화번호 뒤 4자리)만 할 수 있습니다. 정액권 기간이 남은 등록 재원생은 명부에 없어도 예약할 수 있습니다. 관리자 예약은 명부를 보지 않습니다.</p></div>'+
+   '<div class="card"><div class="part" style="margin-top:0">연동 열쇠</div>'+
+     '<p style="margin:0 0 8px">'+(R.has_token?'열쇠가 만들어져 있습니다.':'아직 열쇠가 없습니다.')+'</p><div id="rtkOut"></div>'+
+     '<button class="btn ghost" id="rtkNew">'+(R.has_token?'새 열쇠 만들기':'열쇠 만들기')+'</button>'+
+     '<p class="hint">만든 열쇠는 한 번만 보입니다. 구글 시트 메뉴 [예약 명부 → 연동 열쇠 넣기]에 붙여 넣으십시오. 새로 만들면 전에 넣은 열쇠는 더 이상 쓸 수 없습니다.</p></div>'+
+   '<div class="card"><div class="part" style="margin-top:0">명부와 연결되지 않은 재원생 <small>'+R.unlinked.length+'명</small></div>'+
+     (R.unlinked.length?R.unlinked.map(x=>'<div class="item"><div class="row"><div><b style="color:var(--stu-text)">'+esc(x.name)+'</b>'+pb(x.prod)+'<div class="hint" style="margin:0">'+(x.in_roster?'명부에 같은 이름이 있습니다':'명부에 같은 이름이 없습니다')+'</div></div>'+(x.in_roster?'<button class="btn small" data-rlink="'+x.id+'" data-rname="'+esc(x.name)+'">명부와 연결</button>':'')+'</div></div>').join(""):'<p class="hint">모든 등록 재원생이 명부와 연결되어 있습니다.</p>')+
+     '<p class="hint">연결하면 그 학생의 비밀번호가 명부의 전화번호 뒤 4자리로 바뀝니다. 명부에 이름이 없으면 시트의 이름과 같게 이용자 수정에서 고친 뒤 연결하십시오.</p></div>'+
+   (R.gone.length?'<div class="card"><div class="part" style="margin-top:0">명부에서 빠진 연결 재원생 <small>'+R.gone.length+'명</small></div>'+
+     R.gone.map(x=>'<div class="item"><b style="color:var(--stu-text)">'+esc(x.name)+'</b>'+pb(x.prod)+'<div class="hint" style="margin:0">등록번호 '+esc(x.no)+(x.prod==="flat"?' · 정액권 기간 동안은 예약할 수 있습니다':' · 재원생 예약을 할 수 없습니다')+'</div></div>').join("")+'</div>':'')+
+   '<div style="font-size:12px;color:var(--sub);line-height:1.7;margin:12px 4px 0"><b>처음 설정 순서</b><ol style="margin:2px 0 0;padding-left:18px"><li>[열쇠 만들기]로 열쇠를 만들어 복사합니다.</li><li>구글 시트 [확장 프로그램 → Apps Script]에 명부 보내기 코드를 붙여 넣습니다.</li><li>시트 메뉴 [예약 명부 → 연동 열쇠 넣기]에 열쇠를 붙여 넣습니다.</li><li>[예약 명부 → 지금 반영]을 누르고 이 화면의 인원 수를 확인합니다.</li><li>[예약 명부 → 1시간마다 자동 반영 켜기]를 누르고, 이 화면에서 [명부 확인 켜기]를 누릅니다.</li></ol></div>';
+}
+function bindRosterPage(){
+  if(!$("#rcToggle"))return;
+  const after=async msg=>{uFlash=msg||"";await reloadAdmin();renderAdmin()};
+  $("#rcToggle").onclick=async()=>{
+    const on=!A.roster.check;
+    if(on&&!confirm("명부 확인을 켜시겠습니까?\n켜면 명부에 없는 이름으로는 재원생 예약을 할 수 없습니다."))return;
+    $("#rcToggle").disabled=true;const r=await rpc("admin_set_roster_check",{p_on:on});
+    if(r.auth){adminExpired();return}
+    if(!r.ok){$("#rcToggle").disabled=false;alert(r.msg);return}
+    after(on?"명부 확인을 켰습니다.":"명부 확인을 껐습니다.");
+  };
+  $("#rtkNew").onclick=async()=>{
+    if(A.roster.has_token&&!confirm("새 열쇠를 만들면 지금 시트에 넣어 둔 열쇠는 더 이상 쓸 수 없습니다. 만드시겠습니까?"))return;
+    $("#rtkNew").disabled=true;const r=await rpc("admin_roster_token");$("#rtkNew").disabled=false;
+    if(r.auth){adminExpired();return}
+    if(!r.ok){alert(r.msg);return}
+    A.roster.has_token=true;
+    $("#rtkOut").innerHTML='<div class="msg warn" style="margin:0 0 6px">이 열쇠는 지금 한 번만 보입니다. 복사해서 구글 시트에 붙여 넣으십시오.</div><div class="tokenbox" id="rtkVal">'+esc(r.token)+'</div><button class="btn small" id="rtkCopy">열쇠 복사</button>';
+    $("#rtkCopy").onclick=async()=>{const ok=await copyText(r.token);$("#rtkCopy").textContent=ok?"복사했습니다":"복사 실패"};
+  };
+  document.querySelectorAll("[data-rlink]").forEach(b=>b.onclick=async()=>{
+    const f=await rpc("admin_roster_find",{p_name:b.dataset.rname});
+    if(f.auth){adminExpired();return}
+    const rows=(f.rows||[]).filter(x=>!x.linked);
+    if(!rows.length){alert("연결할 수 있는 명부 학생이 없습니다(이미 다른 이용자와 연결됨).");return}
+    let no=rows[0].no;
+    if(rows.length>1){no=prompt(b.dataset.rname+" 학생이 명부에 "+rows.length+"명 있습니다. 연결할 등록번호를 입력하십시오.\n("+rows.map(x=>x.no).join(", ")+")","");if(!no)return;no=no.trim()}
+    else if(!confirm(b.dataset.rname+"님을 명부(등록번호 "+no+")와 연결하시겠습니까?\n비밀번호가 명부의 전화번호 뒤 4자리로 바뀝니다."))return;
+    b.disabled=true;const r=await rpc("admin_link_roster",{p_user_id:+b.dataset.rlink,p_no:no});
+    if(r.auth){adminExpired();return}
+    if(!r.ok){b.disabled=false;alert(r.msg);return}
+    after(b.dataset.rname+"님을 명부와 연결했습니다.");
+  });
 }
 function bindPay(){
   if(!$("#paGo"))return;
@@ -1579,7 +1682,7 @@ function bindBlock2(){
 function settingsHtml(){
   // 큰 제목과 [← 뒤로]를 한 줄에(v0.18.11, 뒤로 버튼은 오른쪽)
   const UP=setPage==="status"||setPage==="dormant"||setPage==="black",LN={dormant:"휴면 이용자",black:"블랙리스트"}[setPage]||"이용자 현황";
-  const title=UP?(editUser!==null?"이용자 수정":viewUser!==null?"이용자 정보":LN):{block:"이용 불가 시간 설정",pw:"관리자 비밀번호 변경",door:"출입 비밀번호 변경",pay:"입금 계좌 변경",fee:"이용료 변경"}[setPage];
+  const title=UP?(editUser!==null?"이용자 수정":viewUser!==null?"이용자 정보":LN):{block:"이용 불가 시간 설정",pw:"관리자 비밀번호 변경",door:"출입 비밀번호 변경",pay:"입금 계좌 변경",fee:"이용료 변경",roster:"재원생 명부 연동"}[setPage];
   const back='<div class="titlerow"><h2>'+title+'</h2><button class="btn ghost small" id="setBack">'+(UP&&editUser!==null?'← 이용자 정보':UP&&viewUser!==null?'← '+LN:'← 설정')+'</button></div>';
   if(UP){
     if(viewUser!==null&&!A.detail)return back+'<p class="hint">불러오는 중입니다…</p>';
@@ -1590,15 +1693,16 @@ function settingsHtml(){
   if(setPage==="door")return back+doorHtml();
   if(setPage==="pay")return back+payHtml();
   if(setPage==="fee")return back+feeHtml();
+  if(setPage==="roster")return back+rosterHtml();
   const mi=(k,l)=>'<div class="item"><button data-sp="'+k+'" style="width:100%;text-align:left;border:0;background:none;color:var(--ink);font:inherit;font-weight:700;padding:12px 0;min-height:48px;cursor:pointer">'+l+'</button></div>';
   // 설정 메뉴를 세 묶음으로(v0.29.0, 묶음 이름은 사용자가 맡김)
   const cat=(t,items)=>'<div class="card"><div class="part" style="margin:0 0 2px">'+t+'</div>'+items+'</div>';
-  return cat("이용자 관리",mi("status","이용자 현황")+mi("dormant","휴면 이용자 (90일 이상)")+mi("black","블랙리스트"))+
+  return cat("이용자 관리",mi("status","이용자 현황")+mi("dormant","휴면 이용자 (90일 이상)")+mi("black","블랙리스트")+mi("roster","재원생 명부 연동"))+
     cat("이용료·출입 정보",mi("fee","이용료 변경")+mi("pay","입금 계좌 변경")+mi("door","출입 비밀번호 변경"))+
     cat("운영·보안",mi("block","이용 불가 시간 설정")+mi("pw","관리자 비밀번호 변경"));
 }
 function bindSettings(){
-  document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{setPage=b.dataset.sp;renderAdmin();if(setPage==="block"||setPage==="door"||setPage==="pay"||setPage==="fee")reloadAdmin()});
+  document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{setPage=b.dataset.sp;renderAdmin();if(setPage==="block"||setPage==="door"||setPage==="pay"||setPage==="fee"||setPage==="roster")reloadAdmin()});
   const back=$("#setBack");if(back)back.onclick=()=>{if(editUser!==null){editUser=null}else if(viewUser!==null){viewUser=null;A.detail=null}else{setPage=null}uFlash="";renderAdmin()};
   if(setPage==="status"||setPage==="dormant"||setPage==="black"){if(editUser!==null&&A.detail)bindUserEdit();else if(viewUser!==null&&A.detail)bindUserView();else if(viewUser===null)(setPage==="dormant"?bindDormant():setPage==="black"?bindBlack():bindStatus())}
   if(setPage==="block")bindBlock2();
@@ -1606,6 +1710,7 @@ function bindSettings(){
   if(setPage==="door")bindDoor();
   if(setPage==="pay")bindPay();
   if(setPage==="fee")bindFee();
+  if(setPage==="roster")bindRosterPage();
 }
 function tabBtns(){return [["list","예약 목록"],["ext","이용자 등록"],["proxy","관리자 예약"],["block","설정"]].map(([k,l])=>'<button class="tab" data-at="'+k+'" aria-selected="'+(adminTab===k)+'">'+l+'</button>').join("")}
 function applyAdminTab(){

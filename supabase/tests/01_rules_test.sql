@@ -557,4 +557,72 @@ select test.ok((public.my_reservations('삭제시험', '4242'))->'list'->0->>'re
 select test.ok((public.reserve('2027-02-11', 11, '삭제시험', '4242', true, 'ext'))->>'msg' like '등록된 일반회원 정보와 일치하지 않습니다%', '삭제된 일반회원은 더 예약할 수 없음(미등록)');
 reset role; reset app.fake_now;
 
+-- ===== 29. 재원생 명부 연동 (025) =====
+reset role; set app.fake_now = '2027-03-10 12:00:00'; set role authenticated;
+-- 연동 전에 등록해 둔 재원생(이름·비밀번호가 명부와 같으면 자동 연결될 사람), 명부에 없는 정액권 재원생
+select test.ok((public.admin_create_user('{"type":"stu","name":"명부연결","pw":"1111","phone":"01011111111"}'))->>'ok' = 'true', '명부 시험: 연동 전 재원생 등록');
+select test.ok((public.admin_create_user('{"type":"stu","name":"정액밖","pw":"2222","phone":"01022222222","prod":{"kind":"flat","start":"2027-03-01","days":30,"limit":2}}'))->>'ok' = 'true', '명부 시험: 명부에 없는 정액권 재원생 등록');
+select test.ok((public.admin_set_roster_check(true))->>'msg' like '명부가 비어 있습니다%', '명부가 비면 명부 확인을 켤 수 없음');
+reset role;
+set role anon;
+select test.ok((public.roster_sync('틀린열쇠', '[]'))->>'msg' like '연동 열쇠가 맞지 않습니다%', '열쇠가 없거나 틀리면 거절');
+select test.denied($$select public.admin_roster_token()$$, '익명은 연동 열쇠를 만들 수 없음');
+select test.denied($$select public.admin_roster_status()$$, '익명은 연동 상태를 볼 수 없음');
+reset role; set role authenticated;
+select (public.admin_roster_token())->>'token' as rtk \gset
+reset role; set role anon;
+select test.ok((public.roster_sync(:'rtk', '[]'))->>'msg' like '보낸 명부에 올바른 학생이 없습니다%', '빈 명부는 거절');
+select test.ok((public.roster_sync(:'rtk', '[{"no":"R1","name":"명부일","pw4":"4321"},{"no":"R2","name":"명부연결","pw4":"1111"},{"no":"R3","name":"x","pw4":"12"},{"no":"R1","name":"명부중복","pw4":"9999"}]')) @> '{"ok":true,"count":2,"added":2,"linked":1}'::jsonb, '명부 반영: 올바른 2명, 잘못된 줄·중복 등록번호는 건너뜀, 같은 이름·비밀번호 재원생 자동 연결');
+reset role;
+select test.ok((select count(*) from public.roster) = 2 and (select roster_no from public.users where name = '명부연결') = 'R2', '명부 2명, 자동 연결 확인');
+select test.ok(not exists (select 1 from public.roster where pw_hash like '%4321%'), '뒤 4자리는 원문으로 저장하지 않음');
+set role authenticated;
+select test.ok((public.admin_set_roster_check(true))->>'check' = 'true', '명부 확인 켜기');
+reset role; set role anon;
+select test.ok((public.reserve('2027-03-10', 13, '명부일', '4321', true, 'stu'))->>'ok' = 'true', '명부에 있는 재원생은 예약됨');
+select test.ok((public.reserve('2027-03-10', 14, '명부없음', '4321', true, 'stu'))->>'msg' like '재원생 명부에서 확인되지 않습니다%', '명부에 없는 이름은 막힘');
+select test.ok((public.reserve('2027-03-11', 14, '명부일', '0000', true, 'stu'))->>'msg' like '재원생 명부에서 확인되지 않습니다%', '이름은 맞고 비밀번호가 틀리면 막힘');
+select test.ok((public.reserve('2027-03-10', 15, '정액밖', '2222', true, 'stu'))->>'prod' = 'flat', '(나) 명부에 없어도 그날 정액권이 있으면 예약됨');
+select test.ok((public.reserve('2027-03-10', 16, '명부연결', '1111', true, 'ext'))->>'msg' like '등록된 일반회원 정보와 일치하지 않습니다%', '일반회원 예약은 명부와 상관없이 전과 같음');
+-- 시트에서 전화번호가 바뀜 → 연결된 재원생 비밀번호도 바뀜
+reset role; set role anon;
+select test.ok((public.roster_sync(:'rtk', '[{"no":"R1","name":"명부일","pw4":"4321"},{"no":"R2","name":"명부연결","pw4":"5555"}]')) @> '{"ok":true,"changed":1}'::jsonb, '전화번호가 바뀐 학생 반영');
+select test.ok((public.reserve('2027-03-10', 17, '명부연결', '5555', true, 'stu'))->>'ok' = 'true', '바뀐 뒤 4자리로 예약됨');
+select test.ok((public.my_reservations('명부연결', '5555'))->>'user_type' = 'stu', '연결된 재원생 비밀번호도 새 뒤 4자리로 바뀜');
+select test.ok((public.reserve('2027-03-11', 17, '명부연결', '1111', true, 'stu'))->>'msg' like '재원생 명부에서 확인되지 않습니다%', '옛 뒤 4자리는 막힘');
+-- 안전장치: 12명 → 3명이면 거절, 강제로 반영은 됨
+select test.ok((public.roster_sync(:'rtk', (select jsonb_agg(jsonb_build_object('no','M'||i,'name','명부다수','pw4',(1000+i)::text)) from generate_series(1,12) i)))->>'count' = '12', '12명 반영');
+select test.ok((public.roster_sync(:'rtk', '[{"no":"R1","name":"명부일","pw4":"4321"},{"no":"R2","name":"명부연결","pw4":"5555"},{"no":"M1","name":"명부다수","pw4":"1001"}]'))->>'msg' like '한 번에 절반 넘게 빠져서%', '한 번에 절반 넘게 빠지면 거절');
+reset role;
+select test.ok((select count(*) from public.roster) = 12, '거절되면 기존 명부 그대로');
+set role anon;
+select test.ok((public.roster_sync(:'rtk', '[{"no":"R1","name":"명부일","pw4":"4321"},{"no":"R2","name":"명부연결","pw4":"5555"},{"no":"M1","name":"명부다수","pw4":"1001"}]', true))->>'removed' = '11', '강제로 반영하면 빠진 학생 삭제');
+-- 명부에서 빠져도 이미 잡힌 예약은 그대로
+select test.ok((public.roster_sync(:'rtk', '[{"no":"R2","name":"명부연결","pw4":"5555"},{"no":"M1","name":"명부다수","pw4":"1001"}]'))->>'removed' = '1', '명부일 빠짐');
+reset role;
+select test.ok(exists (select 1 from public.reservations where name = '명부일' and date = '2027-03-10' and status = 'confirmed'), '명부에서 빠져도 이미 잡힌 예약은 그대로');
+set role anon;
+select test.ok((public.reserve('2027-03-11', 13, '명부일', '4321', true, 'stu'))->>'msg' like '재원생 명부에서 확인되지 않습니다%', '명부에서 빠지면 새 예약은 막힘');
+reset role; set role authenticated;
+-- 이름으로 찾기·이용자 등록 때 명부 연결·직접 연결
+select test.ok((public.admin_roster_find('명부다수'))->'rows'->0->>'no' = 'M1' and (public.admin_roster_find('명부다수'))->'rows'->0->>'pw4' is null, '이름으로 명부 찾기(뒤 4자리는 주지 않음)');
+select test.ok((public.admin_create_user('{"type":"stu","name":"다른이름","phone":"01033333333","roster_no":"M1"}'))->>'msg' like '이름이 명부%', '이름이 명부와 다르면 등록 막힘');
+select test.ok((public.admin_create_user('{"type":"stu","name":"명부다수","phone":"01033333333","roster_no":"M1","prod":{"kind":"flat","start":"2027-03-10","days":30,"limit":3}}'))->'user'->>'roster_no' = 'M1', '명부에서 골라 정액권과 함께 등록(비밀번호 입력 없음)');
+select test.ok((public.admin_create_user('{"type":"stu","name":"명부다수","phone":"01033333333","roster_no":"M1"}'))->>'msg' like '이 명부 학생은 이미 등록%', '같은 명부 학생은 두 번 등록 안 됨');
+reset role; set role anon;
+select test.ok((public.reserve('2027-03-10', 18, '명부다수', '1001', true, 'stu'))->>'prod' = 'flat', '명부에서 등록한 학생은 뒤 4자리로 정액권 예약');
+reset role;
+select id as lk_uid from public.users where name = '정액밖' \gset
+set role authenticated;
+select test.ok((public.admin_link_roster(:lk_uid, 'M1'))->>'msg' like '이름이 명부%', '이름이 다르면 직접 연결 막힘');
+select test.ok((public.admin_roster_status())->'unlinked' @> '[{"name":"정액밖"}]'::jsonb, '명부와 연결 안 된 재원생 목록');
+reset role;
+update public.users set type = 'ext' where name = '명부연결';
+select test.ok((select roster_no from public.users where name = '명부연결') is null, '일반회원으로 바꾸면 명부 연결이 풀림');
+set role authenticated;
+select test.ok((public.admin_set_roster_check(false))->>'check' = 'false', '명부 확인 끄기');
+reset role; set role anon;
+select test.ok((public.reserve('2027-03-11', 13, '명부밖학생', '1234', true, 'stu'))->>'ok' = 'true', '끄면 전처럼 아무 재원생이나 예약됨');
+reset role; reset app.fake_now;
+
 select '모든 시험 통과' as 결과;
