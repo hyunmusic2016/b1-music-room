@@ -342,7 +342,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.38.9";
+const APP_VERSION="v0.38.10";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1218,6 +1218,17 @@ function priceCalcHtml(p){
 function updPrices(){document.querySelectorAll(".pcalc").forEach(el=>{const p=el.id.slice(0,-5);el.innerHTML=priceCalcHtml(p)})}
 // 캡처 단계로 들음: 코드에서 보내는 input/change(버블 없음, 예: 가격표에서 고르기)도 받기 위해
 ["input","change"].forEach(t=>document.addEventListener(t,e=>{if(e.target.closest&&e.target.closest("#adminPane"))setTimeout(updPrices,0)},true));
+/* 금액 칸(.pp: 1회 이용료·이용료 표 가격)은 입력하는 동안 1,000 단위 쉼표를 붙임(v0.38.10). 숫자만 남기고 커서는 같은 숫자 뒤에 둠.
+   서버는 쉼표·"원"을 빼고 저장하므로 저장 값은 그대로 숫자. */
+document.addEventListener("input",e=>{
+  const el=e.target;if(!el.classList||!el.classList.contains("pp"))return;
+  const pos=el.selectionStart||0,before=el.value.slice(0,pos).replace(/\D/g,"").length;
+  const d=el.value.replace(/\D/g,"").replace(/^0+(?=\d)/,"");
+  const f=d?Number(d).toLocaleString("ko-KR"):"";
+  if(f===el.value)return;
+  el.value=f;let i=0,c=0;while(i<f.length&&c<before){if(/\d/.test(f[i]))c++;i++}
+  try{el.setSelectionRange(i,i)}catch(_){}
+},true);
 function bindPeriod(p){loadPriceCache();const updEnd=()=>{const s=$("#"+p+"Start").value,d=daysVal(p+"Days");$("#"+p+"End").textContent=s&&d?periodText(s,d):"";updPrices()};$("#"+p+"Start").oninput=updEnd;$("#"+p+"Days").oninput=updEnd;updEnd();return updEnd}
 function readPeriod(p){const start=$("#"+p+"Start").value,days=daysVal(p+"Days");return start&&days?{start,days}:{err:"시작일과 기간(일)을 확인하십시오. 기간은 1 이상의 숫자로 입력하십시오."}}
 /* 정액권·횟수권 새로 추가하는 칸(종류 없음/정액권/횟수권 + 시작일·기간·횟수). */
@@ -1590,7 +1601,7 @@ function feeHtml(){
     // 손님용 이용료 안내 창과 같은 모양: 큰 상자 "일반회원"(1회 이용료·정액권·횟수권) / "재원생"(정액권)(v0.28.2)
     group("일반회원","--ext-text",
       '<div class="card"><div class="part" style="margin-top:0">1회 이용료<span class="hr1">1시간</span></div>'+
-      '<div class="prow"><input type="text" id="fe_fee" class="pp" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="예: 7000" value="'+esc(fee)+'"><span>원</span></div></div>'+
+      '<div class="prow"><input type="text" id="fe_fee" class="pp" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="예: 7,000" value="'+esc(fee)+'"><span>원</span></div></div>'+
       box("ext_flat","정액권",FLAT)+box("ext_count","횟수권",CNT))+
     group("재원생","--stu-text",box("stu_flat","정액권",FLAT)+box("stu_count","횟수권",CNT),36)+
     '<div class="card"><p class="hint" style="margin-top:0">상품 추가·삭제와 가격 변경은 [저장]을 눌러야 반영됩니다. 횟수와 가격이 모두 빈 줄은 저장하지 않습니다.</p><div id="feMsg"></div><button class="btn" id="feGo">저장</button></div>';
