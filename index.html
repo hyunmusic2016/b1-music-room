@@ -342,7 +342,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.38.11";
+const APP_VERSION="v0.38.12";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1136,7 +1136,7 @@ function userFields(p,u){
   u=u||{};const req='<span class="req" aria-hidden="true">*</span>';
   return '<div class="cols c2"><div><label for="'+p+'Name">이름 (본명) '+req+'</label><input type="text" id="'+p+'Name" aria-required="true" autocomplete="off" value="'+esc(u.name||"")+'"></div><div><label for="'+p+'Pw">비밀번호 4자리 '+(u.name?'':req)+'</label><input type="password" id="'+p+'Pw" inputmode="numeric" maxlength="4" autocomplete="off"'+(u.name?' placeholder="변경 시에만 입력"':' aria-required="true"')+'></div></div>'+
     '<div id="'+p+'Roster" class="rbox hidden"></div>'+ // 재원생 명부 연결(v0.36.0)
-    '<div class="cols c2"><div><label for="'+p+'Phone">전화번호 <span id="'+p+'PhReq">'+req+'</span></label><input type="tel" id="'+p+'Phone" class="phone" aria-required="true" inputmode="numeric" maxlength="11" autocomplete="off" placeholder="01000000000" value="'+esc(String(u.phone||"").replace(/\D/g,""))+'"></div><div><label for="'+p+'Part">파트</label><input type="text" id="'+p+'Part" maxlength="20" autocomplete="off" placeholder="예: 드럼" value="'+esc(u.part||"")+'"></div></div>'+
+    '<div class="cols c2"><div><label for="'+p+'Phone">전화번호 <span id="'+p+'PhReq">'+req+'</span></label><input type="tel" id="'+p+'Phone" class="phone" aria-required="true" inputmode="numeric" autocomplete="off" placeholder="01000000000" value="'+esc(String(u.phone||"").replace(/\D/g,""))+'"></div><div><label for="'+p+'Part">파트</label><input type="text" id="'+p+'Part" maxlength="20" autocomplete="off" placeholder="예: 드럼" value="'+esc(u.part||"")+'"></div></div>'+
     '<label for="'+p+'Memo">메모</label><input type="text" id="'+p+'Memo" maxlength="100" autocomplete="off" value="'+esc(u.memo||"")+'">';
 }
 function readUserFields(p,isNew){ // 화면에서 먼저 형식만 확인합니다(최종 확인은 서버).
@@ -1218,8 +1218,8 @@ function priceCalcHtml(p){
 function updPrices(){document.querySelectorAll(".pcalc").forEach(el=>{const p=el.id.slice(0,-5);el.innerHTML=priceCalcHtml(p)})}
 // 캡처 단계로 들음: 코드에서 보내는 input/change(버블 없음, 예: 가격표에서 고르기)도 받기 위해
 ["input","change"].forEach(t=>document.addEventListener(t,e=>{if(e.target.closest&&e.target.closest("#adminPane"))setTimeout(updPrices,0)},true));
-/* 전화번호 칸(.phone)은 숫자만 입력(하이픈 등은 바로 지움, 11자리까지)(v0.38.11). 보여 줄 때는 010-0000-0000(서버 저장 값·fmtPhone) */
-document.addEventListener("input",e=>{const el=e.target;if(!el.classList||!el.classList.contains("phone"))return;const d=el.value.replace(/\D/g,"").slice(0,11);if(d!==el.value)el.value=d},true);
+/* 전화번호 칸(.phone)은 숫자만 입력(하이픈 등은 바로 지움, 11자리까지)(v0.38.11). maxlength를 두지 않아 "010-1234-5678"을 붙여 넣어도 잘리지 않고 숫자 11자리가 남음(v0.38.12). 보여 줄 때는 010-0000-0000(서버 저장 값·fmtPhone) */
+document.addEventListener("input",e=>{const el=e.target;if(!el.classList||!el.classList.contains("phone"))return;let d=el.value.replace(/\D/g,"");if(/^821/.test(d))d="0"+d.slice(2);d=d.slice(0,11);if(d!==el.value)el.value=d},true); // +82 10-… 붙여넣기 → 010…
 /* 금액 칸(.pp: 1회 이용료·이용료 표 가격)은 입력하는 동안 1,000 단위 쉼표를 붙임(v0.38.10). 숫자만 남기고 커서는 같은 숫자 뒤에 둠.
    서버는 쉼표·"원"을 빼고 저장하므로 저장 값은 그대로 숫자. */
 document.addEventListener("input",e=>{
