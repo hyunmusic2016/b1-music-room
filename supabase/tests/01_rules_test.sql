@@ -648,4 +648,16 @@ reset role; set role anon;
 select test.ok((public.reserve('2027-03-11', 13, '명부밖학생', '1234', true, 'stu'))->>'ok' = 'true', '끄면 전처럼 아무 재원생이나 예약됨');
 reset role; reset app.fake_now;
 
+-- 32. 028: 출입 비밀번호 마지막 수정 날짜
+reset role; set app.fake_now = '2027-04-01 10:00';
+set role authenticated;
+select test.ok((public.admin_set_door_codes('{"gate":"1111","room":"2222","toilet":"3333"}'))->'codes'->>'updated_at' = '2027-04-01', '바꾸면 오늘 날짜가 남음');
+reset role; set app.fake_now = '2027-04-05 10:00'; set role authenticated;
+select test.ok((public.admin_set_door_codes('{"gate":"1111","room":"2222","toilet":"3333"}'))->'codes'->>'updated_at' = '2027-04-01', '안 바꾸고 저장하면 날짜 그대로');
+select test.ok((public.admin_door_codes())->'codes'->>'updated_at' = '2027-04-01', '관리자 조회에도 날짜');
+select test.ok((public.admin_set_door_codes('{"gate":"1111","room":"2222","toilet":"4444"}'))->'codes'->>'updated_at' = '2027-04-05', '하나만 바꿔도 오늘 날짜로');
+reset role;
+select test.ok(public.door_codes()->>'updated_at' = '2027-04-05' and public.door_codes()->>'toilet' = '4444', '공개 my_codes가 쓰는 값에도 날짜');
+reset app.fake_now;
+
 select '모든 시험 통과' as 결과;
