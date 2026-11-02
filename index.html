@@ -316,7 +316,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.34.1";
+const APP_VERSION="v0.35.0";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -417,6 +417,14 @@ function slotsFor(d){return board?board.slots.filter(s=>s.date===d):[]}
 /* ===== 정액권·횟수권(서버가 준 상품 정보) =====
    상품: {id, kind, target, start, end, limit, total, used, left:{today,tomorrow}(정액권) 또는 {total}(횟수권)} */
 function leftText(q){const t=seoulDate();if(q.start>t)return "시작 예정";const n=spanDays(t,q.end);return n<=0?"기간 종료":n===1?"1일 남음(오늘까지)":n+"일 남음"}
+/* 상품 기간이 7일 안에 끝나면 미리 안내(v0.35.0, 사용자 요청): 예약 창·내 예약. 시작 전 상품은 안내하지 않음. */
+const SOON_DAYS=7;
+function mdw(ds){const [y,m,d]=ds.split("-").map(Number);return m+"/"+d+"("+DAYS_KO[new Date(Date.UTC(y,m-1,d)).getUTCDay()]+")"}
+function soonHtml(q){
+  if(!q)return "";const t=seoulDate();if(q.start>t)return "";
+  const n=spanDays(t,q.end);if(n<1||n>SOON_DAYS)return "";
+  return '<div class="msg warn" style="margin:8px 0 0;text-align:left">⏰ '+PROD[q.kind]+' 기간이 <b>'+mdw(q.end)+'</b>에 끝납니다('+(n===1?'오늘까지':n+'일 남음')+'). 계속 이용하시려면 관리자('+PHONE+')에게 연장을 문의하십시오.</div>';
+}
 function prodLeftFor(p,d){if(p.kind==="count")return p.left.total;const t=seoulDate();const v=d===t?p.left.today:d===addDays(t,1)?p.left.tomorrow:null;return v==null?null:v}
 function prodLeftText(p,d){if(p.kind==="count")return "총 "+p.total+"회 중 "+p.left.total+"회 남음";const v=prodLeftFor(p,d);return v==null?"기간 아님":v+"회 남음"}
 function prodLine(q){
@@ -553,7 +561,7 @@ function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
       }
       if(!(p.start<=D&&D<=p.end))return;
       const remain=p.kind==="count"?prodLeftText(p,D):(D===allowedDates()[0]?"오늘":"내일")+" 이용 "+prodLeftText(p,D);
-      $("#rBadge").innerHTML='<i class="badge '+p.kind+'">'+PROD[p.kind]+'</i><b style="font-size:13px;margin-left:6px;color:var('+(EXT?'--ext-text':'--stu-text')+')">'+remain+'</b><span style="font-weight:400;font-size:12px;color:var(--sub);margin-left:6px">'+sh(p.start)+' ~ '+sh(p.end)+' · '+leftText(p)+'</span>';
+      $("#rBadge").innerHTML='<i class="badge '+p.kind+'">'+PROD[p.kind]+'</i><b style="font-size:13px;margin-left:6px;color:var('+(EXT?'--ext-text':'--stu-text')+')">'+remain+'</b><span style="font-weight:400;font-size:12px;color:var(--sub);margin-left:6px">'+sh(p.start)+' ~ '+sh(p.end)+' · '+leftText(p)+'</span>'+soonHtml(p);
     },350);
   };
   $("#rName").oninput=badge;$("#rPw").oninput=badge;
@@ -854,7 +862,7 @@ $("#mFind").onclick=async()=>{
     const P=r.product,dts=allowedDates(),col=P.target==="ext"?"--ext-text":"--stu-text";
     ph+='<div class="card"><span class="badge '+P.kind+'" style="margin-left:0">'+PROD[P.kind]+'</span>'+
       '<div style="margin-top:8px;font-weight:700;color:var('+col+')">'+(P.kind==="count"?"남은 횟수: "+prodLeftText(P):'오늘 이용 '+prodLeftText(P,dts[0])+'<br>내일 이용 '+prodLeftText(P,dts[1]))+'</div>'+
-      '<div class="hint">이용 기간: '+P.start+" ~ "+P.end+' · '+leftText(P)+'</div></div>';
+      '<div class="hint">이용 기간: '+P.start+" ~ "+P.end+' · '+leftText(P)+'</div>'+soonHtml(P)+'</div>';
   }
   // 예약 현황에는 아직 끝나지 않은 확정 예약만. 취소된 예약·시간이 지난 예약은 오늘 것이라도 바로 아래 '예약 기록'으로(v0.25.3)
   const now=r.list.filter(x=>x.status==="confirmed"&&!x.ended),past=r.list.filter(x=>!now.includes(x));
