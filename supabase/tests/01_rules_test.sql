@@ -78,7 +78,7 @@ select test.ok((public.admin_create_user('{"type":"ext","name":"김외부","pw":
   "prod":{"kind":"count","start":"2026-10-27","days":30,"total":2}}'))->>'ok' = 'true', '외부 이용자 + 횟수권(총 2회) 등록');
 select test.ok((public.admin_create_user('{"type":"ext","name":"김외부","pw":"0000","phone":"01000000000"}'))->>'msg' like '같은 이름과 비밀번호%', '같은 이름+비밀번호 중복 등록 막힘');
 select test.ok((public.admin_create_user('{"type":"ext","name":"김외부","pw":"9999","phone":"0123"}'))->>'msg' like '전화번호%', '전화번호 형식 확인');
-select test.ok((public.admin_create_user('{"type":"stu","name":"김재원","pw":"1234","phone":"01011112222","prod":{"kind":"count","start":"2026-10-27","days":30,"total":5}}'))->>'msg' like '재원생은 정액권만%', '재원생 횟수권 등록 막힘');
+select test.ok((public.admin_create_user('{"type":"stu","name":"김재원","pw":"1234","phone":"01011112222","prod":{"kind":"count","start":"2026-10-27","days":30,"total":0}}'))->>'msg' like '총 이용 횟수를%', '상품 값이 틀리면 막힘(030부터 재원생 횟수권은 가능)');
 select test.ok(not exists (select 1 from jsonb_array_elements((public.admin_users())->'users') u where u->>'name' = '김재원'), '상품이 막히면 이용자도 저장 안 됨');
 select test.ok(((public.admin_users())->'users'->0->'current'->>'end') = '2026-11-25', '30일 = 시작일 + 29일');
 reset role;
@@ -145,8 +145,10 @@ select test.ok((public.my_reservations('김정새', '5555'))->>'ok' = 'true' and
                '새 이름·비밀번호로 예약 조회');
 select test.ok((public.my_reservations('김정액', '0000'))->>'ok' = 'false', '옛 이름·비밀번호로는 조회 안 됨');
 reset role; set role authenticated;
+begin;
 select test.ok((public.admin_update_user(jsonb_build_object('id', :ext_uid, 'type', 'stu', 'name', '김외부',
-  'phone', '01000000000')))->>'msg' like '재원생은 횟수권을 사용할 수 없습니다%', '횟수권 사용 중인 외부 이용자를 재원생으로 변경 막힘');
+  'phone', '01000000000')))->'user'->>'type' = 'stu', '030: 횟수권 사용 중인 일반회원도 재원생으로 변경 가능(시험 뒤 되돌림)');
+rollback;
 select test.ok((public.admin_update_user(jsonb_build_object('id', :stu_uid, 'type', 'stu', 'name', '김정새',
   'phone', '01000001111', 'edit_prod', jsonb_build_object('start', '2026-10-27', 'days', 45, 'limit', 3))))->'user'->'current'->>'end' = '2026-12-10',
   '정액권 기간·횟수 수정(45일)');
@@ -671,5 +673,32 @@ set role authenticated;
 select test.ok((public.admin_update_user(jsonb_build_object('id', :np_uid, 'type', 'stu', 'name', '번호없생', 'phone', '', 'part', '드럼')))->>'ok' = 'true', '재원생 수정도 전화번호 없이 저장');
 select test.ok((public.admin_update_user(jsonb_build_object('id', :np_uid, 'type', 'ext', 'name', '번호없생', 'phone', '')))->>'msg' like '전화번호를 올바르게%', '일반회원으로 바꿀 때는 전화번호 필요');
 reset role;
+
+-- 34. 030: 재원생 횟수권
+reset role; set app.fake_now = '2027-05-01 08:00';
+set role authenticated;
+select test.ok((public.admin_create_user('{"type":"stu","name":"재횟수","pw":"2580","prod":{"kind":"count","start":"2027-05-01","days":30,"total":2}}'))->'user'->'current'->>'kind' = 'count', '재원생 횟수권 등록');
+select test.ok((public.admin_create_user('{"type":"stu","name":"재횟둘","pw":"2581","prod":{"kind":"count","start":"2027-05-01","days":30,"total":3}}'))->>'ok' = 'true', '재원생 횟수권 등록(명부에 없는 학생)');
+select test.ok((public.admin_set_roster_check(true))->>'check' = 'true', '명부 확인 켜기');
+reset role; set role anon;
+select test.ok((public.product_info('stu', '재횟수', '2580'))->'product'->>'kind' = 'count', '예약 창에 재원생 횟수권 정보');
+select test.ok((public.reserve('2027-05-01', 10, '재횟수', '2580', true, 'stu'))->>'prod' = 'count', '재원생 횟수권으로 예약(명부에 없어도 횟수권이면 예외)');
+select test.ok((public.reserve('2027-05-01', 11, '재횟수', '2580', true, 'stu'))->>'prod' = 'count', '같은 날 두 번째도 됨(하루 제한 없음)');
+select test.ok((public.reserve('2027-05-01', 12, '재횟수', '2580', true, 'stu'))->>'msg' like '횟수권 2회를 모두%', '총 횟수를 다 쓰면 막힘');
+select test.ok((public.my_reservations('재횟수', '2580'))->'product'->'left'->>'total' = '0' or (public.my_reservations('재횟수', '2580'))->>'ok' = 'true', '내 예약 조회');
+select test.ok((public.cancel_own((select (x->>'id')::bigint from jsonb_array_elements((public.my_reservations('재횟수', '2580'))->'list') x limit 1), '재횟수', '2580'))->>'ok' = 'true', '취소하면');
+select test.ok((public.reserve('2027-05-01', 13, '재횟수', '2580', true, 'stu'))->>'prod' = 'count', '돌려받은 1회로 다시 예약');
+select test.ok((public.reserve('2027-05-02', 9, '재횟둘', '2581', true, 'stu'))->>'prod' = 'count', '명부에 없는 횟수권 재원생도 예약');
+select test.ok((public.reserve('2027-05-02', 14, '명부밖둘', '1111', true, 'stu'))->>'msg' like '재원생 명부에서 확인되지 않습니다%', '상품 없는 명부 밖 학생은 그대로 막힘');
+reset role;
+select id as rh_uid from public.users where name = '재횟둘' \gset
+set role authenticated;
+select test.ok((public.admin_reserve('2027-05-02', 15, '재횟둘', :rh_uid, false, false))->>'prod' = 'count', '관리자 일반예약도 재원생 횟수권 차감');
+select test.ok((public.admin_set_prices('{"fee":"9000","stu_count":[{"n":"10","price":"50000"}]}'))->'stu_count'->0->>'n' = '10', '이용료 표에 재원생 횟수권 저장');
+select test.ok((public.admin_set_prices('{"fee":"9000","stu_count":[{"n":"1000","price":"1"}]}'))->>'msg' like '재원생 횟수권 1번째 줄: 횟수를 1~999%', '재원생 횟수권은 999회까지');
+select test.ok((public.admin_set_roster_check(false))->>'check' = 'false', '명부 확인 끄기');
+reset role; set role anon;
+select test.ok((public.price_info()) ? 'stu_count', '공개 이용료 조회에 재원생 횟수권 칸');
+reset role; reset app.fake_now;
 
 select '모든 시험 통과' as 결과;
