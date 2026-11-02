@@ -701,4 +701,16 @@ reset role; set role anon;
 select test.ok((public.price_info()) ? 'stu_count', '공개 이용료 조회에 재원생 횟수권 칸');
 reset role; reset app.fake_now;
 
+-- 35. 031: 관리자 예약에서 명부 학생을 고르면 명부의 뒤 4자리가 붙어 '내 예약'에 보임
+reset role; set app.fake_now = '2027-05-03 08:00';
+set role authenticated;
+select test.ok((public.admin_reserve('2027-05-03', 10, '예약없는생', null, false, false, 'Z1'))->>'ok' = 'true', '명부 학생으로 관리자 예약');
+select test.ok((public.admin_reserve('2027-05-03', 11, '예약없는생', null, false, false, 'Z9'))->>'msg' like '재원생 명부에서 그 학생을%', '없는 등록번호는 막힘');
+select test.ok((public.admin_reserve('2027-05-03', 12, '예약없는생', null, false, false, 'Z1'))->>'msg' like '재원생은 하루에 한 번만%', '명부 학생 관리자 일반예약도 하루 1회');
+select test.ok((public.admin_reserve('2027-05-03', 13, '다른이름', null, false, true, 'Z1'))->>'msg' like '재원생 명부에서 그 학생을%', '이름이 명부와 다르면 막힘');
+reset role; set role anon;
+select test.ok(jsonb_array_length((public.my_reservations('예약없는생', '2468'))->'list') = 1, '그 학생의 내 예약에 관리자 예약이 보임');
+select test.ok((public.my_codes('예약없는생', '2468'))->'codes'->>'gate' is not null, '출입 비밀번호도 받음');
+reset role; reset app.fake_now;
+
 select '모든 시험 통과' as 결과;
