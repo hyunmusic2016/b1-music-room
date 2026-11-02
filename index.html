@@ -342,7 +342,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.37.3";
+const APP_VERSION="v0.37.4";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1110,6 +1110,9 @@ function typeChecks(p,type){ // 재원생/일반회원 체크박스(둘 중 하�
 }
 function bindTypeChecks(p,onChange){
   const t1=$("#"+p+"T1"),t2=$("#"+p+"T2");
+  // 전화번호 필수 표시(*)와 예시 글: 일반회원은 필수, 재원생은 선택(v0.37.4)
+  const ph=()=>{const r=$("#"+p+"PhReq"),i=$("#"+p+"Phone");if(!r||!i)return;const stu=t1.checked;r.style.display=stu?"none":"";i.setAttribute("aria-required",stu?"false":"true");i.placeholder=stu?"없으면 비워 두십시오":"010-0000-0000"};
+  const oc=onChange;onChange=()=>{ph();oc&&oc()};setTimeout(ph,0);
   t1.onchange=()=>{if(t1.checked)t2.checked=false;else t1.checked=true;onChange&&onChange()};
   t2.onchange=()=>{if(t2.checked)t1.checked=false;else t2.checked=true;onChange&&onChange()};
 }
@@ -1117,7 +1120,7 @@ function userFields(p,u){
   u=u||{};const req='<span class="req" aria-hidden="true">*</span>';
   return '<div class="cols c2"><div><label for="'+p+'Name">이름 (본명) '+req+'</label><input type="text" id="'+p+'Name" aria-required="true" autocomplete="off" value="'+esc(u.name||"")+'"></div><div><label for="'+p+'Pw">비밀번호 4자리 '+(u.name?'':req)+'</label><input type="password" id="'+p+'Pw" inputmode="numeric" maxlength="4" autocomplete="off"'+(u.name?' placeholder="변경 시에만 입력"':' aria-required="true"')+'></div></div>'+
     '<div id="'+p+'Roster" class="rbox hidden"></div>'+ // 재원생 명부 연결(v0.36.0)
-    '<div class="cols c2"><div><label for="'+p+'Phone">전화번호 '+req+'</label><input type="tel" id="'+p+'Phone" aria-required="true" inputmode="tel" autocomplete="off" placeholder="010-0000-0000" value="'+esc(u.phone||"")+'"></div><div><label for="'+p+'Part">파트</label><input type="text" id="'+p+'Part" maxlength="20" autocomplete="off" placeholder="예: 드럼" value="'+esc(u.part||"")+'"></div></div>'+
+    '<div class="cols c2"><div><label for="'+p+'Phone">전화번호 <span id="'+p+'PhReq">'+req+'</span></label><input type="tel" id="'+p+'Phone" aria-required="true" inputmode="tel" autocomplete="off" placeholder="010-0000-0000" value="'+esc(u.phone||"")+'"></div><div><label for="'+p+'Part">파트</label><input type="text" id="'+p+'Part" maxlength="20" autocomplete="off" placeholder="예: 드럼" value="'+esc(u.part||"")+'"></div></div>'+
     '<label for="'+p+'Memo">메모</label><input type="text" id="'+p+'Memo" maxlength="100" autocomplete="off" value="'+esc(u.memo||"")+'">';
 }
 function readUserFields(p,isNew){ // 화면에서 먼저 형식만 확인합니다(최종 확인은 서버).
@@ -1125,8 +1128,10 @@ function readUserFields(p,isNew){ // 화면에서 먼저 형식만 확인합니�
   const rb=$("#"+p+"Roster"),rno=rb&&!rb.classList.contains("hidden")?(rb.dataset.no||""):""; // 명부에서 고른 등록번호(있으면 비밀번호 대신)
   if(!validName(name))return {err:"이름을 한글 2~5자 또는 영문으로 입력하십시오."};
   if(((isNew&&!rno)||pw)&&!/^\d{4}$/.test(pw))return {err:"비밀번호는 숫자 4자리입니다."};
-  if(!phone)return {err:"전화번호를 올바르게 입력하십시오. (예: 010-1234-5678)"};
-  return {name,pw,rno,phone,part:$("#"+p+"Part").value.trim(),memo:$("#"+p+"Memo").value.trim()};
+  // 재원생은 전화번호를 비워 둘 수 있음(v0.37.4, 서버 029). 적었으면 형식 확인
+  const stu=$("#"+p+"T1")&&$("#"+p+"T1").checked,raw=$("#"+p+"Phone").value.trim();
+  if(!phone&&!(stu&&!raw))return {err:stu?"전화번호를 올바르게 입력하시거나 비워 두십시오. (예: 010-1234-5678)":"전화번호를 올바르게 입력하십시오. (예: 010-1234-5678)"};
+  return {name,pw,rno,phone:phone||"",part:$("#"+p+"Part").value.trim(),memo:$("#"+p+"Memo").value.trim()};
 }
 /* 재원생 명부 연결(v0.36.0, 서버 025): 이용자 등록·이용자 수정 공용(작업 원칙 10).
    재원생이고 이름이 있으면 명부(구글 시트 수강생대장)에서 같은 이름을 찾아 등록번호로 고르게 함.

@@ -660,4 +660,16 @@ reset role;
 select test.ok(public.door_codes()->>'updated_at' = '2027-04-05' and public.door_codes()->>'toilet' = '4444', '공개 my_codes가 쓰는 값에도 날짜');
 reset app.fake_now;
 
+-- 33. 029: 재원생은 전화번호 없이 등록·수정
+set role authenticated;
+select test.ok((public.admin_create_user('{"type":"stu","name":"번호없생","pw":"3579","phone":""}'))->'user'->>'phone' = '', '재원생은 전화번호 없이 등록됨');
+select test.ok((public.admin_create_user('{"type":"stu","name":"번호틀생","pw":"3579","phone":"0123"}'))->>'msg' like '전화번호를 올바르게%', '재원생도 적은 번호가 틀리면 막힘');
+select test.ok((public.admin_create_user('{"type":"ext","name":"번호없외","pw":"3579","phone":""}'))->>'msg' like '전화번호를 올바르게%', '일반회원은 전화번호 필수');
+reset role;
+select id as np_uid from public.users where name = '번호없생' \gset
+set role authenticated;
+select test.ok((public.admin_update_user(jsonb_build_object('id', :np_uid, 'type', 'stu', 'name', '번호없생', 'phone', '', 'part', '드럼')))->>'ok' = 'true', '재원생 수정도 전화번호 없이 저장');
+select test.ok((public.admin_update_user(jsonb_build_object('id', :np_uid, 'type', 'ext', 'name', '번호없생', 'phone', '')))->>'msg' like '전화번호를 올바르게%', '일반회원으로 바꿀 때는 전화번호 필요');
+reset role;
+
 select '모든 시험 통과' as 결과;
