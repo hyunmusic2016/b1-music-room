@@ -207,8 +207,6 @@ div#rBadge:not(:empty){margin-top:6px}
 .myres .mb{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 /* 입금 확인(v0.39.0): 일반회원이 정액권·횟수권 없이 한 예약만. 관리자 확인용 표시이며 예약에는 영향 없음 */
 .btn.payok{background:#1e8e4e;color:#fff}
-.paid{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:800;color:var(--ok);border:1.5px solid var(--ok);border-radius:999px;padding:2px 9px;white-space:nowrap}
-.unpaid{display:inline-block;font-size:11px;font-weight:800;color:var(--danger);border:1px solid var(--danger);border-radius:999px;padding:0 7px;margin-left:4px;vertical-align:3px}
 details.hist.unpaidbox>summary{color:var(--danger)}
 .myres .note{flex-basis:100%;font-size:12px;color:var(--sub)}
 .part .cnt{font-size:13px;font-weight:700;color:var(--sub);margin-left:4px}
@@ -340,7 +338,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.39.0";
+const APP_VERSION="v0.39.1";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1829,7 +1827,7 @@ function resItem(r){
   // v0.38.6: 내 예약 현황과 같은 카드 모양·날짜 색(오늘 하늘, 내일 보라). 이름은 구분 색(재원생 청록/일반회원 테라코타)
   const ds=allowedDates(),dw=r.date===ds[0]?'오늘':r.date===ds[1]?'내일':'';
   return '<div class="myres'+(r.date===ds[1]?' tmr':'')+'"><div'+(done?' style="opacity:.6"':'')+'><div class="md">'+(dw?'<span class="dw">'+dw+'</span>':'')+dateLabel(r.date)+'</div>'+
-    '<div class="mt">'+hourLabel(r.hour)+' <b class="nm" style="color:'+(r.ext?'var(--ext-text)':'var(--stu-text)')+'">'+esc(r.name)+'</b>'+(r.prod?'<span class="badge '+r.prod+'">'+PROD[r.prod]+'</span>':"")+(r.super?'<span class="badge super">슈퍼패스</span>':"")+(payNeed(r)&&!r.pay_ok?'<span class="unpaid">입금 미확인</span>':"")+'</div>'+
+    '<div class="mt">'+hourLabel(r.hour)+' <b class="nm" style="color:'+(r.ext?'var(--ext-text)':'var(--stu-text)')+'">'+esc(r.name)+'</b>'+(r.prod?'<span class="badge '+r.prod+'">'+PROD[r.prod]+'</span>':"")+(r.super?'<span class="badge super">슈퍼패스</span>':"")+'</div>'+
     (done||r.reason?'<div class="hint" style="margin-top:2px">'+(done?'이용 시간 지남':'')+(r.reason?(done?' · ':'')+esc(r.reason):'')+'</div>':'')+'</div>'+
     (r.status==="confirmed"&&(!r.ended||payNeed(r))?'<div class="mb">'+payBtns(r)+(!r.ended?'<button class="btn danger small" data-ac="'+r.id+'">취소</button>':'')+'</div>':"")+'</div>';
 }
@@ -1837,7 +1835,7 @@ function resItem(r){
 const payNeed=r=>r.status==="confirmed"&&r.pay_need===true;
 function payBtns(r){
   if(!payNeed(r))return "";
-  return r.pay_ok?'<span class="paid" title="관리자가 입금을 확인했습니다">✓ 입금 확인됨</span><button class="btn ghost small" data-pay="'+r.id+'" data-v="0">확인 취소</button>'
+  return r.pay_ok?'<button class="btn ghost small" data-pay="'+r.id+'" data-v="0">입금 확인 취소</button>'
                  :'<button class="btn payok small" data-pay="'+r.id+'" data-v="1">입금 확인</button>';
 }
 /* 지난 예약·취소된 예약을 날짜별로 묶어 한 줄씩(날짜는 최근 순, 같은 날은 시간 순) */
@@ -1902,7 +1900,7 @@ function renderAdmin(){
    '<div id="sec-list"><div class="card"><div class="row"><b>예약 목록 (본명 표시)</b></div><div class="tbl">'+
    (up.length?up.map(resItem).join(""):'<p class="hint">예정된 예약이 없습니다.</p>')+'</div></div>'+
    // 입금 확인 안 된 예약(v0.39.0): 이용 시간이 지났는데(어제까지) 관리자가 아직 입금을 확인하지 않은 일반회원 예약. 확인하면 지난 예약으로
-   '<details class="hist unpaidbox" id="hUnpaid"'+wasOpen("hUnpaid")+'><summary>입금 확인 안 된 예약 <small>'+unpaid.length+'건</small></summary>'+
+   '<details class="hist unpaidbox" id="hUnpaid"'+(document.getElementById("hUnpaid")?wasOpen("hUnpaid"):" open")+'><summary>입금 확인 안 된 예약 <small>'+unpaid.length+'건</small></summary>'+
    '<p class="hint" style="margin:8px 0 4px">일반회원이 정액권·횟수권 없이 이용한 예약 중 아직 입금 확인을 누르지 않은 예약입니다. [입금 확인]을 누르면 지난 예약으로 옮겨집니다.</p>'+
    (unpaid.length?unpaid.map(resItem).join(""):'<p class="hint">입금 확인이 안 된 예약이 없습니다.</p>')+'</details>'+
    // 지난 예약·취소된 예약은 예약 목록 상자 밖에 따로 된 상자로(v0.21.6)
