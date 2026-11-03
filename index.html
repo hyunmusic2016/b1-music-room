@@ -81,6 +81,7 @@ input:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px soli
 .kindpick{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;margin:12px 0 0;padding:14px 16px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-height:44px}
 .kindpick.flat{border-color:var(--flat)}.kindpick.count{border-color:var(--cnt)}
 .kindpick b{font-size:17px}.kindpick span{font-size:13px;color:var(--sub)}
+.kindpick[disabled]{opacity:.5;cursor:not-allowed;border-style:dashed}.kindpick em{font-style:normal;font-size:13px;font-weight:700;color:var(--danger)}
 .stuchk{display:flex;gap:8px;align-items:flex-start;margin:6px 0 6px;padding:9px 12px;border-radius:10px;font-size:13.5px;line-height:1.5;color:var(--ink)}
 .stuchk .ic{flex:none;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;margin-top:1px}
 .stuchk.ok{border:1.5px solid var(--stu-btn);background:color-mix(in srgb,var(--stu-btn) 9%,transparent)}
@@ -353,7 +354,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.40.0";
+const APP_VERSION="v0.40.1";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -650,13 +651,13 @@ function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
     const pop=document.createElement("div");pop.id="kindPop";
     pop.innerHTML='<div class="row" style="align-items:flex-start"><h2 style="margin:0">정액권과 횟수권 중 어느 것을 사용하겠습니까?</h2><button class="btn ghost small" id="kpBack">← 뒤로</button></div>'+
       '<p class="hint" style="margin-top:8px">'+(D===allowedDates()[0]?'오늘':'내일')+' '+dateLabel(D)+' '+hourLabel(h)+' 예약에 쓸 상품을 고르십시오.</p>'+
-      opts.map(p=>'<button type="button" class="kindpick '+p.kind+'" data-k="'+p.kind+'"><i class="badge big '+p.kind+'" style="margin-left:0">'+PROD[p.kind]+'</i>'+
+      opts.map(p=>'<button type="button" class="kindpick '+p.kind+'" data-k="'+p.kind+'"'+(p.usable===false?' disabled':'')+'><i class="badge big '+p.kind+'" style="margin-left:0">'+PROD[p.kind]+'</i>'+
         '<b>'+(p.kind==="count"?'총 '+p.total+'회 중 '+p.left.total+'회 남음':(D===allowedDates()[0]?'오늘':'내일')+' '+prodLeftText(p,D)+' (하루 '+p.limit+'회)')+'</b>'+
-        '<span>'+sh(p.start)+' ~ '+sh(p.end)+' · '+(p.kind==="count"?'1회 차감':'그날 횟수 1회 사용')+'</span></button>').join("");
+        '<span>'+sh(p.start)+' ~ '+sh(p.end)+' · '+(p.kind==="count"?'1회 차감':'그날 횟수 1회 사용')+'</span>'+(p.usable===false?'<em>'+esc(p.why||'모두 사용했습니다.')+'</em>':'')+'</button>').join("");
     $("#sheet").prepend(pop);$("#sheet").scrollTop=0;
     const close=()=>{pop.remove();kids.forEach(k=>k.classList.remove("hidden"))};
     $("#kpBack").onclick=close;
-    pop.querySelectorAll(".kindpick").forEach(b=>b.onclick=()=>{pickKind=b.dataset.k;close();$("#rGo").click()});
+    pop.querySelectorAll(".kindpick:not([disabled])").forEach(b=>b.onclick=()=>{pickKind=b.dataset.k;close();$("#rGo").click()});
   };
   $("#rGo").onclick=async()=>{
     if(busy)return;
@@ -777,8 +778,8 @@ function openAdminSheet(h){const D=curDateA;
     const r=await rpc("admin_reserve",{p_date:D,p_hour:h,p_name:name,p_user_id:typeof pick==='number'&&pick>0?pick:null,p_ext:typeof pick==='string'?false:uExt,...(typeof pick==='string'?{p_roster_no:pick.slice(2)}:{}),p_super:sup,...(aKind&&!sup?{p_kind:aKind}:{})});
     if(!$("#rMsg"))return;
     if(!r.ok&&r.choose&&Array.isArray(r.options)){ // 정액권·횟수권 둘 다 쓸 수 있음 → 고르기(v0.40.0)
-      $("#rMsg").innerHTML='<div class="card" style="margin:10px 0 0"><b>정액권과 횟수권 중 어느 것을 사용하겠습니까?</b>'+r.options.map(p=>'<button type="button" class="kindpick '+p.kind+'" data-k="'+p.kind+'"><i class="badge big '+p.kind+'" style="margin-left:0">'+PROD[p.kind]+'</i><b>'+(p.kind==="count"?'총 '+p.total+'회 중 '+p.left.total+'회 남음':(D===allowedDates()[0]?'오늘':'내일')+' '+prodLeftText(p,D)+' (하루 '+p.limit+'회)')+'</b></button>').join("")+'</div>';
-      $("#rMsg").querySelectorAll(".kindpick").forEach(b=>b.onclick=()=>{aKind=b.dataset.k;$("#rMsg").innerHTML="";$("#rGo").click()});
+      $("#rMsg").innerHTML='<div class="card" style="margin:10px 0 0"><b>정액권과 횟수권 중 어느 것을 사용하겠습니까?</b>'+r.options.map(p=>'<button type="button" class="kindpick '+p.kind+'" data-k="'+p.kind+'"'+(p.usable===false?' disabled':'')+'><i class="badge big '+p.kind+'" style="margin-left:0">'+PROD[p.kind]+'</i><b>'+(p.kind==="count"?'총 '+p.total+'회 중 '+p.left.total+'회 남음':(D===allowedDates()[0]?'오늘':'내일')+' '+prodLeftText(p,D)+' (하루 '+p.limit+'회)')+'</b>'+(p.usable===false?'<em>'+esc(p.why||'모두 사용했습니다.')+'</em>':'')+'</button>').join("")+'</div>';
+      $("#rMsg").querySelectorAll(".kindpick:not([disabled])").forEach(b=>b.onclick=()=>{aKind=b.dataset.k;$("#rMsg").innerHTML="";$("#rGo").click()});
       done();placeSheet();return;
     }
     if(!r.ok){

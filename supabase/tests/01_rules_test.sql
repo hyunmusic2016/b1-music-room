@@ -760,11 +760,15 @@ select test.ok(jsonb_array_length((public.product_info('ext', '둘다회원', '1
 select test.ok((public.reserve('2027-06-01', 10, '둘다회원', '1111', true, 'ext'))->>'choose' = 'true', '둘 다 쓸 수 있으면 고르라고 함');
 select test.ok(jsonb_array_length((public.reserve('2027-06-01', 10, '둘다회원', '1111', true, 'ext'))->'options') = 2, '고를 상품 2개를 알려 줌');
 select test.ok((public.reserve('2027-06-01', 10, '둘다회원', '1111', true, 'ext', 'flat'))->>'prod' = 'flat', '정액권을 골라 예약');
-select test.ok((public.reserve('2027-06-01', 11, '둘다회원', '1111', true, 'ext'))->>'prod' = 'count', '정액권 오늘 다 씀 → 횟수권으로 자동');
-select test.ok((public.reserve('2027-06-01', 12, '둘다회원', '1111', true, 'ext'))->>'note' like '정액권 하루 이용 횟수(1회)를 모두 사용해 횟수권으로%', '자동 선택 안내');
+select test.ok((public.reserve('2027-06-01', 11, '둘다회원', '1111', true, 'ext'))->>'choose' = 'true', '034: 정액권 오늘 다 써도 고르는 창');
+select test.ok((public.reserve('2027-06-01', 11, '둘다회원', '1111', true, 'ext'))->'options'->0->>'usable' = 'false', '034: 다 쓴 정액권은 usable false');
+select test.ok((public.reserve('2027-06-01', 11, '둘다회원', '1111', true, 'ext'))->'options'->1->>'usable' = 'true', '034: 남은 횟수권은 usable true');
+select test.ok((public.reserve('2027-06-01', 11, '둘다회원', '1111', true, 'ext', 'count'))->>'prod' = 'count', '남은 횟수권을 골라 예약');
+select test.ok((public.reserve('2027-06-01', 12, '둘다회원', '1111', true, 'ext', 'count'))->>'prod' = 'count', '횟수권 한 번 더');
 select test.ok((public.reserve('2027-06-01', 13, '둘다회원', '1111', true, 'ext', 'flat'))->>'msg' like '정액권 하루 이용 횟수%', '다 쓴 정액권을 고르면 막힘');
 select test.ok((public.reserve('2027-06-01', 13, '둘다회원', '1111', true, 'ext'))->>'msg' like '정액권 하루 이용 횟수(1회)와 횟수권 2회를 모두%', '둘 다 다 쓰면 막힘');
-select test.ok((public.reserve('2027-06-02', 10, '둘다회원', '1111', true, 'ext'))->>'note' like '횟수권 2회를 모두 사용해 정액권으로%', '다음 날: 횟수권 다 씀 → 정액권 자동');
+select test.ok((public.reserve('2027-06-02', 10, '둘다회원', '1111', true, 'ext'))->'options'->1->>'why' like '횟수권 2회를 모두%', '034: 다음 날 횟수권 다 씀 → 고르는 창에 이유');
+select test.ok((public.reserve('2027-06-02', 10, '둘다회원', '1111', true, 'ext', 'flat'))->>'prod' = 'flat', '정액권을 골라 예약');
 select test.ok((public.reserve('2027-06-02', 11, '둘다회원', '1111', true, 'ext', 'count'))->>'msg' like '횟수권 2회를 모두%', '다 쓴 횟수권을 고르면 막힘');
 select test.ok(jsonb_array_length((public.my_reservations('둘다회원', '1111'))->'products') = 2, '내 예약에 상품 2개');
 reset role;
@@ -774,7 +778,8 @@ select id as dd_fp from public.products where user_id = :dd_uid and kind = 'flat
 select id as dd_cp from public.products where user_id = :dd_uid and kind = 'count' \gset
 set role anon;
 select test.ok((public.cancel_own(:dd_cnt, '둘다회원', '1111'))->>'ok' = 'true', '횟수권 예약 취소');
-select test.ok((public.reserve('2027-06-02', 12, '둘다회원', '1111', true, 'ext'))->>'prod' = 'count', '취소로 돌려받은 횟수권으로 자동(정액권 그날 다 씀)');
+select test.ok((public.reserve('2027-06-02', 12, '둘다회원', '1111', true, 'ext'))->'options'->1->>'usable' = 'true', '취소로 돌려받은 횟수권은 다시 쓸 수 있음');
+select test.ok((public.reserve('2027-06-02', 12, '둘다회원', '1111', true, 'ext', 'count'))->>'prod' = 'count', '돌려받은 횟수권으로 예약');
 reset role; set role authenticated;
 select test.ok((public.admin_reserve('2027-06-02', 13, '둘다회원', :dd_uid, true, false))->>'msg' like '정액권 하루 이용 횟수(1회)와 횟수권 2회를 모두 사용했습니다. 이용자 현황%', '관리자 일반예약: 둘 다 다 쓰면 막힘');
 select test.ok((public.admin_reserve('2027-06-02', 13, '둘다회원', :dd_uid, true, true))->>'ok' = 'true', '슈퍼패스는 그대로');
