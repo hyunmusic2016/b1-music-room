@@ -207,6 +207,11 @@ div#rBadge:not(:empty){margin-top:6px}
 .myres .mb{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 /* 입금 확인(v0.39.0): 일반회원이 정액권·횟수권 없이 한 예약만. 관리자 확인용 표시이며 예약에는 영향 없음 */
 .btn.payok{background:#1e8e4e;color:#fff}
+/* 관리자 예약 목록 카드(v0.39.4): 왼쪽 3줄(날짜 / 시간 / 이름·배지), 오른쪽 버튼(입금 확인 → 취소) */
+.myres.adm{flex-wrap:nowrap;align-items:center}
+.myres.adm .mi{flex:1;min-width:0}
+.myres.adm .mn{margin-top:2px}.myres.adm .mn .nm{font-size:16px;font-weight:800;margin-right:2px}.myres.adm .mn .badge{font-size:11px;vertical-align:2px}
+.myres.adm .mb{flex-direction:column;align-items:stretch;flex:none}
 details.hist.unpaidbox>summary{color:var(--danger)}
 .myres .note{flex-basis:100%;font-size:12px;color:var(--sub)}
 .part .cnt{font-size:13px;font-weight:700;color:var(--sub);margin-left:4px}
@@ -338,7 +343,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.39.3";
+const APP_VERSION="v0.39.4";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1823,26 +1828,29 @@ function renderProxy(){
 }
 /* 예약 목록: 앞으로의 예약(가까운 순)과 지난 예약(펼쳐 보기, 최근 순) */
 function resItem(r){
-  const done=r.status==="confirmed"&&r.ended; // 오늘 이미 끝난 예약은 흐리게 + "이용 시간 지남"(v0.35.3)
-  // v0.38.6: 내 예약 현황과 같은 카드 모양·날짜 색(오늘 하늘, 내일 보라). 이름은 구분 색(재원생 청록/일반회원 테라코타)
+  const done=r.status==="confirmed"&&r.ended; // 오늘 이미 끝난 예약은 흐리게(v0.35.3, v0.39.4부터 "이용 시간 지남" 글자는 없음)
+  // v0.39.4 배치: 1줄 오늘/내일·날짜(요일) / 2줄 시간 / 3줄 이름 + 배지, 오른쪽에 [입금 확인]·[취소] 순서. 날짜 색은 v0.38.6과 같음
   const ds=allowedDates(),dw=r.date===ds[0]?'오늘':r.date===ds[1]?'내일':'';
-  return '<div class="myres'+(r.date===ds[1]?' tmr':'')+'"><div'+(done?' style="opacity:.6"':'')+'><div class="md">'+(dw?'<span class="dw">'+dw+'</span>':'')+dateLabel(r.date)+'</div>'+
-    '<div class="mt">'+hourLabel(r.hour)+' <b class="nm" style="color:'+(r.ext?'var(--ext-text)':'var(--stu-text)')+'">'+esc(r.name)+'</b>'+resWhoBadges(r)+(r.prod?'<span class="badge '+r.prod+'">'+PROD[r.prod]+'</span>':"")+(r.super?'<span class="badge super">슈퍼패스</span>':"")+'</div>'+
-    (done||r.reason?'<div class="hint" style="margin-top:2px">'+(done?'이용 시간 지남':'')+(r.reason?(done?' · ':'')+esc(r.reason):'')+'</div>':'')+'</div>'+
-    (r.status==="confirmed"&&(!r.ended||payNeed(r))?'<div class="mb">'+payBtns(r)+(!r.ended?'<button class="btn danger small" data-ac="'+r.id+'">취소</button>':'')+'</div>':"")+'</div>';
+  const btns=r.status==="confirmed"?payBtns(r)+(!r.ended?'<button class="btn danger small" data-ac="'+r.id+'">취소</button>':''):'';
+  return '<div class="myres adm'+(r.date===ds[1]?' tmr':'')+'"><div class="mi"'+(done?' style="opacity:.6"':'')+'><div class="md">'+(dw?'<span class="dw">'+dw+'</span>':'')+dateLabel(r.date)+'</div>'+
+    '<div class="mt">'+hourLabel(r.hour)+'</div>'+
+    '<div class="mn"><b class="nm" style="color:'+(r.ext?'var(--ext-text)':'var(--stu-text)')+'">'+esc(r.name)+'</b>'+resBadges(r)+'</div>'+
+    (r.reason?'<div class="hint" style="margin-top:2px">'+esc(r.reason)+'</div>':'')+'</div>'+
+    (btns?'<div class="mb">'+btns+'</div>':"")+'</div>';
 }
-/* 예약 목록 이름 옆 배지(v0.39.2): 구분(재원생/일반회원) + 등록 이용자면 블랙리스트·블랙리스트 이력(이용자 현황과 같은 모양) */
-function resWhoBadges(r){
+/* 예약 이름 옆 배지(v0.39.2, 순서 v0.39.4): 구분(재원생/일반회원) → 정액권·횟수권 → 슈퍼패스 → 블랙리스트·블랙리스트 이력(항상 맨 오른쪽).
+   블랙리스트 정보는 등록 이용자만(이미 불러온 admin_users에서 찾음) */
+function resBadges(r){
   const t=r.ext?"ext":"stu",u=r.user_id&&A.users?A.users.find(x=>x.id===r.user_id):null;
   return '<span class="badge" style="color:var('+(r.ext?'--ext-text':'--stu-text')+');border-color:currentColor;background:transparent">'+tgtLabel(t)+'</span>'+
+    (r.prod?'<span class="badge '+r.prod+'">'+PROD[r.prod]+'</span>':'')+(r.super?'<span class="badge super">슈퍼패스</span>':'')+
     (u&&u.status==="blacklisted"?'<span class="badge black">블랙리스트</span>':u&&u.black_count>0?'<span class="badge black hist">블랙리스트 이력</span>':'');
 }
 /* 입금 확인 대상: 서버(032)가 pay_need로 알려 줌(일반회원·정액권·횟수권 없음·슈퍼패스 아님). 032 전에는 값이 없어 아무것도 안 보임 */
 const payNeed=r=>r.status==="confirmed"&&r.pay_need===true;
 function payBtns(r){
   if(!payNeed(r))return "";
-  return r.pay_ok?'<button class="btn ghost small" data-pay="'+r.id+'" data-v="0">입금 확인 취소</button>'
-                 :'<button class="btn payok small" data-pay="'+r.id+'" data-v="1">입금 확인</button>';
+  return r.pay_ok?'':'<button class="btn payok small" data-pay="'+r.id+'" data-v="1">입금 확인</button>'; // 확인한 뒤에는 버튼 없음(v0.39.4)
 }
 /* 지난 예약·취소된 예약을 날짜별로 묶어 한 줄씩(날짜는 최근 순, 같은 날은 시간 순) */
 function dayGroups(list,cancelled,id){
@@ -1851,8 +1859,7 @@ function dayGroups(list,cancelled,id){
   return Object.keys(by).sort().reverse().map(d=>{
     const rs=by[d].sort((a,b)=>a.hour-b.hour);
     return '<details class="dgrp" data-d="'+d+'"'+(histOpen[id].has(d)?' open':'')+'><summary class="dgrp-h">'+dateLabel(d)+'<small class="cnt">'+rs.length+'건</small></summary>'+rs.map(r=>
-      '<div class="drow" data-n="'+esc(normName(r.name))+'"><span class="t">'+hourLabel(r.hour)+'</span><span><b style="color:'+(r.ext?'var(--ext-text)':'var(--stu-text)')+'">'+esc(r.name)+'</b>'+resWhoBadges(r)+
-      (r.prod?'<span class="badge '+r.prod+'">'+PROD[r.prod]+'</span>':'')+(r.super?'<span class="badge super">슈퍼패스</span>':'')+
+      '<div class="drow" data-n="'+esc(normName(r.name))+'"><span class="t">'+hourLabel(r.hour)+'</span><span><b style="color:'+(r.ext?'var(--ext-text)':'var(--stu-text)')+'">'+esc(r.name)+'</b>'+resBadges(r)+
       (cancelled?' <span class="why">· '+esc(r.reason||'취소')+'</span>':'')+'</span></div>').join("")+'</details>';
   }).join("");
 }
@@ -1928,7 +1935,7 @@ function renderAdmin(){
   });
   document.querySelectorAll("[data-pay]").forEach(b=>b.onclick=async()=>{
     const on=b.dataset.v==="1";
-    if(!on&&!confirm("입금 확인을 취소하시겠습니까?"))return;
+    if(!confirm(on?"입금 확인하시겠습니까?":"입금 확인을 취소하시겠습니까?"))return;
     b.disabled=true;
     const r=await rpc("admin_set_paid",{p_id:+b.dataset.pay,p_ok:on});
     if(r.auth){adminExpired();return}
