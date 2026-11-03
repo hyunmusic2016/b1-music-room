@@ -713,4 +713,39 @@ select test.ok(jsonb_array_length((public.my_reservations('예약없는생', '24
 select test.ok((public.my_codes('예약없는생', '2468'))->'codes'->>'gate' is not null, '출입 비밀번호도 받음');
 reset role; reset app.fake_now;
 
+-- 36. 032: 일반회원 상품 없는 예약의 입금 확인(관리자 전용)
+reset role; set app.fake_now = '2027-05-04 08:00';
+set role authenticated;
+select test.ok((public.admin_create_user('{"type":"ext","name":"입금시험","pw":"8642","phone":"01086420000"}'))->>'ok' = 'true', '입금 확인용 일반회원 등록');
+select test.ok((public.admin_create_user('{"type":"ext","name":"입금횟수","pw":"8643","phone":"01086430000","prod":{"kind":"count","start":"2027-05-04","days":30,"total":5}}'))->>'ok' = 'true', '횟수권 일반회원 등록');
+reset role; set role anon;
+select test.ok((public.reserve('2027-05-04', 10, '입금시험', '8642', true, 'ext'))->>'ok' = 'true', '상품 없는 일반회원 예약');
+select test.ok((public.reserve('2027-05-04', 11, '입금횟수', '8643', true, 'ext'))->>'prod' = 'count', '횟수권 일반회원 예약');
+select test.ok((public.reserve('2027-05-04', 12, '입금재원', '1357', true, 'stu'))->>'ok' = 'true', '재원생 예약');
+reset role;
+select id as pay_rid from public.reservations where name = '입금시험' and date = '2027-05-04' \gset
+select id as pay_cid from public.reservations where name = '입금횟수' and date = '2027-05-04' \gset
+select id as pay_sid from public.reservations where name = '입금재원' and date = '2027-05-04' \gset
+select id as pay_uid from public.users where name = '입금시험' \gset
+set role authenticated;
+select test.ok((select (x->>'pay_need')::boolean and not (x->>'pay_ok')::boolean from jsonb_array_elements((public.admin_reservations())->'list') x where (x->>'id')::bigint = :pay_rid), '상품 없는 일반회원 예약은 입금 확인 대상·처음엔 확인 안 됨');
+select test.ok((select not (x->>'pay_need')::boolean from jsonb_array_elements((public.admin_reservations())->'list') x where (x->>'id')::bigint = :pay_cid), '횟수권 예약은 대상 아님');
+select test.ok((select not (x->>'pay_need')::boolean from jsonb_array_elements((public.admin_reservations())->'list') x where (x->>'id')::bigint = :pay_sid), '재원생 예약은 대상 아님');
+select test.ok((public.admin_set_paid(:pay_rid, true))->>'pay_ok' = 'true', '입금 확인');
+select test.ok((select (x->>'pay_ok')::boolean from jsonb_array_elements((public.admin_reservations())->'list') x where (x->>'id')::bigint = :pay_rid), '목록에 확인됨으로 보임');
+select test.ok((public.admin_set_paid(:pay_rid, false))->>'pay_ok' = 'false', '확인 취소');
+select test.ok((public.admin_set_paid(:pay_cid, true))->>'msg' like '입금 확인은 일반회원이 정액권%', '횟수권 예약은 확인 불가');
+select test.ok((public.admin_set_paid(:pay_sid, true))->>'msg' like '입금 확인은 일반회원이 정액권%', '재원생 예약은 확인 불가');
+select test.ok((public.admin_reserve('2027-05-04', 13, '입금시험', :pay_uid, true, true))->>'ok' = 'true', '슈퍼패스 예약');
+reset role;
+select id as pay_pid from public.reservations where name = '입금시험' and date = '2027-05-04' and hour = 13 \gset
+set role authenticated;
+select test.ok((public.admin_set_paid(:pay_pid, true))->>'msg' like '입금 확인은%', '슈퍼패스 예약은 확인 불가(사용자 선택)');
+select test.ok((public.admin_cancel(:pay_rid, '시험'))->>'ok' = 'true', '예약 취소');
+select test.ok((public.admin_set_paid(:pay_rid, true))->>'msg' like '취소된 예약은%', '취소된 예약은 확인 불가');
+reset role; set role anon;
+select test.ok((select count(*) from jsonb_each((public.public_board()->'slots'->0))) > 0 and position('pay_ok' in public.public_board()::text) = 0, '공개 현황에 입금 확인 정보 없음');
+select test.ok(position('pay_ok' in (public.my_reservations('입금시험', '8642'))::text) = 0, '내 예약에도 입금 확인 정보 없음');
+reset role; reset app.fake_now;
+
 select '모든 시험 통과' as 결과;
