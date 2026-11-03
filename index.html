@@ -335,7 +335,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.38.17";
+const APP_VERSION="v0.38.18";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -552,7 +552,7 @@ function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
    '<div id="rBadge"></div>'+
    ('<p class="hint warn">'+(EXT?'통화 시 등록하신 이름을 입력하십시오.':'원생 본명을 입력하십시오.')+'</p>')+
    (EXT?'<p class="hint">비밀번호: 연락하신 전화번호 뒤 4자리를 입력하십시오.</p>':'<div class="pwnote"><span class="pwk" aria-hidden="true">🔑</span><div><b>비밀번호 = 본인 휴대전화 번호 뒤 4자리</b><span>본인 휴대전화가 없으면 보호자 휴대전화 번호 뒤 4자리를 입력하십시오.</span><small>비밀번호가 맞지 않으면 학원('+PHONE+')으로 문의하십시오.</small></div></div>')+
-   ('<label class="check"><input type="checkbox" id="rC"><span>예약 확인·변경·취소를 위한 이름·비밀번호 수집에 동의합니다. 예약 기록은 이용일로부터 '+KEEP_DAYS+'일 뒤 삭제됩니다(정액권·횟수권 예약은 상품 종료 '+KEEP_DAYS+'일 뒤).</span></label>')+
+   ('<label class="check"><input type="checkbox" id="rC"><span>예약 확인·변경·취소를 위한 이름·비밀번호 수집에 동의합니다. 예약 기록은 이용일로부터 '+KEEP_DAYS+'일 뒤 삭제됩니다.</span></label>')+
    '<div id="rMsg"></div><button class="btn'+(EXT?' ext':' stu')+'" id="rGo">예약하기</button>';
   $("#bg").classList.add("open");$("#rName").focus();
   $("#backCh").onclick=openChooser;
