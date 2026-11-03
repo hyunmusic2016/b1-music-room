@@ -27,6 +27,7 @@
 - `index.html`: **실제 서비스 화면(v0.14.0부터).** Supabase에 연결(공개용 주소·Publishable 키만 포함, `supabase-js@2.117.0` CDN 고정). 주소 **`https://room.hyunmusic.com/`**(관리자 `https://room.hyunmusic.com/#admin`, 2026-11-03부터 개인 도메인, GitHub Pages + 저장소의 `CNAME` 파일 — 지우지 말 것). **앞으로 화면 수정은 이 파일에 한다.**
 - `imweb-snippet.html`: 아임웹 코드 칸에 붙여 넣는 코드(iframe + 스크립트). 예약 화면 → 아임웹: 높이(`drum-room-height`), 맨 위로(`drum-room-top`), 위치 요청(`drum-room-ask`), 보이게 스크롤(`drum-room-need`) — `https://room.hyunmusic.com`에서 온 것만 받음. 아임웹 → 예약 화면: 칸 위치(`drum-room-view`). **이 파일을 바꾸면 사용자가 아임웹 코드 칸을 다시 바꿔야 한다.**
 - `google-apps-script/roster_sync.gs`: **구글 시트(수강생대장)에 붙이는 Apps Script**(v0.36.0). 시트 메뉴 [예약 명부]: 지금 반영 / 강제로 반영 / 연동 열쇠 넣기 / 1시간마다 자동 반영 켜기. 칸 이름(3번째 줄)으로 등록번호·이름/보호자·원생 전화번호·보호자 전화번호·퇴원 연월일을 찾음, 탭 이름은 맨 위 `SHEET_NAME`. 공개용 키만 들어 있고 연동 열쇠는 시트의 Script Properties에만 저장(코드·GitHub에 없음). **이 파일을 바꾸면 사용자가 시트의 Apps Script도 다시 붙여 넣어야 한다.**
+- `.github/workflows/keepalive.yml`: **Supabase 무료 플랜 멈춤 방지(2026-11-03, 사용자 요청).** 매일 00:23(서울) GitHub Actions가 공개 `public_board`를 한 번 읽기만 함(공개용 키만, 데이터 변경 없음), 실패하면 빨간 실패로 표시. Actions 탭에서 [Run workflow]로 직접 실행 가능. 저장소에 60일 변경이 없으면 GitHub가 멈출 수 있음 → Actions 탭에서 Enable workflow. Supabase가 이미 멈췄으면 이것으로 살아나지 않음(대시보드 Resume project, 멈춘 뒤 90일 안).
 - `prototype.html`: 서버 없는 프로토타입(v0.13.6에서 멈춤, 모의 서버가 브라우저 안에 있음). 화면·규칙의 옛 기준으로만 참고한다.
 - `logo.png`: 학원 로고 원본(프로토타입에는 260px로 줄여 base64로 내장).
 - `.gitignore`: `.env` 등 비밀 키 파일을 커밋에서 제외.
