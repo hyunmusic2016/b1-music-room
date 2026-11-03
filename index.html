@@ -354,7 +354,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.40.1";
+const APP_VERSION="v0.40.2";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -365,7 +365,7 @@ const PHONE="010-7753-8730";
 // 계좌가 보이는 화면은 열 때마다 서버(pay_info)에서 새로 받아 오므로, 저장하면 곳곳에 바로 반영됩니다.
 function payBoxHtml(pi){ // 계좌 상자(계좌번호 복사 버튼 포함). pi: pay_info 응답
   if(!pi||!pi.ok)return '<div class="ro" style="margin-top:8px">'+esc(NET_MSG)+'</div>';
-  if(!pi.number)return '<div class="ro" style="margin-top:8px">입금 계좌가 아직 등록되지 않았습니다. 관리자에게 문의하십시오.</div>';
+  if(!pi.number)return '<div class="ro" style="margin-top:8px">입금 계좌가 아직 등록되지 않았습니다. 관리자('+PHONE+')에게 문의하십시오.</div>';
   return '<div class="ro" style="margin-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:10px"><div style="flex:1 1 auto">'+esc(pi.bank)+' <b style="white-space:nowrap">'+esc(pi.number)+'</b>'+feeLine(pi)+'<div style="font-size:13px;color:var(--sub);margin-top:2px">예금주: '+esc(pi.holder)+'</div></div>'+ // 1회 이용료는 설정 > 이용료 변경(v0.25.0, 비어 있으면 줄 없음), 예금주는 참고용이라 작은 회색 글씨로 맨 아래(v0.25.2)
     '<button type="button" class="btn ghost small" data-copyacc="'+esc(pi.number)+'" style="flex:none;margin:0">계좌번호 복사</button></div>';
 }
@@ -422,6 +422,8 @@ const NET_MSG="서버에 연결할 수 없습니다. 잠시 후 다시 시도하
 let sb=null;
 try{sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"drum-room-admin"}})}catch(e){console.error(e)}
 /* 서버 함수 호출. 성공·실패 모두 {ok, msg, ...} 모양으로 돌려줍니다(public_board, is_admin은 결과 그대로). */
+/* "관리자에게 문의하십시오"·"학원에 문의하십시오" 안내에는 항상 전화번호를 붙임(v0.40.2, 사용자 요청). 서버 문구도 여기서 한 번에 바꿈 */
+function withPhone(m){return String(m).replace(/관리자에게 (연장을 )?문의/g,"관리자("+PHONE+")에게 $1문의").replace(/학원에 문의/g,"학원("+PHONE+")에 문의")}
 async function rpc(fn,args){
   if(!sb)return {ok:false,msg:NET_MSG};
   try{
@@ -432,6 +434,8 @@ async function rpc(fn,args){
       return {ok:false,msg:NET_MSG};
     }
     if(data&&data.ok===false&&data.msg==="관리자 로그인이 필요합니다.")data.auth=true;
+    if(data&&typeof data.msg==="string")data.msg=withPhone(data.msg);
+    if(data&&Array.isArray(data.options))data.options.forEach(o=>{if(o&&typeof o.why==="string")o.why=withPhone(o.why)});
     return data;
   }catch(e){console.error(fn,e);return {ok:false,msg:NET_MSG}}
 }
@@ -611,7 +615,7 @@ function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
       if(kindOf(r)==="expired"){
         const p=r.product; // 상품이 이 날짜 전에 끝남(끝난 뒤 7일까지) → 일반 예약으로 잡힌다고 미리 알림(v0.21.15, 7일은 v0.21.19·서버 017)
         setExpired(p);
-        $("#rBadge").innerHTML=pre+'<div class="msg warn" style="margin:6px 0 0">⚠ '+esc(prodWarn)+' 계속 '+prodWarnKind+'으로 이용하시려면 관리자에게 문의하십시오.</div>';
+        $("#rBadge").innerHTML=pre+'<div class="msg warn" style="margin:6px 0 0">⚠ '+esc(prodWarn)+' 계속 '+prodWarnKind+'으로 이용하시려면 관리자('+PHONE+')에게 문의하십시오.</div>';
         return;
       }
       const on=prodsOf(r).filter(p=>p.start<=D&&D<=p.end);
@@ -963,7 +967,7 @@ $("#mFind").onclick=async()=>{
   h+=now.map(x=>{const c=x.ext?'ext':'stu',dw=x.date===ds[0]?'오늘':x.date===ds[1]?'내일':'';
     return '<div class="myres '+c+(x.date===ds[1]?' tmr':'')+'"><div><div class="md">'+(dw?'<span class="dw">'+dw+'</span>':'')+dateLabel(x.date)+'</div>'+
     '<div class="mt">'+hourLabel(x.hour)+(x.prod?' <span class="badge '+x.prod+'">'+PROD[x.prod]+'</span>':'')+'</div></div>'+
-    (!x.started?'<div class="mb"><button class="btn ghost small" data-m="'+x.id+'">예약 변경</button><button class="btn danger small" data-c="'+x.id+'">취소</button></div>':'<div class="note">이용 중인 예약입니다. 변경·취소는 관리자에게 문의하십시오.</div>')+'</div>'}).join("");
+    (!x.started?'<div class="mb"><button class="btn ghost small" data-m="'+x.id+'">예약 변경</button><button class="btn danger small" data-c="'+x.id+'">취소</button></div>':'<div class="note">이용 중인 예약입니다. 변경·취소는 관리자('+PHONE+')에게 문의하십시오.</div>')+'</div>'}).join("");
   const hasUp=now.some(x=>x.status==="confirmed");
   // 일반회원의 상품 없는(일반) 확정 예약이 끝나기 전까지 입금 계좌·1회 이용료(출입 비밀번호처럼, v0.25.0)
   const hasPay=now.some(x=>x.status==="confirmed"&&x.ext&&!x.prod);
@@ -1029,7 +1033,7 @@ async function openPriceSheet(){
   // 재원생도 같은 모양(v0.28.1), 일반회원과 간격을 더 두고 재원생 전용 강조(v0.34.1)
   // 재원생 정액권·횟수권(v0.38.0): 재원생 전용 안내는 큰 상자 제목 바로 아래 한 번
   if(sf.length||sc.length)h+=group("재원생","--stu-text",'<div class="stuonly" style="margin:6px 0 0">🎓 아래 상품은 <u>현실용음악학원 재원생</u>만 이용할 수 있습니다.</div>'+inner(sub("정액권","flat",sf,"하루"))+inner(sub("횟수권","count",sc,"총")),ext||hasExp?36:12);
-  if(!ext&&!sf.length&&!sc.length)h+='<p class="hint">이용료가 아직 등록되지 않았습니다. 관리자에게 문의하십시오.</p>';
+  if(!ext&&!sf.length&&!sc.length)h+='<p class="hint">이용료가 아직 등록되지 않았습니다. 관리자('+PHONE+')에게 문의하십시오.</p>';
   if(pi&&pi.ok&&pi.number)h+=box("입금 계좌","--ink",payBoxHtml(Object.assign({},pi,{fee:""})));
   h+='<p class="hint" style="text-align:center;margin-top:14px">정액권·횟수권 구매와 문의는 관리자에게 전화하십시오.</p>'+
     '<a class="btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none;background:#1e8e4e;color:#fff" href="tel:'+PHONE.replace(/-/g,"")+'">관리자에게 전화 ('+PHONE+')</a>';
