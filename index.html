@@ -342,7 +342,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.38.14";
+const APP_VERSION="v0.38.15";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -472,7 +472,9 @@ function go(v){
 }
 const ICON_LIST='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>';
 const ICON_CAL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
-function setTopBtn(v){const b=$("#topBtn"),toMine=v==="book";b.dataset.go=toMine?"mine":"book";b.innerHTML=(toMine?ICON_LIST+"내 예약":ICON_CAL+"예약하기")}
+/* 로그인한 관리자 화면에서는 버튼을 숨김(v0.38.15, 사용자 요청). 로그인 전 관리자 화면에는 그대로 둠 */
+let curView="book";
+function setTopBtn(v){curView=v;const b=$("#topBtn"),toMine=v==="book";b.classList.toggle("hidden",v==="admin"&&adminOn);b.dataset.go=toMine?"mine":"book";b.innerHTML=(toMine?ICON_LIST+"내 예약":ICON_CAL+"예약하기")}
 $("#topBtn").onclick=()=>go($("#topBtn").dataset.go);
 setTopBtn("book");
 
@@ -1043,9 +1045,9 @@ $("#aGo").onclick=async()=>{
   }catch(e){msg(NET_MSG)}
   finally{$("#aGo").disabled=false}
 };
-function enterAdmin(){adminOn=true;$("#adminLogin").classList.add("hidden");$("#adminPane").classList.remove("hidden");$("#aPw").value="";$("#aMsg").innerHTML="";reloadAdmin()}
+function enterAdmin(){adminOn=true;setTopBtn(curView);$("#adminLogin").classList.add("hidden");$("#adminPane").classList.remove("hidden");$("#aPw").value="";$("#aMsg").innerHTML="";reloadAdmin()}
 function leaveAdmin(note){
-  adminOn=false;A.loaded=false;$("#adminPane").classList.add("hidden");$("#adminPane").innerHTML="";$("#adminLogin").classList.remove("hidden");
+  adminOn=false;setTopBtn(curView);A.loaded=false;$("#adminPane").classList.add("hidden");$("#adminPane").innerHTML="";$("#adminLogin").classList.remove("hidden");
   $("#aMsg").innerHTML=note?'<div class="msg err">'+esc(note)+'</div>':"";
 }
 function adminExpired(){closeSheet();leaveAdmin("로그인이 만료되었습니다. 다시 로그인하십시오.")}
