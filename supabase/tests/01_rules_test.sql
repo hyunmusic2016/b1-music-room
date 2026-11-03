@@ -319,7 +319,7 @@ reset role;
 insert into public.products (user_id, kind, start_date, end_date, daily_limit) values (:f_uid, 'flat', '2026-12-26', '2026-12-27', 1);
 set role authenticated;
 select test.ok((public.admin_update_user(jsonb_build_object('id', :f_uid, 'type', 'stu', 'name', '만료정액', 'phone', '01034343434',
-  'edit_prod', jsonb_build_object('start', '2026-12-22', 'days', 3, 'limit', 1))))->>'msg' like '이 이용자의 다른 상품과 기간이 겹칩니다%',
+  'edit_prod', jsonb_build_object('start', '2026-12-22', 'days', 3, 'limit', 1))))->>'msg' like '이 이용자의 다른 정액권과 기간이 겹칩니다%',
   '사용 중인 다른 상품과 겹치면 계속 막힘');
 reset role;
 
@@ -746,6 +746,64 @@ select test.ok((public.admin_set_paid(:pay_rid, true))->>'msg' like '취소된 �
 reset role; set role anon;
 select test.ok((select count(*) from jsonb_each((public.public_board()->'slots'->0))) > 0 and position('pay_ok' in public.public_board()::text) = 0, '공개 현황에 입금 확인 정보 없음');
 select test.ok(position('pay_ok' in (public.my_reservations('입금시험', '8642'))::text) = 0, '내 예약에도 입금 확인 정보 없음');
+reset role; reset app.fake_now;
+
+-- 37. 033: 정액권 + 횟수권 동시 사용
+reset role; set app.fake_now = '2027-06-01 08:00';
+set role authenticated;
+select test.ok((public.admin_create_user('{"type":"ext","name":"둘다회원","pw":"1111","phone":"01011110000","prods":[{"kind":"flat","start":"2027-06-01","days":30,"limit":1},{"kind":"count","start":"2027-06-01","days":30,"total":2}]}'))->>'ok' = 'true', '정액권+횟수권 함께 등록');
+select test.ok((public.admin_create_user('{"type":"ext","name":"같은둘","pw":"1112","phone":"01011120000","prods":[{"kind":"flat","start":"2027-06-01","days":30,"limit":1},{"kind":"flat","start":"2027-06-01","days":30,"limit":2}]}'))->>'msg' like '같은 종류의 상품은%', '같은 종류 두 개는 막힘');
+select test.ok(exists (select 1 from jsonb_array_elements((public.admin_users())->'users') x where x->>'name' = '둘다회원' and jsonb_array_length(x->'currents') = 2), '이용자 정보에 상품 2개(currents)');
+select test.ok(exists (select 1 from jsonb_array_elements((public.admin_find_users('둘다회원', '2027-06-01'))->'users') x where jsonb_array_length(x->'products') = 2), '관리자 이름 찾기에 상품 2개');
+reset role; set role anon;
+select test.ok(jsonb_array_length((public.product_info('ext', '둘다회원', '1111'))->'products') = 2, '예약 창 정보에 상품 2개');
+select test.ok((public.reserve('2027-06-01', 10, '둘다회원', '1111', true, 'ext'))->>'choose' = 'true', '둘 다 쓸 수 있으면 고르라고 함');
+select test.ok(jsonb_array_length((public.reserve('2027-06-01', 10, '둘다회원', '1111', true, 'ext'))->'options') = 2, '고를 상품 2개를 알려 줌');
+select test.ok((public.reserve('2027-06-01', 10, '둘다회원', '1111', true, 'ext', 'flat'))->>'prod' = 'flat', '정액권을 골라 예약');
+select test.ok((public.reserve('2027-06-01', 11, '둘다회원', '1111', true, 'ext'))->>'prod' = 'count', '정액권 오늘 다 씀 → 횟수권으로 자동');
+select test.ok((public.reserve('2027-06-01', 12, '둘다회원', '1111', true, 'ext'))->>'note' like '정액권 하루 이용 횟수(1회)를 모두 사용해 횟수권으로%', '자동 선택 안내');
+select test.ok((public.reserve('2027-06-01', 13, '둘다회원', '1111', true, 'ext', 'flat'))->>'msg' like '정액권 하루 이용 횟수%', '다 쓴 정액권을 고르면 막힘');
+select test.ok((public.reserve('2027-06-01', 13, '둘다회원', '1111', true, 'ext'))->>'msg' like '정액권 하루 이용 횟수(1회)와 횟수권 2회를 모두%', '둘 다 다 쓰면 막힘');
+select test.ok((public.reserve('2027-06-02', 10, '둘다회원', '1111', true, 'ext'))->>'note' like '횟수권 2회를 모두 사용해 정액권으로%', '다음 날: 횟수권 다 씀 → 정액권 자동');
+select test.ok((public.reserve('2027-06-02', 11, '둘다회원', '1111', true, 'ext', 'count'))->>'msg' like '횟수권 2회를 모두%', '다 쓴 횟수권을 고르면 막힘');
+select test.ok(jsonb_array_length((public.my_reservations('둘다회원', '1111'))->'products') = 2, '내 예약에 상품 2개');
+reset role;
+select id as dd_cnt from public.reservations where name = '둘다회원' and date = '2027-06-01' and hour = 11 \gset
+select id as dd_uid from public.users where name = '둘다회원' \gset
+select id as dd_fp from public.products where user_id = :dd_uid and kind = 'flat' \gset
+select id as dd_cp from public.products where user_id = :dd_uid and kind = 'count' \gset
+set role anon;
+select test.ok((public.cancel_own(:dd_cnt, '둘다회원', '1111'))->>'ok' = 'true', '횟수권 예약 취소');
+select test.ok((public.reserve('2027-06-02', 12, '둘다회원', '1111', true, 'ext'))->>'prod' = 'count', '취소로 돌려받은 횟수권으로 자동(정액권 그날 다 씀)');
+reset role; set role authenticated;
+select test.ok((public.admin_reserve('2027-06-02', 13, '둘다회원', :dd_uid, true, false))->>'msg' like '정액권 하루 이용 횟수(1회)와 횟수권 2회를 모두 사용했습니다. 이용자 현황%', '관리자 일반예약: 둘 다 다 쓰면 막힘');
+select test.ok((public.admin_reserve('2027-06-02', 13, '둘다회원', :dd_uid, true, true))->>'ok' = 'true', '슈퍼패스는 그대로');
+-- 수정: 기존 두 상품 수정 + 같은 종류 새로 추가 막힘
+select test.ok((public.admin_update_user(jsonb_build_object('id', :dd_uid, 'type','ext','name','둘다회원','phone','01011110000',
+   'prods', jsonb_build_array(jsonb_build_object('id', :dd_fp, 'start','2027-06-01','days',30,'limit',2),
+                              jsonb_build_object('id', :dd_cp, 'start','2027-06-01','days',30,'total',5)))))->>'ok' = 'true', '두 상품 함께 수정');
+reset role;
+select test.ok((select daily_limit from public.products where id = :dd_fp) = 2 and (select total_count from public.products where id = :dd_cp) = 5, '수정 값 저장됨');
+set role authenticated;
+select test.ok((public.admin_update_user(jsonb_build_object('id', :dd_uid, 'type','ext','name','둘다회원','phone','01011110000',
+   'prods', jsonb_build_array(jsonb_build_object('kind','flat','start','2027-06-05','days',30,'limit',1)))))->>'msg' like '이미 사용 중이거나 시작 예정인 정액권%', '같은 종류 새 상품은 막힘');
+select test.ok((public.admin_update_user(jsonb_build_object('id', :dd_uid, 'type','ext','name','둘다회원','phone','01011110000',
+   'prods', jsonb_build_array(jsonb_build_object('id', :dd_cp, 'start','2027-06-01','days',30,'total',1)))))->>'msg' like '이미 2회 사용했습니다%', '횟수권 총 횟수는 쓴 횟수 이상');
+-- 한 종류만 있는 이용자에게 다른 종류 추가
+select test.ok((public.admin_create_user('{"type":"stu","name":"하나생","pw":"2222","prod":{"kind":"flat","start":"2027-06-01","days":30,"limit":1}}'))->>'ok' = 'true', '재원생 정액권만 등록(예전 형식)');
+reset role;
+select id as hn_uid from public.users where name = '하나생' \gset
+set role authenticated;
+select test.ok((public.admin_update_user(jsonb_build_object('id', :hn_uid, 'type','stu','name','하나생','phone','',
+   'prods', jsonb_build_array(jsonb_build_object('kind','count','start','2027-06-01','days',30,'total',3)))))->>'ok' = 'true', '정액권 쓰는 재원생에게 횟수권 추가');
+select test.ok((public.admin_update_user(jsonb_build_object('id', :hn_uid, 'type','stu','name','하나생','phone','',
+   'new_prod', jsonb_build_object('kind','count','start','2027-06-01','days',30,'total',3))))->>'ok' = 'true', '예전 형식 new_prod는 상품 있으면 무시(그대로 저장)');
+reset role;
+select test.ok((select count(*) from public.products where user_id = :hn_uid) = 2, '하나생 상품 2개');
+set role anon;
+select test.ok((public.reserve('2027-06-01', 14, '하나생', '2222', true, 'stu', 'count'))->>'prod' = 'count', '재원생 횟수권을 골라 예약');
+select test.ok((public.reserve('2027-06-01', 15, '하나생', '2222', true, 'stu'))->>'choose' = 'true', '재원생도 둘 다 남아 있으면 고르라고 함');
+select test.ok((public.reserve('2027-06-01', 15, '하나생', '2222', true, 'stu', 'flat'))->>'prod' = 'flat', '재원생 정액권을 골라 같은 날 두 번째 예약');
 reset role; reset app.fake_now;
 
 select '모든 시험 통과' as 결과;
