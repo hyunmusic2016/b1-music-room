@@ -2,11 +2,11 @@
      - 예약 화면이 자기 길이를 알려 주면 칸 높이를 자동으로 맞춥니다(아래 여백 없음).
      - 스크롤할 때마다 칸의 화면 위치를 예약 화면에 알려 줘서, 예약 창이 화면 가운데에 고정된 것처럼 보이게 합니다.
      - 스크립트가 막히는 환경에서는 처음 높이(1500px)로 고정되어 보입니다. -->
-<iframe id="drumRoomFrame" src="https://hyunmusic2016.github.io/b1-music-room/" title="B1 음악 연습실 예약"
+<iframe id="drumRoomFrame" src="https://room.hyunmusic.com/" title="B1 음악 연습실 예약"
   style="display:block;width:100%;height:1500px;border:0;overflow:hidden" scrolling="no"></iframe>
 <script>
 (function(){
-  var f=document.getElementById("drumRoomFrame"),ORIGIN="https://hyunmusic2016.github.io",busy=false;
+  var f=document.getElementById("drumRoomFrame"),ORIGIN="https://room.hyunmusic.com",busy=false;
   function sendView(){
     busy=false;
     if(!f.contentWindow)return;
