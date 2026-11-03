@@ -338,7 +338,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.39.1";
+const APP_VERSION="v0.39.2";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1827,9 +1827,15 @@ function resItem(r){
   // v0.38.6: 내 예약 현황과 같은 카드 모양·날짜 색(오늘 하늘, 내일 보라). 이름은 구분 색(재원생 청록/일반회원 테라코타)
   const ds=allowedDates(),dw=r.date===ds[0]?'오늘':r.date===ds[1]?'내일':'';
   return '<div class="myres'+(r.date===ds[1]?' tmr':'')+'"><div'+(done?' style="opacity:.6"':'')+'><div class="md">'+(dw?'<span class="dw">'+dw+'</span>':'')+dateLabel(r.date)+'</div>'+
-    '<div class="mt">'+hourLabel(r.hour)+' <b class="nm" style="color:'+(r.ext?'var(--ext-text)':'var(--stu-text)')+'">'+esc(r.name)+'</b>'+(r.prod?'<span class="badge '+r.prod+'">'+PROD[r.prod]+'</span>':"")+(r.super?'<span class="badge super">슈퍼패스</span>':"")+'</div>'+
+    '<div class="mt">'+hourLabel(r.hour)+' <b class="nm" style="color:'+(r.ext?'var(--ext-text)':'var(--stu-text)')+'">'+esc(r.name)+'</b>'+resWhoBadges(r)+(r.prod?'<span class="badge '+r.prod+'">'+PROD[r.prod]+'</span>':"")+(r.super?'<span class="badge super">슈퍼패스</span>':"")+'</div>'+
     (done||r.reason?'<div class="hint" style="margin-top:2px">'+(done?'이용 시간 지남':'')+(r.reason?(done?' · ':'')+esc(r.reason):'')+'</div>':'')+'</div>'+
     (r.status==="confirmed"&&(!r.ended||payNeed(r))?'<div class="mb">'+payBtns(r)+(!r.ended?'<button class="btn danger small" data-ac="'+r.id+'">취소</button>':'')+'</div>':"")+'</div>';
+}
+/* 예약 목록 이름 옆 배지(v0.39.2): 구분(재원생/일반회원) + 등록 이용자면 블랙리스트·블랙리스트 이력(이용자 현황과 같은 모양) */
+function resWhoBadges(r){
+  const t=r.ext?"ext":"stu",u=r.user_id&&A.users?A.users.find(x=>x.id===r.user_id):null;
+  return '<span class="badge" style="color:var('+(r.ext?'--ext-text':'--stu-text')+');border-color:currentColor;background:transparent">'+tgtLabel(t)+'</span>'+
+    (u&&u.status==="blacklisted"?'<span class="badge black">블랙리스트</span>':u&&u.black_count>0?'<span class="badge black hist">블랙리스트 이력</span>':'');
 }
 /* 입금 확인 대상: 서버(032)가 pay_need로 알려 줌(일반회원·정액권·횟수권 없음·슈퍼패스 아님). 032 전에는 값이 없어 아무것도 안 보임 */
 const payNeed=r=>r.status==="confirmed"&&r.pay_need===true;
