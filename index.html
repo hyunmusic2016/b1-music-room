@@ -286,9 +286,6 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .ver{font-size:11px;color:var(--sub);margin:0;letter-spacing:.02em}
 /* 맨 아래 오른쪽: 버전 + 관리자 페이지 아이콘(v0.16.6) */
 .foot{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:28px 0 0}
-.admin-ic{width:44px;height:44px;padding:0;border:0;background:transparent;color:var(--sub);border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
-.admin-ic svg{width:20px;height:20px}
-.admin-ic:hover,.admin-ic:focus-visible{color:var(--ink);background:var(--line)}
 </style>
 </head>
 <body>
@@ -327,7 +324,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
     </div>
     <div id="adminPane" class="hidden"></div>
   </section>
-  <div class="foot"><p class="ver" id="ver"></p><button type="button" class="admin-ic" id="toAdmin" aria-label="관리자 페이지" title="관리자 페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></div>
+  <div class="foot"><p class="ver" id="ver"></p></div>
 </div>
 
 
@@ -338,7 +335,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.38.16";
+const APP_VERSION="v0.38.17";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1025,7 +1022,6 @@ async function openMoveSheet(id){
 }
 
 /* ===== 관리자 로그인(Supabase 이메일+비밀번호, 로그인 유지) ===== */
-$("#toAdmin").onclick=()=>go("admin");
 $("#aEmail").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("#aPw").focus()}});
 $("#aPw").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("#aGo").click()}});
 $("#aGo").onclick=async()=>{
@@ -1916,6 +1912,8 @@ function renderAdmin(){
 $("#ver").textContent=APP_VERSION;
 renderBook();refreshBook();
 if(location.hash==="#admin")go("admin"); // 관리자는 주소 끝에 #admin을 붙여 바로 들어올 수 있습니다.
+/* 화면 안의 관리자 진입 버튼은 없음(v0.38.17). 주소창에 #admin을 붙이면 새로고침 없이도 관리자 화면으로 */
+addEventListener("hashchange",()=>{if(location.hash==="#admin")go("admin")});
 checkSession();
 /* 자동 새로고침: 30초마다, 그리고 화면으로 돌아왔을 때 예약 현황(관리자는 예약 목록)을 다시 불러옵니다. 입력 창이 열려 있으면 건너뜁니다. */
 function autoRefresh(){
