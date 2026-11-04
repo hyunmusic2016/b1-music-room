@@ -865,4 +865,14 @@ reset role; set role anon;
 select test.ok((public.info_pages())->'pages'->'price'->'sections'->0->>'b' = '매일 채워짐', '공개 조회에 이용료 설명');
 reset role; reset request.jwt.claims;
 
+-- 41. 038: 사진 크기
+reset role;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
+set role authenticated;
+select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"size":"s"}]'))->'pages'->'room'->'sections'->0->>'size' = 's', '사진 크기 작게 저장');
+select test.ok(not ((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"size":"l"}]'))->'pages'->'room'->'sections'->0 ? 'size'), '크게(기본)는 따로 저장 안 함');
+select test.ok(not ((public.admin_set_info_page('room', '[{"t":"장비","b":"x","size":"m"}]'))->'pages'->'room'->'sections'->0 ? 'size'), '사진 없으면 크기 저장 안 함');
+select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"size":"xl"}]'))->>'msg' like '사진 크기를%', '잘못된 크기는 막힘');
+reset role; reset request.jwt.claims;
+
 select '모든 시험 통과' as 결과;
