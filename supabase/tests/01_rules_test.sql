@@ -830,4 +830,29 @@ reset role; set role anon;
 select test.ok((public.info_pages())->'pages'->'room'->'sections'->0->>'t' = '장비', '공개 조회에 저장한 글');
 reset role; reset app.fake_now;
 
+-- 39. 036: 안내 창 사진(Storage 공개 버킷, 관리자만 올리기)
+reset role;
+select test.ok((select public from storage.buckets where id = 'info-photos'), '사진 버킷은 공개');
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
+set role authenticated;
+insert into storage.objects (bucket_id, name) values ('info-photos', 'room/1-a.jpg');
+select test.ok(true, '관리자는 사진 올리기 가능');
+select test.denied($q$insert into storage.objects (bucket_id, name) values ('other', 'x.jpg')$q$, '관리자도 다른 버킷에는 못 올림');
+reset role;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000b"}';
+set role authenticated;
+select test.denied($q$insert into storage.objects (bucket_id, name) values ('info-photos', 'room/2-b.jpg')$q$, '관리자가 아닌 로그인 계정은 사진 못 올림');
+reset role; set role anon;
+select test.denied($q$insert into storage.objects (bucket_id, name) values ('info-photos', 'room/3-c.jpg')$q$, '익명은 사진 못 올림');
+reset role;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
+set role authenticated;
+select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"드럼","imgs":["room/1-a.jpg","room/2-b_c.png"]}]'))->'pages'->'room'->'sections'->0->'imgs'->>1 = 'room/2-b_c.png', '칸에 사진 저장');
+select test.ok((public.admin_set_info_page('room', '[{"t":"","b":"","imgs":["room/1-a.jpg"]}]'))->'pages'->'room'->'sections'->0->'imgs'->>0 = 'room/1-a.jpg', '사진만 있는 칸도 저장');
+select test.ok((public.admin_set_info_page('room', '[{"t":"x","b":"y","imgs":["https://evil.example/a.jpg"]}]'))->>'msg' like '사진 정보가 올바르지%', '다른 주소는 못 넣음');
+select test.ok((public.admin_set_info_page('room', '[{"t":"x","b":"y","imgs":["way/1-a.jpg"]}]'))->>'msg' like '사진 정보가 올바르지%', '다른 창 폴더 사진은 못 넣음');
+select test.ok((public.admin_set_info_page('room', '[{"t":"x","b":"y","imgs":["room/1.jpg","room/2.jpg","room/3.jpg","room/4.jpg","room/5.jpg","room/6.jpg","room/7.jpg"]}]'))->>'msg' like '사진은 칸 하나에 6장%', '사진 6장 제한');
+select test.ok(not ((public.admin_set_info_page('room', '[{"t":"x","b":"y"}]'))->'pages'->'room'->'sections'->0 ? 'imgs'), '사진 없는 칸에는 imgs 없음');
+reset role; reset request.jwt.claims;
+
 select '모든 시험 통과' as 결과;
