@@ -314,6 +314,8 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .mustread span{font-size:20px;line-height:1}
 .infogrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.infogrid .btn{margin:0;min-height:52px;font-weight:800;line-height:1.3}
 .infogrid .stu-i{color:var(--stu-text);border-color:var(--stu-btn)}.infogrid .ext-i{color:var(--ext-text);border-color:var(--ext-line)}
+.ilist{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:none;color:var(--ink);font:inherit;padding:12px 0;min-height:56px;cursor:pointer}
+.ilist .ino{flex:none;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px}
 .infotabs{display:flex;flex-wrap:wrap;gap:6px}.infotabs .btn{margin:0}.infotabs .btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent-strong)}
 .iphotos{display:grid;gap:8px;margin-top:10px}.iphotos img{width:100%;border-radius:10px;display:block;background:var(--line)}
 .iethumbs{display:flex;flex-wrap:wrap;gap:8px}.iethumb{position:relative;width:84px;height:84px}.iethumb img{width:100%;height:100%;object-fit:cover;border-radius:8px;display:block}
@@ -379,7 +381,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.43.2";
+const APP_VERSION="v0.43.3";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1066,7 +1068,8 @@ $("#priceBtn").onclick=openPriceSheet;
    주소 상자(오시는 길 맨 위)와 [관리자에게 전화] 상자(call)는 고칠 수 없는 고정 부분. */
 const ADDRESS="인천광역시 부평구 동수북로158번길 3, 수경빌딩 지하1층";
 const TODO='<span class="todo">입력 예정</span>';
-const INFO_KEYS=[["first","처음 오시는 분 필독!"],["way","오시는 길"],["room","시설 안내"],["stu","재원생 안내·주의사항"],["ext","일반회원 안내·주의사항"],["price","이용료 보기 · 정액권·횟수권 안내"]];
+// 순서 = 홈 화면 위에서 아래(v0.43.3, 관리자 안내 글 변경 목록 순서)
+const INFO_KEYS=[["first","처음 오시는 분 필독!"],["price","이용료 보기 · 정액권·횟수권 안내"],["way","오시는 길"],["room","시설 안내"],["stu","재원생 안내·주의사항"],["ext","일반회원 안내·주의사항"]];
 const INFO_DEFAULT={
  first:{call:true,sections:[
   {t:"B1 음악 연습실은",b:"현실용음악학원 건물 **지하 1층**에 있는 음악 연습실입니다.\n**24시간** 이용할 수 있고, **1시간 단위**로 **오늘과 내일**만 예약할 수 있습니다.\n예약은 누르는 즉시 확정됩니다. 예약한 시간에만 이용하십시오."},
@@ -1968,8 +1971,8 @@ function bindBlock2(){
 function settingsHtml(){
   // 큰 제목과 [← 뒤로]를 한 줄에(v0.18.11, 뒤로 버튼은 오른쪽)
   const UP=setPage==="status"||setPage==="dormant"||setPage==="black",LN={dormant:"휴면 이용자",black:"블랙리스트"}[setPage]||"이용자 현황";
-  const title=UP?(editUser!==null?"이용자 수정":viewUser!==null?"이용자 정보":LN):{block:"이용 불가 시간 설정",pw:"관리자 비밀번호 변경",door:"출입 비밀번호 변경",pay:"입금 계좌 변경",fee:"이용료 변경",roster:"재원생 명부 연동",info:"안내 글 변경"}[setPage];
-  const back='<div class="titlerow"><h2>'+title+'</h2><button class="btn ghost small" id="setBack">'+(UP&&editUser!==null?'← 이용자 정보':UP&&viewUser!==null?'← '+LN:'← 설정')+'</button></div>';
+  const title=UP?(editUser!==null?"이용자 수정":viewUser!==null?"이용자 정보":LN):{block:"이용 불가 시간 설정",pw:"관리자 비밀번호 변경",door:"출입 비밀번호 변경",pay:"입금 계좌 변경",fee:"이용료 변경",roster:"재원생 명부 연동",info:A.infoKey?((INFO_KEYS.find(x=>x[0]===A.infoKey)||[])[1]||"안내 글 변경"):"안내 글 변경"}[setPage];
+  const back='<div class="titlerow"><h2>'+title+'</h2><button class="btn ghost small" id="setBack">'+(UP&&editUser!==null?'← 이용자 정보':UP&&viewUser!==null?'← '+LN:setPage==="info"&&A.infoKey?'← 안내 글 변경':'← 설정')+'</button></div>';
   if(UP){
     if(viewUser!==null&&!A.detail)return back+'<p class="hint">불러오는 중입니다…</p>';
     return back+(editUser!==null?userEditHtml():viewUser!==null?userViewHtml():setPage==="dormant"?dormantHtml():setPage==="black"?blackHtml():statusHtml());
@@ -1993,10 +1996,15 @@ function settingsHtml(){
 /* 설정 > 홈 화면 안내 > 안내 글 변경(v0.42.0, 서버 035): 홈 안내 창 5개의 칸(제목 + 내용)을 관리자가 직접 고침.
    저장하면 그 창은 저장한 글, [기본 글로 되돌리기]면 화면 코드의 기본 글(INFO_DEFAULT). 주소 상자·전화 버튼은 고정. */
 function infoEditHtml(){
-  const k=A.infoKey||"first",sv=infoSaved&&infoSaved[k];
   if(!A.infoLoaded)return '<p class="hint">불러오는 중입니다…</p>';
+  if(!A.infoKey){ // 목록(v0.43.3): 홈 화면 위에서 아래 순서, 누르면 그 글만 고치는 화면
+    return (infoSaved===null?'<div class="msg err">서버에서 안내 글을 불러오지 못했습니다. Supabase에 035를 실행했는지 확인하십시오.</div>':'')+
+      '<div class="card"><p class="hint" style="margin:0 0 4px">고칠 안내 글을 고르십시오. 홈 화면 위에서 아래 순서입니다.</p>'+
+      INFO_KEYS.map(([kk,l],i)=>{const v=infoSaved&&infoSaved[kk];return '<div class="item"><button type="button" data-ik="'+kk+'" class="ilist"><span class="ino">'+(i+1)+'</span><span style="flex:1;min-width:0"><b>'+l+'</b><small class="hint" style="display:block;margin:2px 0 0">'+(v?'✎ '+esc(priceDate(v.updated_at)||v.updated_at)+' 저장한 글':'기본 글')+'</small></span><span class="chev" aria-hidden="true">›</span></button></div>'}).join("")+'</div>';
+  }
+  const k=A.infoKey,sv=infoSaved&&infoSaved[k];
   const secs=A.infoDraft||JSON.parse(JSON.stringify(infoSections(k)));A.infoDraft=secs;
-  const tabs='<div class="infotabs">'+INFO_KEYS.map(([kk,l])=>'<button type="button" class="btn ghost small'+(kk===k?' on':'')+'" data-ik="'+kk+'">'+l+(infoSaved&&infoSaved[kk]?' ✎':'')+'</button>').join("")+'</div>';
+  const tabs='';
   const st=infoSaved===null?'<div class="msg err">서버에서 안내 글을 불러오지 못했습니다. Supabase에 035를 실행했는지 확인하십시오. 그 전에는 저장할 수 없고 손님에게는 기본 글이 보입니다.</div>'
     :'<p class="hint" style="margin:8px 0 0">'+(sv?'🗓 '+esc(priceDate(sv.updated_at)||sv.updated_at)+'에 저장한 글이 손님에게 보입니다.':'아직 저장한 적이 없어 기본 글이 보입니다.')+'</p>';
   const help='<details class="hist" style="margin:10px 0 0"><summary>글 쓰는 법</summary><ul class="hint" style="margin:6px 0 0;padding-left:18px">'+
@@ -2023,16 +2031,14 @@ function infoEditHtml(){
 }
 function readInfoDraft(){const d=A.infoDraft||[];return [...document.querySelectorAll(".card.ie")].map((c,i)=>{const o={t:c.querySelector(".ie-t").value,b:c.querySelector(".ie-b").value};const im=(d[i]&&d[i].imgs)||[];if(im.length)o.imgs=im.slice();return o})}
 function bindInfoEdit(){
-  if(!$("#ieSave"))return;
-  const k=A.infoKey||"first",redraw=()=>{renderAdmin()};
+  if(A.infoKey&&!$("#ieSave"))return;
+  if(!A.infoKey){window.infoLeave=null;document.querySelectorAll("[data-ik]").forEach(b=>b.onclick=()=>{A.infoKey=b.dataset.ik;A.infoDraft=null;A.infoMsg="";renderAdmin();window.scrollTo(0,0)});return}
+  const k=A.infoKey,redraw=()=>{renderAdmin()};
   const norm=a=>JSON.stringify(a.map(x=>({t:x.t||"",b:x.b||"",i:(x.imgs||[]).join(",")})));
   const orig=norm(infoSections(k));A.infoUp=A.infoUp||[]; // infoUp: 이번에 올렸지만 아직 저장 안 한 사진
   const dropUnsaved=()=>{const keep=new Set(savedPhotos(k));removePhotos(A.infoUp.filter(x=>!keep.has(x)));A.infoUp=[]};
-  document.querySelectorAll("[data-ik]").forEach(b=>b.onclick=()=>{
-    if(b.dataset.ik===k)return;
-    if(norm(readInfoDraft())!==orig&&!confirm("저장하지 않은 내용은 사라집니다. 다른 창으로 넘어가시겠습니까?"))return;
-    dropUnsaved();A.infoKey=b.dataset.ik;A.infoDraft=null;A.infoMsg="";redraw();
-  });
+  // [← 안내 글 변경]으로 목록에 돌아갈 때: 저장 안 한 내용이 있으면 확인, 이번에 올린 사진은 지움
+  window.infoLeave=()=>{if(norm(readInfoDraft())!==orig&&!confirm("저장하지 않은 내용은 사라집니다. 목록으로 돌아가시겠습니까?"))return false;dropUnsaved();return true};
   const mv=(i,d)=>{const a=readInfoDraft(),j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];A.infoDraft=a;A.infoMsg="";redraw()};
   document.querySelectorAll("[data-iu]").forEach(b=>b.onclick=()=>mv(+b.dataset.iu,-1));
   document.querySelectorAll("[data-idn]").forEach(b=>b.onclick=()=>mv(+b.dataset.idn,1));
@@ -2072,8 +2078,8 @@ function bindInfoEdit(){
   };
 }
 function bindSettings(){
-  document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{setPage=b.dataset.sp;renderAdmin();if(setPage==="block"||setPage==="door"||setPage==="pay"||setPage==="fee"||setPage==="roster"||setPage==="info"){if(setPage==="info"){A.infoKey=A.infoKey||"first";A.infoDraft=null;A.infoMsg=""}reloadAdmin()}});
-  const back=$("#setBack");if(back)back.onclick=()=>{if(editUser!==null){editUser=null}else if(viewUser!==null){viewUser=null;A.detail=null}else{setPage=null}uFlash="";renderAdmin()};
+  document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{setPage=b.dataset.sp;renderAdmin();if(setPage==="block"||setPage==="door"||setPage==="pay"||setPage==="fee"||setPage==="roster"||setPage==="info"){if(setPage==="info"){A.infoKey=null;A.infoDraft=null;A.infoMsg=""}reloadAdmin()}});
+  const back=$("#setBack");if(back)back.onclick=()=>{if(setPage==="info"&&A.infoKey){if(window.infoLeave&&!window.infoLeave())return;A.infoKey=null;A.infoDraft=null;A.infoMsg="";renderAdmin();window.scrollTo(0,0);return}if(editUser!==null){editUser=null}else if(viewUser!==null){viewUser=null;A.detail=null}else{setPage=null}uFlash="";renderAdmin()};
   if(setPage==="status"||setPage==="dormant"||setPage==="black"){if(editUser!==null&&A.detail)bindUserEdit();else if(viewUser!==null&&A.detail)bindUserView();else if(viewUser===null)(setPage==="dormant"?bindDormant():setPage==="black"?bindBlack():bindStatus())}
   if(setPage==="block")bindBlock2();
   if(setPage==="pw")bindSet();
