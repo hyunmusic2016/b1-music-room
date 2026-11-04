@@ -811,4 +811,23 @@ select test.ok((public.reserve('2027-06-01', 15, '하나생', '2222', true, 'stu
 select test.ok((public.reserve('2027-06-01', 15, '하나생', '2222', true, 'stu', 'flat'))->>'prod' = 'flat', '재원생 정액권을 골라 같은 날 두 번째 예약');
 reset role; reset app.fake_now;
 
+-- 38. 035: 홈 안내 창 글(관리자 변경·공개 조회)
+reset role; set app.fake_now = '2027-06-10 08:00';
+set role anon;
+select test.ok((public.info_pages())->'pages' = '{}'::jsonb, '처음에는 저장한 안내 글 없음');
+select test.ok(not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'admin_set_info_page' and has_function_privilege('anon', p.oid, 'execute')), '익명은 안내 글 저장 불가');
+reset role; set role authenticated;
+select test.ok((public.admin_set_info_page('way', '[{"t":"주차","b":"건물 뒤 주차장"},{"t":"","b":""}]'))->'pages'->'way'->'sections'->0->>'b' = '건물 뒤 주차장', '안내 글 저장');
+select test.ok(jsonb_array_length((public.info_pages())->'pages'->'way'->'sections') = 1, '빈 칸은 버림');
+select test.ok((public.info_pages())->'pages'->'way'->>'updated_at' = '2027-06-10', '수정 날짜');
+select test.ok((public.admin_set_info_page('bad', '[{"t":"x","b":"y"}]'))->>'msg' = '잘못된 안내 창입니다.', '없는 창은 막힘');
+select test.ok((public.admin_set_info_page('room', '[{"t":"","b":""}]'))->>'msg' like '내용을 한 칸 이상%', '모두 빈 칸이면 막힘');
+select test.ok((public.admin_set_info_page('room', jsonb_build_array(jsonb_build_object('t', repeat('가', 61), 'b', 'x'))))->>'msg' like '칸 제목은 60자%', '제목 60자 제한');
+select test.ok((public.admin_set_info_page('room', jsonb_build_array(jsonb_build_object('t', 'x', 'b', repeat('가', 3001)))))->>'msg' like '칸 하나의 내용은 3000자%', '내용 3000자 제한');
+select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"드럼 1대"}]'))->'pages' ? 'way', '다른 창 저장해도 앞의 창 유지');
+select test.ok(not ((public.admin_set_info_page('way', null))->'pages' ? 'way'), '기본 글로 되돌리기');
+reset role; set role anon;
+select test.ok((public.info_pages())->'pages'->'room'->'sections'->0->>'t' = '장비', '공개 조회에 저장한 글');
+reset role; reset app.fake_now;
+
 select '모든 시험 통과' as 결과;
