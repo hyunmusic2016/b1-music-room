@@ -330,8 +330,9 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .iesz .hint{margin:0;min-width:44px}.iesz-prev{margin:2px 0 10px;padding:8px;border:1px dashed var(--line);border-radius:10px}.iesz-prev .iphotos{margin-top:0}.iesz-prev a{pointer-events:none}
 .iesz{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 8px}.iesz .btn{margin:0;min-height:34px}.iesz .btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent-strong)}.iphotos img{width:100%;border-radius:10px;display:block;background:var(--line)}
 .iethumbs{display:flex;flex-wrap:wrap;gap:8px}.iethumb{position:relative;width:84px;height:84px}.iethumb img{width:100%;height:100%;object-fit:cover;border-radius:8px;display:block}
-.iethumb .imv{position:absolute;left:4px;right:4px;bottom:4px;display:flex;justify-content:space-between}
-.iethumb .imv button{width:30px;height:26px;border-radius:7px;border:0;background:rgba(0,0,0,.62);color:#fff;font-size:18px;font-weight:900;line-height:1;cursor:pointer;padding:0}.iethumb .imv button:disabled{opacity:.25;cursor:default}
+.iethumb[data-ti] img{touch-action:none;pointer-events:none}.iethumb[data-ti]{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}.iethumb.dragging{z-index:5;cursor:grabbing;opacity:.85;box-shadow:0 8px 22px rgba(0,0,0,.35);border-radius:8px}
+.iethumb.dropto{outline:3px solid var(--accent-strong);outline-offset:2px;border-radius:8px}
+.iethumb .ino2{position:absolute;left:4px;bottom:4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:rgba(0,0,0,.62);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .iethumb .ix{position:absolute;top:-6px;right:-6px;width:26px;height:26px;border-radius:50%;border:0;background:var(--danger);color:#fff;font-weight:900;cursor:pointer}
 .card.ie.drop{outline:3px dashed var(--accent-strong);outline-offset:-3px;background:color-mix(in srgb,var(--accent) 18%,var(--surface))}
 .ieadd.sm{width:auto;height:36px;padding:0 12px;border-width:1.5px;font-size:12.5px}
@@ -396,7 +397,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.43.10";
+const APP_VERSION="v0.43.11";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -2058,6 +2059,7 @@ function infoEditHtml(){
     '<li>"입력 예정"이라고 쓰면 점선 상자로 보입니다.</li>'+
     '<li>"관리자에게 문의하십시오." 뒤에는 전화번호가 자동으로 붙습니다.</li>'+
     '<li>칸마다 사진을 6장까지 넣을 수 있습니다(내용 아래에 보임). 올릴 때 자동으로 크기를 줄입니다.</li>'+
+    '<li>사진 순서는 작은 사진을 눌러 다른 사진 자리로 <b>끌어다 놓으면</b> 바뀝니다(마우스·손가락 모두). 사진의 숫자가 순서입니다.</li>'+
     '<li>사진 배치: <b>한 줄에</b> 1장·2장·3장, <b>크기</b> 크게(화면 폭 가득)·보통(약 70%)·작게(약 45%, 가운데)를 따로 고릅니다. 한 줄에 2장 이상이면 정사각형으로 잘려 보이고, 손님이 누르면 원본이 열립니다. 고른 모양은 바로 아래 점선 상자에 미리 보입니다.</li>'+
     (INFO_DEFAULT[k].addr?'<li>맨 위 주소 상자(주소 복사·지도 버튼)는 고정이라 여기서 고치지 않습니다.</li>':'')+
     (INFO_DEFAULT[k].call?'<li>맨 아래 [관리자에게 전화] 상자는 고정입니다.</li>':'')+'</ul></details>';
@@ -2069,7 +2071,7 @@ function infoEditHtml(){
       ((x.imgs||[]).length?'<div class="iesz" role="group" aria-label="한 줄 사진 수"><span class="hint">한 줄에</span>'+[[1,"1장"],[2,"2장"],[3,"3장"]].map(([v,l])=>'<button type="button" class="btn ghost small'+((+x.cols||1)===v?' on':'')+'" data-icol="'+i+':'+v+'">'+l+'</button>').join("")+'</div>'+
         '<div class="iesz" role="group" aria-label="사진 크기"><span class="hint">크기</span>'+[["l","크게"],["m","보통"],["s","작게"]].map(([v,l])=>'<button type="button" class="btn ghost small'+((x.size||"l")===v?' on':'')+'" data-isz="'+i+':'+v+'">'+l+'</button>').join("")+'</div>'+
         '<div class="iesz-prev">'+photosHtml(x.imgs,x.size,x.cols)+'</div>':'')+
-      '<div class="iethumbs">'+(x.imgs||[]).filter(photoOk).map((im,j)=>'<div class="iethumb"><img src="'+PHOTO_BASE+im+'" alt=""><button type="button" class="ix" data-ipx="'+i+':'+j+'" aria-label="사진 빼기">✕</button><div class="imv"><button type="button" data-ipm="'+i+':'+j+':-1"'+(j?'':' disabled')+' aria-label="앞으로">‹</button><button type="button" data-ipm="'+i+':'+j+':1"'+(j<(x.imgs||[]).length-1?'':' disabled')+' aria-label="뒤로">›</button></div></div>').join("")+
+      '<div class="iethumbs">'+(x.imgs||[]).filter(photoOk).map((im,j)=>'<div class="iethumb" data-ti="'+i+'" data-tj="'+j+'" title="끌어서 순서 바꾸기"><img src="'+PHOTO_BASE+im+'" alt="" draggable="false"><span class="ino2">'+(j+1)+'</span><button type="button" class="ix" data-ipx="'+i+':'+j+'" aria-label="사진 빼기">✕</button></div>').join("")+
       ((x.imgs||[]).length<6?'<label class="ieadd'+((x.imgs||[]).length?'':' sm')+'"><input type="file" accept="image/*" multiple data-ipa="'+i+'" hidden>📷 사진 추가</label>':'')+'</div>'+'</div>').join("");
   return '<div class="card">'+tabs+st+help+'</div>'+rows+
     '<button type="button" class="btn ghost" id="ieAdd"'+(secs.length>=20?' disabled':'')+'>+ 칸 추가</button>'+
@@ -2092,9 +2094,28 @@ function bindInfoEdit(){
   document.querySelectorAll("[data-ix]").forEach(b=>b.onclick=()=>{const a=readInfoDraft();a.splice(+b.dataset.ix,1);A.infoDraft=a;A.infoMsg="";redraw()});
   document.querySelectorAll("[data-icol]").forEach(b=>b.onclick=()=>{const [i,v]=b.dataset.icol.split(":"),a=readInfoDraft();a[+i].cols=+v;A.infoDraft=a;A.infoMsg="";redraw()}); // 한 줄 사진 수(v0.43.6, 서버 039)
   document.querySelectorAll("[data-isz]").forEach(b=>b.onclick=()=>{const [i,v]=b.dataset.isz.split(":"),a=readInfoDraft();a[+i].size=v;A.infoDraft=a;A.infoMsg="";redraw()}); // 사진 크기(v0.43.5, 서버 038)
-  document.querySelectorAll("[data-ipm]").forEach(b=>b.onclick=()=>{ // 사진 순서 바꾸기(v0.43.9): ‹ 앞으로 · › 뒤로
-    const [i,j,d]=b.dataset.ipm.split(":").map(Number),a=readInfoDraft(),im=a[i].imgs||[],k2=j+d;if(k2<0||k2>=im.length)return;
-    [im[j],im[k2]]=[im[k2],im[j]];a[i].imgs=im;A.infoDraft=a;A.infoMsg="";redraw();
+  // 사진 순서: 작은 사진을 눌러 끌어서 다른 사진 자리에 놓기(마우스·손가락, v0.43.11). 6px 넘게 움직여야 끌기 시작
+  document.querySelectorAll(".iethumb[data-ti]").forEach(th=>{
+    let st=null;
+    const start=(x,y)=>{st={x,y,drag:false,to:null}};
+    const move=(x,y)=>{if(!st)return false;const dx=x-st.x,dy=y-st.y;
+      if(!st.drag){if(Math.hypot(dx,dy)<6)return false;st.drag=true;th.classList.add("dragging")}
+      th.style.transform="translate("+dx+"px,"+dy+"px)";
+      const sibs=[...th.parentNode.querySelectorAll(".iethumb")];st.to=null;
+      sibs.forEach(o=>{o.classList.remove("dropto");if(o===th)return;const r=o.getBoundingClientRect();
+        if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom){o.classList.add("dropto");st.to=+o.dataset.tj}});return true};
+    const end=()=>{if(!st)return;const s0=st;st=null;th.classList.remove("dragging");th.style.transform="";
+      th.parentNode.querySelectorAll(".dropto").forEach(o=>o.classList.remove("dropto"));
+      if(!s0.drag||s0.to===null)return;
+      const i2=+th.dataset.ti,j2=+th.dataset.tj,a=readInfoDraft(),im=a[i2].imgs||[];const [m]=im.splice(j2,1);im.splice(s0.to,0,m);a[i2].imgs=im;A.infoDraft=a;A.infoMsg="";redraw()};
+    // 마우스: pointer 이벤트 / 손가락: touch 이벤트(휴대폰에서 pointer가 중간에 취소되는 문제 때문에, v0.43.11)
+    th.onpointerdown=e=>{if(e.pointerType==="touch"||e.target.closest(".ix")||e.button>0)return;start(e.clientX,e.clientY);th.setPointerCapture(e.pointerId)};
+    th.onpointermove=e=>{if(e.pointerType==="touch")return;if(move(e.clientX,e.clientY))e.preventDefault()};
+    th.onpointerup=th.onpointercancel=e=>{if(e.pointerType!=="touch")end()};
+    th.addEventListener("touchstart",e=>{if(e.target.closest(".ix")||e.touches.length>1)return;const t=e.touches[0];start(t.clientX,t.clientY)},{passive:true});
+    th.addEventListener("touchmove",e=>{if(!st)return;const t=e.touches[0];if(move(t.clientX,t.clientY))e.preventDefault()},{passive:false});
+    th.addEventListener("touchend",e=>{if(st&&st.drag)e.preventDefault();end()},{passive:false});
+    th.addEventListener("touchcancel",()=>{if(st){st.drag=false;end()}});
   });
   document.querySelectorAll("[data-ipx]").forEach(b=>b.onclick=()=>{ // 사진 빼기(저장 전 올린 사진은 바로 지우고, 저장된 사진은 [저장] 뒤에 지움)
     const [i,j]=b.dataset.ipx.split(":").map(Number),a=readInfoDraft(),im=a[i].imgs||[],nm=im[j];im.splice(j,1);a[i].imgs=im;A.infoDraft=a;
