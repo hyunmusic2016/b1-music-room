@@ -308,7 +308,10 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .ver{font-size:11px;color:var(--sub);margin:0;letter-spacing:.02em}
 /* 맨 아래 오른쪽: 버전 + 관리자 페이지 아이콘(v0.16.6) */
 .foot{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:28px 0 0}
-.addr{margin:0;font-size:11.5px;line-height:1.6;color:var(--sub);word-break:keep-all}.addr a{color:inherit;text-decoration:none}
+.addr{margin:0;font-size:11.5px;line-height:1.5;color:var(--sub);word-break:keep-all;min-width:0}
+.addr .al{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px}
+.abtn{flex:none;font:inherit;font-size:11.5px;font-weight:700;min-height:28px;padding:0 9px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;text-decoration:none}
+.abtn.call{background:#1e8e4e;border-color:#1e8e4e;color:#fff}
 </style>
 </head>
 <body>
@@ -347,7 +350,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
     </div>
     <div id="adminPane" class="hidden"></div>
   </section>
-  <div class="foot"><p class="addr">주소 : 인천광역시 부평구 동수북로158번길 3, 수경빌딩 지하1층<br>전화번호 : <a href="tel:01077538730">010-7753-8730</a></p><p class="ver" id="ver"></p></div>
+  <div class="foot"><div class="addr"><div class="al"><span>주소 : 인천광역시 부평구 동수북로158번길 3, 수경빌딩 지하1층</span><button type="button" class="abtn" id="addrCopy" data-addr="인천광역시 부평구 동수북로158번길 3, 수경빌딩 지하1층">주소 복사</button></div><div class="al"><span>전화번호 : 010-7753-8730</span><a class="abtn call" href="tel:01077538730">통화</a></div></div><p class="ver" id="ver"></p></div>
 </div>
 
 
@@ -358,7 +361,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.40.5";
+const APP_VERSION="v0.40.6";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -2019,6 +2022,7 @@ function renderAdmin(){
 
 /* ===== 시작 ===== */
 $("#ver").textContent=APP_VERSION;
+$("#addrCopy").onclick=async()=>{const b=$("#addrCopy"),ok=await copyText(b.dataset.addr);b.textContent=ok?"복사했습니다":"복사 실패";setTimeout(()=>{b.textContent="주소 복사"},2000)}; // 푸터 주소 복사(v0.40.6)
 renderBook();refreshBook();
 if(location.hash==="#admin")go("admin"); // 관리자는 주소 끝에 #admin을 붙여 바로 들어올 수 있습니다.
 /* 화면 안의 관리자 진입 버튼은 없음(v0.38.17). 주소창에 #admin을 붙이면 새로고침 없이도 관리자 화면으로 */
