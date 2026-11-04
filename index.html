@@ -385,7 +385,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.43.6";
+const APP_VERSION="v0.43.7";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -2004,8 +2004,8 @@ function infoEditHtml(){
   if(!A.infoLoaded)return '<p class="hint">불러오는 중입니다…</p>';
   if(!A.infoKey){ // 목록(v0.43.3): 홈 화면 위에서 아래 순서, 누르면 그 글만 고치는 화면
     return (infoSaved===null?'<div class="msg err">서버에서 안내 글을 불러오지 못했습니다. Supabase에 035를 실행했는지 확인하십시오.</div>':'')+
-      '<div class="card"><p class="hint" style="margin:0 0 4px">고칠 안내 글을 고르십시오. 홈 화면 위에서 아래 순서입니다.</p>'+
-      INFO_KEYS.map(([kk,l],i)=>{const v=infoSaved&&infoSaved[kk];return '<div class="item"><button type="button" data-ik="'+kk+'" class="ilist"><span class="ino">'+(i+1)+'</span><span style="flex:1;min-width:0"><b>'+l+'</b><small class="hint" style="display:block;margin:2px 0 0">'+(v?'✎ '+esc(priceDate(v.updated_at)||v.updated_at)+' 저장한 글':'기본 글')+'</small></span><span class="chev" aria-hidden="true">›</span></button></div>'}).join("")+'</div>';
+      '<div class="card">'+
+      INFO_KEYS.map(([kk,l],i)=>{const v=infoSaved&&infoSaved[kk];return '<div class="item"><button type="button" data-ik="'+kk+'" class="ilist"><span style="flex:1;min-width:0"><b>'+l+'</b><small class="hint" style="display:block;margin:2px 0 0">'+(v?'✎ '+esc(priceDate(v.updated_at)||v.updated_at)+' 저장한 글':'기본 글')+'</small></span><span class="chev" aria-hidden="true">›</span></button></div>'}).join("")+'</div>';
   }
   const k=A.infoKey,sv=infoSaved&&infoSaved[k];
   const secs=A.infoDraft||JSON.parse(JSON.stringify(infoSections(k)));A.infoDraft=secs;
