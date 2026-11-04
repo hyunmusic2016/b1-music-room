@@ -866,30 +866,26 @@ reset role; set role anon;
 select test.ok((public.info_pages())->'pages'->'price'->'sections'->0->>'b' = '매일 채워짐', '공개 조회에 이용료 설명');
 reset role; reset request.jwt.claims;
 
--- 41. 038: 사진 크기
+-- 41. 038·039·041: 사진 배치(041부터 사진마다 lay, 칸 전체 size·cols로 보내도 사진마다 바꿔 저장)
 reset role;
 set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
 set role authenticated;
-select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"size":"s"}]'))->'pages'->'room'->'sections'->0->>'size' = 's', '사진 크기 작게 저장');
-select test.ok(not ((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"size":"l"}]'))->'pages'->'room'->'sections'->0 ? 'size'), '크게(기본)는 따로 저장 안 함');
-select test.ok(not ((public.admin_set_info_page('room', '[{"t":"장비","b":"x","size":"m"}]'))->'pages'->'room'->'sections'->0 ? 'size'), '사진 없으면 크기 저장 안 함');
+select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg","room/2-b.jpg"],"size":"s"}]'))->'pages'->'room'->'sections'->0->'lay' = '["1s","1s"]'::jsonb, '옛 방식 작게 → 사진마다 1s');
+select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"cols":"3"}]'))->'pages'->'room'->'sections'->0->'lay' = '["3"]'::jsonb, '옛 방식 3장 → 사진마다 3');
+select test.ok(not ((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"size":"l"}]'))->'pages'->'room'->'sections'->0 ? 'lay'), '모두 기본(1l)이면 lay 저장 안 함');
+select test.ok(not ((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"size":"m"}]'))->'pages'->'room'->'sections'->0 ? 'size'), '칸 전체 size는 더 저장 안 함');
 select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"size":"xl"}]'))->>'msg' like '사진 크기를%', '잘못된 크기는 막힘');
-reset role; reset request.jwt.claims;
-
--- 42. 039: 사진 한 줄 장수(cols)와 크기(size) 따로
-reset role;
-set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
-set role authenticated;
-select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"size":"m","cols":1}]'))->'pages'->'room'->'sections'->0 = '{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"size":"m"}'::jsonb, '보통 크기 + 한 줄 1장');
-select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"cols":"3"}]'))->'pages'->'room'->'sections'->0->>'cols' = '3', '한 줄 3장 저장');
 select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1-a.jpg"],"cols":4}]'))->>'msg' like '한 줄 사진 수를%', '한 줄 4장은 막힘');
+select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1.jpg","room/2.jpg","room/3.jpg","room/4.jpg"],"lay":["1l","2","2","1m"]}]'))->'pages'->'room'->'sections'->0->'lay' = '["1l","2","2","1m"]'::jsonb, '041: 사진마다 배치(2·3번만 한 줄 2장)');
+select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1.jpg","room/2.jpg"],"lay":["2"]}]'))->>'msg' like '사진 배치 정보가 올바르지%', '041: 배치 수가 사진 수와 다르면 막힘');
+select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"x","imgs":["room/1.jpg"],"lay":["4"]}]'))->>'msg' like '사진 배치를 다시%', '041: 없는 배치 값은 막힘');
 reset role;
--- 038 모양의 옛 자료를 넣고 039의 변환 부분만 다시 실행해 보기
-update public.settings set value = '{"way":{"sections":[{"t":"a","b":"","imgs":["way/1-a.jpg"],"size":"m"},{"t":"b","b":"","imgs":["way/2-b.jpg"],"size":"s"},{"t":"c","b":"x"}],"updated_at":"2026-11-04"}}' where key = 'info_pages';
-\i supabase/tests/039_convert_only.sql
-select test.ok((select value->'way'->'sections'->0 from public.settings where key = 'info_pages') = '{"t":"a","b":"","imgs":["way/1-a.jpg"],"cols":2}'::jsonb, '옛 보통 → 한 줄 2장·크게');
-select test.ok((select value->'way'->'sections'->1->>'cols' from public.settings where key = 'info_pages') = '3' and not ((select value->'way'->'sections'->1 from public.settings where key = 'info_pages') ? 'size'), '옛 작게 → 한 줄 3장·크게');
-select test.ok((select value->'way'->'sections'->2 from public.settings where key = 'info_pages') = '{"t":"c","b":"x"}'::jsonb, '사진 없는 칸은 그대로');
+-- 039 모양의 옛 자료를 넣고 041의 변환 부분만 다시 실행해 보기
+update public.settings set value = '{"way":{"sections":[{"t":"a","b":"","imgs":["way/1-a.jpg","way/1-b.jpg"],"cols":2},{"t":"b","b":"","imgs":["way/2-b.jpg"],"size":"m"},{"t":"c","b":"x"},{"t":"d","b":"","imgs":["way/3.jpg"],"size":"l"}],"updated_at":"2026-11-04"}}' where key = 'info_pages';
+\i supabase/tests/041_convert_only.sql
+select test.ok((select value->'way'->'sections'->0 from public.settings where key = 'info_pages') = '{"t":"a","b":"","imgs":["way/1-a.jpg","way/1-b.jpg"],"lay":["2","2"]}'::jsonb, '041 변환: 칸 2장 → 사진마다 2');
+select test.ok((select value->'way'->'sections'->1->'lay' from public.settings where key = 'info_pages') = '["1m"]'::jsonb, '041 변환: 보통 → 1m');
+select test.ok((select value->'way'->'sections'->2 from public.settings where key = 'info_pages') = '{"t":"c","b":"x"}'::jsonb and (select value->'way'->'sections'->3 from public.settings where key = 'info_pages') = '{"t":"d","b":"","imgs":["way/3.jpg"]}'::jsonb, '041 변환: 사진 없는 칸·기본값 칸 정리');
 reset request.jwt.claims;
 
 select '모든 시험 통과' as 결과;

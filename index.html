@@ -325,7 +325,12 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 #lightbox .lbx{top:12px;right:12px;width:44px;height:44px;font-size:20px}
 #lightbox .lbp,#lightbox .lbn{top:50%;transform:translateY(-50%);width:44px;height:44px;font-size:28px;line-height:1}#lightbox .lbp{left:8px}#lightbox .lbn{right:8px}
 #lightbox .lbc{position:absolute;z-index:2;pointer-events:none;left:0;right:0;bottom:16px;text-align:center;color:#fff;font-size:14px;font-weight:700}
-.iphotos{display:grid;gap:8px;margin-top:10px}.iphotos.c2{grid-template-columns:1fr 1fr}.iphotos.c3{grid-template-columns:1fr 1fr 1fr}
+.iphotos{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.iphotos a{display:block;flex:0 0 100%}
+.iphotos a.p2{flex:0 0 calc(50% - 4px)}.iphotos a.p3{flex:0 0 calc((100% - 16px)/3)}.iphotos a.p2 img,.iphotos a.p3 img{aspect-ratio:1/1;object-fit:cover}
+.iphotos a.p1m img{width:70%;margin:0 auto}.iphotos a.p1s img{width:45%;margin:0 auto}
+.iethumb.sel{outline:3px solid var(--accent-strong);outline-offset:2px;border-radius:8px}.iethumb .isel{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:var(--accent-strong);color:#fff;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.iethumb .ilay{position:absolute;right:4px;bottom:4px;padding:0 5px;height:18px;border-radius:9px;background:rgba(255,255,255,.88);color:#14304d;font-size:10.5px;font-weight:800;display:flex;align-items:center;pointer-events:none}
+.iesel-h{font-size:13px;color:var(--sub);margin:10px 0 6px}.linkbtn{border:0;background:none;color:var(--accent-text);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:0}.iphotos.c2{grid-template-columns:1fr 1fr}.iphotos.c3{grid-template-columns:1fr 1fr 1fr}
 .iphotos.c2 img,.iphotos.c3 img{aspect-ratio:1/1;object-fit:cover}.iphotos.w-m{width:70%;margin-left:auto;margin-right:auto}.iphotos.w-s{width:45%;margin-left:auto;margin-right:auto}
 .iesz .hint{margin:0;min-width:44px}.iesz-prev{margin:2px 0 10px;padding:8px;border:1px dashed var(--line);border-radius:10px}.iesz-prev .iphotos{margin-top:0}.iesz-prev a{pointer-events:none}
 .iesz{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 8px}.iesz .btn{margin:0;min-height:34px}.iesz .btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent-strong)}.iphotos img{width:100%;border-radius:10px;display:block;background:var(--line)}
@@ -397,7 +402,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.43.12";
+const APP_VERSION="v0.43.13";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1064,7 +1069,7 @@ async function openPriceSheet(){
   const hasF=ef.length||sf.length,hasC=ec.length||sc.length;let hasExp=false;
   // 설명 글은 안내 글 변경(price 창)에서 고칠 수 있음(v0.43.2, 서버 037). 제목이 정액권/횟수권인 칸은 그 상품을 팔 때만
   const expSecs=infoSections("price").filter(x=>x.t!=="정액권"&&x.t!=="횟수권"||(x.t==="정액권"?hasF:hasC));
-  const expHtml=expSecs.map(x=>{const b=infoBodyHtml(x.b)+photosHtml(x.imgs,x.size,x.cols),hd=x.t==="정액권"?'<span class="badge big flat" style="margin-left:0">정액권</span>':x.t==="횟수권"?'<span class="badge big count" style="margin-left:0">횟수권</span>':x.t?'<b>'+infoInline(x.t)+'</b>':'';
+  const expHtml=expSecs.map(x=>{const b=infoBodyHtml(x.b)+photosHtml(x),hd=x.t==="정액권"?'<span class="badge big flat" style="margin-left:0">정액권</span>':x.t==="횟수권"?'<span class="badge big count" style="margin-left:0">횟수권</span>':x.t?'<b>'+infoInline(x.t)+'</b>':'';
     return inner(hd+'<div class="pexp info" style="margin:6px 0 0">'+b+'</div>')}).join("");
   if(expHtml){h+=group("정액권·횟수권 안내","--ink",expHtml);hasExp=true}
   if(ext)h+=group("일반회원","--ext-text",ext,hasExp?36:12);
@@ -1166,7 +1171,12 @@ function openLightbox(list,start){
 }
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest(".iphotos a");if(!a||a.closest(".iesz-prev"))return;
   e.preventDefault();const all=[...a.parentNode.querySelectorAll("a")];openLightbox(all.map(x=>x.href),all.indexOf(a))});
-function photosHtml(imgs,size,cols){const a=(Array.isArray(imgs)?imgs:[]).filter(photoOk),c=[2,3].includes(+cols)?+cols:1;return a.length?'<div class="iphotos c'+c+' w-'+(size==="m"||size==="s"?size:"l")+'">'+a.map(x=>'<a href="'+PHOTO_BASE+x+'" target="_blank" rel="noopener"><img src="'+PHOTO_BASE+x+'" alt="" loading="lazy"></a>').join("")+'</div>':""}
+// 사진마다 배치(v0.43.13, 서버 041): '1l' 한 줄 1장·크게 / '1m' 1장·보통 / '1s' 1장·작게 / '2' 한 줄 2장 / '3' 한 줄 3장. 예전 칸 전체 설정(size·cols)도 읽음
+const LAY_OK=["1l","1m","1s","2","3"];
+function photoLay(x,j){const v=x&&Array.isArray(x.lay)?x.lay[j]:null;if(LAY_OK.includes(v))return v;const c=+(x&&x.cols)||1;return c>1?String(c):"1"+((x&&(x.size==="m"||x.size==="s"))?x.size:"l")}
+function layOf(x){return ((x&&x.imgs)||[]).map((_,j)=>photoLay(x,j))}
+function photosHtml(x){const im=(x&&Array.isArray(x.imgs)?x.imgs:[]);const a=im.map((u,j)=>[u,photoLay(x,j)]).filter(([u])=>photoOk(u));
+  return a.length?'<div class="iphotos">'+a.map(([u,l])=>'<a class="p'+l+'" href="'+PHOTO_BASE+u+'" target="_blank" rel="noopener"><img src="'+PHOTO_BASE+u+'" alt="" loading="lazy"></a>').join("")+'</div>':""}
 // 사진 줄이기: 긴 쪽 1280px, JPEG(약 200KB). 2MB가 넘으면 화질을 낮춰 다시
 async function shrinkPhoto(file){
   const url=URL.createObjectURL(file);
@@ -1196,7 +1206,7 @@ function infoPageHtml(k,secs){
       '<div class="maps"><button type="button" class="btn ghost" id="infoAddrCopy">주소 복사</button>'+
       '<a class="btn ghost" target="_blank" rel="noopener" href="https://map.naver.com/p/search/'+encodeURIComponent(ADDRESS.split(",")[0])+'">네이버 지도</a>'+
       '<a class="btn ghost" target="_blank" rel="noopener" href="https://map.kakao.com/link/search/'+encodeURIComponent(ADDRESS.split(",")[0])+'">카카오맵</a></div>');
-  (secs||infoSections(k)).forEach(x=>{const b=infoBodyHtml(x.b),ph=photosHtml(x.imgs,x.size,x.cols);if(x.t||b||ph)h+=card(x.t?infoInline(x.t):"",b+ph)});
+  (secs||infoSections(k)).forEach(x=>{const b=infoBodyHtml(x.b),ph=photosHtml(x);if(x.t||b||ph)h+=card(x.t?infoInline(x.t):"",b+ph)});
   if(d.call)h+=card("",'<p style="margin:0">궁금하신 점은 관리자에게 전화하십시오.</p><a class="btn call" href="tel:'+PHONE.replace(/\D/g,"")+'">관리자에게 전화 ('+PHONE+')</a>');
   return h;
 }
@@ -2061,7 +2071,7 @@ function infoEditHtml(){
     '<li>"관리자에게 문의하십시오." 뒤에는 전화번호가 자동으로 붙습니다.</li>'+
     '<li>칸마다 사진을 원하는 만큼 넣을 수 있습니다(내용 아래에 보임). 올릴 때 자동으로 크기를 줄입니다.</li>'+
     '<li>사진 순서는 작은 사진을 눌러 다른 사진 자리로 <b>끌어다 놓으면</b> 바뀝니다(마우스·손가락 모두). 사진의 숫자가 순서입니다.</li>'+
-    '<li>사진 배치: <b>한 줄에</b> 1장·2장·3장, <b>크기</b> 크게(화면 폭 가득)·보통(약 70%)·작게(약 45%, 가운데)를 따로 고릅니다. 한 줄에 2장 이상이면 정사각형으로 잘려 보이고, 손님이 누르면 원본이 열립니다. 고른 모양은 바로 아래 점선 상자에 미리 보입니다.</li>'+
+    '<li>사진 배치는 <b>사진마다</b> 정합니다. 작은 사진을 <b>살짝 눌러 고른 뒤</b>(여러 장 가능, ✓ 표시) <b>한 줄에</b> 1장·2장·3장, <b>크기</b> 크게(화면 폭 가득)·보통(약 70%)·작게(약 45%, 가운데)를 누르면 고른 사진에만 적용됩니다. 안 고르면 모든 사진에 적용됩니다. 예: 2·3번만 골라 "2장"을 누르면 그 둘만 나란히 놓입니다. 2장·3장은 정사각형으로 잘려 보이고, 크기는 한 줄 1장일 때만 씁니다. 모양은 바로 아래 점선 상자에 미리 보입니다.</li>'+
     (INFO_DEFAULT[k].addr?'<li>맨 위 주소 상자(주소 복사·지도 버튼)는 고정이라 여기서 고치지 않습니다.</li>':'')+
     (INFO_DEFAULT[k].call?'<li>맨 아래 [관리자에게 전화] 상자는 고정입니다.</li>':'')+'</ul></details>';
   const rows=secs.map((x,i)=>'<div class="card ie" data-i="'+i+'"><div class="row" style="align-items:center;gap:6px"><b style="flex:1">칸 '+(i+1)+'</b>'+
@@ -2069,32 +2079,39 @@ function infoEditHtml(){
       '<label>제목</label><input type="text" class="ie-t" maxlength="60" value="'+esc(x.t||"")+'">'+
       '<label>내용</label><textarea class="ie-b" maxlength="3000" rows="'+Math.min(12,Math.max(3,String(x.b||"").split("\n").length+1))+'">'+esc(x.b||"")+'</textarea>'+
       '<label>사진 <small class="hint">'+((x.imgs||[]).length)+'장</small></label>'+
-      ((x.imgs||[]).length?'<div class="iesz" role="group" aria-label="한 줄 사진 수"><span class="hint">한 줄에</span>'+[[1,"1장"],[2,"2장"],[3,"3장"]].map(([v,l])=>'<button type="button" class="btn ghost small'+((+x.cols||1)===v?' on':'')+'" data-icol="'+i+':'+v+'">'+l+'</button>').join("")+'</div>'+
-        '<div class="iesz" role="group" aria-label="사진 크기"><span class="hint">크기</span>'+[["l","크게"],["m","보통"],["s","작게"]].map(([v,l])=>'<button type="button" class="btn ghost small'+((x.size||"l")===v?' on':'')+'" data-isz="'+i+':'+v+'">'+l+'</button>').join("")+'</div>'+
-        '<div class="iesz-prev">'+photosHtml(x.imgs,x.size,x.cols)+'</div>':'')+
-      '<div class="iethumbs">'+(x.imgs||[]).filter(photoOk).map((im,j)=>'<div class="iethumb" data-ti="'+i+'" data-tj="'+j+'" title="끌어서 순서 바꾸기"><img src="'+PHOTO_BASE+im+'" alt="" draggable="false"><span class="ino2">'+(j+1)+'</span><button type="button" class="ix" data-ipx="'+i+':'+j+'" aria-label="사진 빼기">✕</button></div>').join("")+
-      ((x.imgs||[]).length<PHOTO_MAX?'<label class="ieadd'+((x.imgs||[]).length?'':' sm')+'"><input type="file" accept="image/*" multiple data-ipa="'+i+'" hidden>📷 사진 추가</label>':'')+'</div>'+'</div>').join("");
+      '<div class="iethumbs">'+(x.imgs||[]).filter(photoOk).map((im,j)=>{const L=photoLay(x,j),sel=((A.infoSel||{})[i]||[]).includes(j);
+        return '<div class="iethumb'+(sel?' sel':'')+'" data-ti="'+i+'" data-tj="'+j+'" title="누르면 고르기 · 끌어서 순서 바꾸기"><img src="'+PHOTO_BASE+im+'" alt="" draggable="false"><span class="ino2">'+(j+1)+'</span><span class="ilay">'+LAY_NAME[L]+'</span>'+(sel?'<span class="isel" aria-hidden="true">✓</span>':'')+'<button type="button" class="ix" data-ipx="'+i+':'+j+'" aria-label="사진 빼기">✕</button></div>'}).join("")+
+      ((x.imgs||[]).length<PHOTO_MAX?'<label class="ieadd'+((x.imgs||[]).length?'':' sm')+'"><input type="file" accept="image/*" multiple data-ipa="'+i+'" hidden>📷 사진 추가</label>':'')+'</div>'+
+      ((x.imgs||[]).length?(()=>{const sel=((A.infoSel||{})[i]||[]),tg=sel.length?sel:(x.imgs||[]).map((_,j)=>j),Ls=tg.map(j=>photoLay(x,j)),same=v=>Ls.every(l=>l===v),one=Ls.every(l=>l[0]==="1");
+        return '<div class="iesel-h">'+(sel.length?'고른 사진 <b>'+sel.length+'장</b>에 적용 · <button type="button" class="linkbtn" data-iclr="'+i+'">고르기 풀기</button>':'사진을 눌러 고르면 그 사진에만 적용됩니다. 안 고르면 <b>모든 사진</b>에 적용됩니다.')+'</div>'+
+          '<div class="iesz" role="group" aria-label="한 줄 사진 수"><span class="hint">한 줄에</span>'+[["1","1장"],["2","2장"],["3","3장"]].map(([v,l])=>'<button type="button" class="btn ghost small'+((v==="1"?one:same(v))?' on':'')+'" data-icol="'+i+':'+v+'">'+l+'</button>').join("")+'</div>'+
+          '<div class="iesz" role="group" aria-label="사진 크기"><span class="hint">크기</span>'+[["l","크게"],["m","보통"],["s","작게"]].map(([v,l])=>'<button type="button" class="btn ghost small'+(same("1"+v)?' on':'')+'" data-isz="'+i+':'+v+'">'+l+'</button>').join("")+'<small class="hint" style="margin:0">(한 줄 1장일 때)</small></div>'+
+          '<div class="iesz-prev">'+photosHtml(x)+'</div>'})():'')+'</div>').join("");
   return '<div class="card">'+tabs+st+help+'</div>'+rows+
     '<button type="button" class="btn ghost" id="ieAdd"'+(secs.length>=20?' disabled':'')+'>+ 칸 추가</button>'+
     '<div class="card"><div id="ieMsg">'+(A.infoMsg||'')+'</div><div class="btn2"><button class="btn" id="ieSave"'+(infoSaved===null?' disabled':'')+'>저장</button><button class="btn ghost" id="iePrev">미리 보기</button></div>'+
     (sv?'<button class="btn ghost small" id="ieReset" style="margin-top:12px;color:var(--danger)">기본 글로 되돌리기</button>':'')+'</div>';
 }
-function readInfoDraft(){const d=A.infoDraft||[];return [...document.querySelectorAll(".card.ie")].map((c,i)=>{const o={t:c.querySelector(".ie-t").value,b:c.querySelector(".ie-b").value};const im=(d[i]&&d[i].imgs)||[];if(im.length){o.imgs=im.slice();if(d[i].size&&d[i].size!=="l")o.size=d[i].size;if(+d[i].cols>1)o.cols=+d[i].cols}return o})}
+const LAY_NAME={"1l":"1장","1m":"1장·보통","1s":"1장·작게","2":"2장","3":"3장"};
+// lay는 항상 사진 수와 같은 길이로 들고 다님(사진 빼기·순서 바꾸기·올리기 때 함께 움직임)
+function readInfoDraft(){const d=A.infoDraft||[];return [...document.querySelectorAll(".card.ie")].map((c,i)=>{const o={t:c.querySelector(".ie-t").value,b:c.querySelector(".ie-b").value};const im=(d[i]&&d[i].imgs)||[];if(im.length){o.imgs=im.slice();o.lay=layOf(d[i])}return o})}
 function bindInfoEdit(){
   if(A.infoKey&&!$("#ieSave"))return;
-  if(!A.infoKey){window.infoLeave=null;document.querySelectorAll("[data-ik]").forEach(b=>b.onclick=()=>{A.infoKey=b.dataset.ik;A.infoDraft=null;A.infoMsg="";renderAdmin();window.scrollTo(0,0)});return}
+  if(!A.infoKey){window.infoLeave=null;document.querySelectorAll("[data-ik]").forEach(b=>b.onclick=()=>{A.infoKey=b.dataset.ik;A.infoDraft=null;A.infoMsg="";A.infoSel={};renderAdmin();window.scrollTo(0,0)});return}
   const k=A.infoKey,redraw=()=>{renderAdmin()};
-  const norm=a=>JSON.stringify(a.map(x=>({t:x.t||"",b:x.b||"",i:(x.imgs||[]).join(","),z:(x.imgs||[]).length?(x.size||"l")+(+x.cols||1):""})));
+  const norm=a=>JSON.stringify(a.map(x=>({t:x.t||"",b:x.b||"",i:(x.imgs||[]).join(","),z:layOf(x).join(",")})));
   const orig=norm(infoSections(k));A.infoUp=A.infoUp||[]; // infoUp: 이번에 올렸지만 아직 저장 안 한 사진
   const dropUnsaved=()=>{const keep=new Set(savedPhotos(k));removePhotos(A.infoUp.filter(x=>!keep.has(x)));A.infoUp=[]};
   // [← 안내 글 변경]으로 목록에 돌아갈 때: 저장 안 한 내용이 있으면 확인, 이번에 올린 사진은 지움
   window.infoLeave=()=>{if(norm(readInfoDraft())!==orig&&!confirm("저장하지 않은 내용은 사라집니다. 목록으로 돌아가시겠습니까?"))return false;dropUnsaved();return true};
-  const mv=(i,d)=>{const a=readInfoDraft(),j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];A.infoDraft=a;A.infoMsg="";redraw()};
+  const mv=(i,d)=>{A.infoSel={};const a=readInfoDraft(),j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];A.infoDraft=a;A.infoMsg="";redraw()};
   document.querySelectorAll("[data-iu]").forEach(b=>b.onclick=()=>mv(+b.dataset.iu,-1));
   document.querySelectorAll("[data-idn]").forEach(b=>b.onclick=()=>mv(+b.dataset.idn,1));
-  document.querySelectorAll("[data-ix]").forEach(b=>b.onclick=()=>{const a=readInfoDraft();a.splice(+b.dataset.ix,1);A.infoDraft=a;A.infoMsg="";redraw()});
-  document.querySelectorAll("[data-icol]").forEach(b=>b.onclick=()=>{const [i,v]=b.dataset.icol.split(":"),a=readInfoDraft();a[+i].cols=+v;A.infoDraft=a;A.infoMsg="";redraw()}); // 한 줄 사진 수(v0.43.6, 서버 039)
-  document.querySelectorAll("[data-isz]").forEach(b=>b.onclick=()=>{const [i,v]=b.dataset.isz.split(":"),a=readInfoDraft();a[+i].size=v;A.infoDraft=a;A.infoMsg="";redraw()}); // 사진 크기(v0.43.5, 서버 038)
+  document.querySelectorAll("[data-ix]").forEach(b=>b.onclick=()=>{A.infoSel={};const a=readInfoDraft();a.splice(+b.dataset.ix,1);A.infoDraft=a;A.infoMsg="";redraw()});
+  const applyLay=(i,f)=>{const a=readInfoDraft(),x=a[i],sel=((A.infoSel||{})[i]||[]),tg=sel.length?sel:x.imgs.map((_,j)=>j);tg.forEach(j=>{x.lay[j]=f(x.lay[j])});A.infoDraft=a;A.infoMsg="";redraw()};
+  document.querySelectorAll("[data-icol]").forEach(b=>b.onclick=()=>{const [i,v]=b.dataset.icol.split(":");applyLay(+i,old=>v==="1"?(old&&old[0]==="1"?old:"1l"):v)});
+  document.querySelectorAll("[data-iclr]").forEach(b=>b.onclick=()=>{A.infoSel=A.infoSel||{};A.infoSel[+b.dataset.iclr]=[];redraw()}); // 한 줄 사진 수(v0.43.6, 서버 039)
+  document.querySelectorAll("[data-isz]").forEach(b=>b.onclick=()=>{const [i,v]=b.dataset.isz.split(":");applyLay(+i,()=>"1"+v)}); // 크기를 고르면 그 사진은 한 줄 1장 // 사진 크기(v0.43.5, 서버 038)
   // 사진 순서: 작은 사진을 눌러 끌어서 다른 사진 자리에 놓기(마우스·손가락, v0.43.11). 6px 넘게 움직여야 끌기 시작
   document.querySelectorAll(".iethumb[data-ti]").forEach(th=>{
     let st=null;
@@ -2107,8 +2124,11 @@ function bindInfoEdit(){
         if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom){o.classList.add("dropto");st.to=+o.dataset.tj}});return true};
     const end=()=>{if(!st)return;const s0=st;st=null;th.classList.remove("dragging");th.style.transform="";
       th.parentNode.querySelectorAll(".dropto").forEach(o=>o.classList.remove("dropto"));
-      if(!s0.drag||s0.to===null)return;
-      const i2=+th.dataset.ti,j2=+th.dataset.tj,a=readInfoDraft(),im=a[i2].imgs||[];const [m]=im.splice(j2,1);im.splice(s0.to,0,m);a[i2].imgs=im;A.infoDraft=a;A.infoMsg="";redraw()};
+      const i2=+th.dataset.ti,j2=+th.dataset.tj;
+      if(!s0.drag){A.infoSel=A.infoSel||{};const ss=A.infoSel[i2]||(A.infoSel[i2]=[]),k3=ss.indexOf(j2);if(k3>=0)ss.splice(k3,1);else ss.push(j2);redraw();return} // 살짝 누르면 고르기/풀기
+      if(s0.to===null)return;
+      const a=readInfoDraft(),im=a[i2].imgs||[],ly=a[i2].lay;const [m]=im.splice(j2,1);im.splice(s0.to,0,m);const [ml]=ly.splice(j2,1);ly.splice(s0.to,0,ml);a[i2].imgs=im;a[i2].lay=ly;
+      if(A.infoSel)A.infoSel[i2]=[];A.infoDraft=a;A.infoMsg="";redraw()};
     // 마우스: pointer 이벤트 / 손가락: touch 이벤트(휴대폰에서 pointer가 중간에 취소되는 문제 때문에, v0.43.11)
     th.onpointerdown=e=>{if(e.pointerType==="touch"||e.target.closest(".ix")||e.button>0)return;start(e.clientX,e.clientY);th.setPointerCapture(e.pointerId)};
     th.onpointermove=e=>{if(e.pointerType==="touch")return;if(move(e.clientX,e.clientY))e.preventDefault()};
@@ -2119,7 +2139,7 @@ function bindInfoEdit(){
     th.addEventListener("touchcancel",()=>{if(st){st.drag=false;end()}});
   });
   document.querySelectorAll("[data-ipx]").forEach(b=>b.onclick=()=>{ // 사진 빼기(저장 전 올린 사진은 바로 지우고, 저장된 사진은 [저장] 뒤에 지움)
-    const [i,j]=b.dataset.ipx.split(":").map(Number),a=readInfoDraft(),im=a[i].imgs||[],nm=im[j];im.splice(j,1);a[i].imgs=im;A.infoDraft=a;
+    const [i,j]=b.dataset.ipx.split(":").map(Number),a=readInfoDraft(),im=a[i].imgs||[],nm=im[j];im.splice(j,1);a[i].lay.splice(j,1);a[i].imgs=im;if(A.infoSel)A.infoSel[i]=[];A.infoDraft=a;
     if(nm&&!savedPhotos(k).includes(nm)){removePhotos([nm]);A.infoUp=A.infoUp.filter(x=>x!==nm)}
     A.infoMsg="";redraw();
   });
@@ -2130,7 +2150,7 @@ function bindInfoEdit(){
     const room=PHOTO_MAX-im.length,use=files.slice(0,room);
     A.infoMsg='<div class="msg">사진을 올리는 중입니다… (0/'+use.length+')</div>';redraw();
     let n=0,bad="";
-    for(const f of use){const r=await uploadPhoto(k,f);if(r.err){bad=r.err;break}im.push(r.name);A.infoUp.push(r.name);n++;
+    for(const f of use){const r=await uploadPhoto(k,f);if(r.err){bad=r.err;break}im.push(r.name);(a[i].lay||(a[i].lay=[])).push("1l");A.infoUp.push(r.name);n++;
       A.infoMsg='<div class="msg">사진을 올리는 중입니다… ('+n+'/'+use.length+')</div>';redraw()}
     A.infoMsg=bad?'<div class="msg err">'+esc(bad)+'</div>':'<div class="msg ok">사진 '+n+'장을 올렸습니다.'+(files.length>room?' 칸 하나에 '+PHOTO_MAX+'장까지라 '+(files.length-room)+'장은 넣지 않았습니다.':'')+' [저장]을 눌러야 손님 화면에 보입니다.</div>';redraw();
   };
@@ -2165,7 +2185,7 @@ function bindInfoEdit(){
   };
 }
 function bindSettings(){
-  document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{setPage=b.dataset.sp;renderAdmin();if(setPage==="block"||setPage==="door"||setPage==="pay"||setPage==="fee"||setPage==="roster"||setPage==="info"){if(setPage==="info"){A.infoKey=null;A.infoDraft=null;A.infoMsg=""}reloadAdmin()}});
+  document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{setPage=b.dataset.sp;renderAdmin();if(setPage==="block"||setPage==="door"||setPage==="pay"||setPage==="fee"||setPage==="roster"||setPage==="info"){if(setPage==="info"){A.infoKey=null;A.infoDraft=null;A.infoMsg="";A.infoSel={}}reloadAdmin()}});
   const back=$("#setBack");if(back)back.onclick=()=>{if(setPage==="info"&&A.infoKey){if(window.infoLeave&&!window.infoLeave())return;A.infoKey=null;A.infoDraft=null;A.infoMsg="";renderAdmin();window.scrollTo(0,0);return}if(editUser!==null){editUser=null}else if(viewUser!==null){viewUser=null;A.detail=null}else{setPage=null}uFlash="";renderAdmin()};
   if(setPage==="status"||setPage==="dormant"||setPage==="black"){if(editUser!==null&&A.detail)bindUserEdit();else if(viewUser!==null&&A.detail)bindUserView();else if(viewUser===null)(setPage==="dormant"?bindDormant():setPage==="black"?bindBlack():bindStatus())}
   if(setPage==="block")bindBlock2();
