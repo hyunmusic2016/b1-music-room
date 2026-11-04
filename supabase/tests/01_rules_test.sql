@@ -851,7 +851,8 @@ select test.ok((public.admin_set_info_page('room', '[{"t":"장비","b":"드럼",
 select test.ok((public.admin_set_info_page('room', '[{"t":"","b":"","imgs":["room/1-a.jpg"]}]'))->'pages'->'room'->'sections'->0->'imgs'->>0 = 'room/1-a.jpg', '사진만 있는 칸도 저장');
 select test.ok((public.admin_set_info_page('room', '[{"t":"x","b":"y","imgs":["https://evil.example/a.jpg"]}]'))->>'msg' like '사진 정보가 올바르지%', '다른 주소는 못 넣음');
 select test.ok((public.admin_set_info_page('room', '[{"t":"x","b":"y","imgs":["way/1-a.jpg"]}]'))->>'msg' like '사진 정보가 올바르지%', '다른 창 폴더 사진은 못 넣음');
-select test.ok((public.admin_set_info_page('room', '[{"t":"x","b":"y","imgs":["room/1.jpg","room/2.jpg","room/3.jpg","room/4.jpg","room/5.jpg","room/6.jpg","room/7.jpg"]}]'))->>'msg' like '사진은 칸 하나에 6장%', '사진 6장 제한');
+select test.ok(jsonb_array_length((public.admin_set_info_page('room', '[{"t":"x","b":"y","imgs":["room/1.jpg","room/2.jpg","room/3.jpg","room/4.jpg","room/5.jpg","room/6.jpg","room/7.jpg"]}]'))->'pages'->'room'->'sections'->0->'imgs') = 7, '040: 사진 7장 이상도 저장');
+select test.ok((public.admin_set_info_page('room', jsonb_build_array(jsonb_build_object('t','x','b','y','imgs',(select jsonb_agg('room/'||g||'.jpg') from generate_series(1,101) g)))))->>'msg' like '사진은 칸 하나에 100장%', '040: 안전 한도 100장');
 select test.ok(not ((public.admin_set_info_page('room', '[{"t":"x","b":"y"}]'))->'pages'->'room'->'sections'->0 ? 'imgs'), '사진 없는 칸에는 imgs 없음');
 reset role; reset request.jwt.claims;
 
