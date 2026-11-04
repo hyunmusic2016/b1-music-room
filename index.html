@@ -307,7 +307,8 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .hidden{display:none!important}
 .ver{font-size:11px;color:var(--sub);margin:0;letter-spacing:.02em}
 /* 맨 아래 오른쪽: 버전 + 관리자 페이지 아이콘(v0.16.6) */
-.foot{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:28px 0 0}
+.foot{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:28px 0 0}
+.addr{margin:0;font-size:11.5px;line-height:1.6;color:var(--sub);word-break:keep-all}.addr a{color:inherit;text-decoration:none}
 </style>
 </head>
 <body>
@@ -346,7 +347,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
     </div>
     <div id="adminPane" class="hidden"></div>
   </section>
-  <div class="foot"><p class="ver" id="ver"></p></div>
+  <div class="foot"><p class="addr">주소 : 인천광역시 부평구 동수북로158번길 3, 수경빌딩 지하1층<br>전화번호 : <a href="tel:01077538730">010-7753-8730</a></p><p class="ver" id="ver"></p></div>
 </div>
 
 
@@ -357,7 +358,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.40.4";
+const APP_VERSION="v0.40.5";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
