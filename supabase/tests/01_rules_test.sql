@@ -855,4 +855,14 @@ select test.ok((public.admin_set_info_page('room', '[{"t":"x","b":"y","imgs":["r
 select test.ok(not ((public.admin_set_info_page('room', '[{"t":"x","b":"y"}]'))->'pages'->'room'->'sections'->0 ? 'imgs'), '사진 없는 칸에는 imgs 없음');
 reset role; reset request.jwt.claims;
 
+-- 40. 037: 이용료 보기 설명(price)도 안내 글로 저장
+reset role;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
+set role authenticated;
+select test.ok((public.admin_set_info_page('price', '[{"t":"정액권","b":"매일 채워짐","imgs":["price/1-a.jpg"]}]'))->'pages'->'price'->'sections'->0->>'t' = '정액권', '이용료 설명(price) 저장');
+select test.ok((public.admin_set_info_page('price', '[{"t":"x","b":"y","imgs":["room/1-a.jpg"]}]'))->>'msg' like '사진 정보가 올바르지%', 'price 창은 price 폴더 사진만');
+reset role; set role anon;
+select test.ok((public.info_pages())->'pages'->'price'->'sections'->0->>'b' = '매일 채워짐', '공개 조회에 이용료 설명');
+reset role; reset request.jwt.claims;
+
 select '모든 시험 통과' as 결과;
