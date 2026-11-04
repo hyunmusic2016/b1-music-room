@@ -321,10 +321,10 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 #lightbox .lbtrack{display:flex;width:100%;height:100%;user-select:none;-webkit-user-select:none;cursor:grab}
 #lightbox .lbs{flex:0 0 100%;height:100%;display:flex;align-items:center;justify-content:center;padding:56px 12px}
 #lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px;pointer-events:none}
-#lightbox button{position:absolute;border:0;background:rgba(255,255,255,.16);color:#fff;font-weight:900;cursor:pointer;border-radius:50%}
+#lightbox button{position:absolute;z-index:2;border:0;background:rgba(255,255,255,.16);color:#fff;font-weight:900;cursor:pointer;border-radius:50%}
 #lightbox .lbx{top:12px;right:12px;width:44px;height:44px;font-size:20px}
 #lightbox .lbp,#lightbox .lbn{top:50%;transform:translateY(-50%);width:44px;height:44px;font-size:28px;line-height:1}#lightbox .lbp{left:8px}#lightbox .lbn{right:8px}
-#lightbox .lbc{position:absolute;left:0;right:0;bottom:16px;text-align:center;color:#fff;font-size:14px;font-weight:700}
+#lightbox .lbc{position:absolute;z-index:2;pointer-events:none;left:0;right:0;bottom:16px;text-align:center;color:#fff;font-size:14px;font-weight:700}
 .iphotos{display:grid;gap:8px;margin-top:10px}.iphotos.c2{grid-template-columns:1fr 1fr}.iphotos.c3{grid-template-columns:1fr 1fr 1fr}
 .iphotos.c2 img,.iphotos.c3 img{aspect-ratio:1/1;object-fit:cover}.iphotos.w-m{width:70%;margin-left:auto;margin-right:auto}.iphotos.w-s{width:45%;margin-left:auto;margin-right:auto}
 .iesz .hint{margin:0;min-width:44px}.iesz-prev{margin:2px 0 10px;padding:8px;border:1px dashed var(--line);border-radius:10px}.iesz-prev .iphotos{margin-top:0}.iesz-prev a{pointer-events:none}
@@ -396,7 +396,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.43.9";
+const APP_VERSION="v0.43.10";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1150,7 +1150,9 @@ function openLightbox(list,start){
   const go=d=>{const n=Math.max(0,Math.min(list.length-1,i+d));if(n!==i){i=n}show(true)};
   const close=()=>{box.classList.remove("open");document.removeEventListener("keydown",key,true)};
   const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close()}else if(e.key==="ArrowLeft")go(-1);else if(e.key==="ArrowRight")go(1)};
-  box.querySelector(".lbx").onclick=close;box.querySelector(".lbp").onclick=()=>go(-1);box.querySelector(".lbn").onclick=()=>go(1);
+  // 버튼은 손가락을 뗄 때 바로 동작(v0.43.10: 휴대폰에서 click이 오지 않아 ✕가 안 눌리던 문제), click은 키보드·예비용
+  const tap=(el,fn)=>{let t=0;el.onpointerup=e=>{e.stopPropagation();t=Date.now();fn()};el.onclick=e=>{e.stopPropagation();if(Date.now()-t>600)fn()}};
+  tap(box.querySelector(".lbx"),close);tap(box.querySelector(".lbp"),()=>go(-1));tap(box.querySelector(".lbn"),()=>go(1));
   let x0=null,dx=0,moved=false;
   tr.onpointerdown=e=>{x0=e.clientX;dx=0;moved=false;tr.setPointerCapture(e.pointerId);tr.style.transition="none"};
   tr.onpointermove=e=>{if(x0===null)return;dx=e.clientX-x0;if(Math.abs(dx)>5)moved=true;tr.style.transform="translateX(calc("+(-i*100)+"% + "+dx+"px))"};
