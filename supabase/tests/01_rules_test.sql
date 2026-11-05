@@ -954,4 +954,18 @@ reset role; reset request.jwt.claims; set role anon;
 select test.denied('select public.admin_edit_contact_off(''x'',''2026-11-06 10:00'',''2026-11-07 10:00'',''x'')', '익명은 예외 수정 불가');
 reset role; reset app.fake_now;
 
+-- 45. 045: 로비 PC 안내 상자
+reset role; set role anon;
+select test.ok((public.lobby_info())->'boxes' = 'null'::jsonb, '저장 전에는 상자 없음(화면 기본 글)');
+select test.denied('select public.admin_set_lobby_info(''{"boxes":[]}'')', '익명은 로비 안내 저장 불가');
+reset role; set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok(jsonb_array_length((public.admin_set_lobby_info('{"boxes":[{"id":"usage","type":"text","title":"이용안내","body":"<b>x</b>","style":"list","scale":300},{"id":"qr","type":"qr","style":"center"}],"ls":-0.5}'))->'boxes') = 2, '로비 안내 저장');
+reset role; set role anon;
+select test.ok((public.lobby_info())->'boxes'->0->>'body' = '<b>x</b>' and ((public.lobby_info())->'boxes'->0->>'scale')::int = 160 and ((public.lobby_info())->>'ls')::numeric = -0.1, '글은 그대로, 크기·자간은 범위 안으로');
+reset role; set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((public.admin_set_lobby_info('{"boxes":[{"type":"html"}]}'))->>'msg' like '1번째 상자의 종류%', '잘못된 종류는 막힘');
+select test.ok((public.admin_set_lobby_info('{"boxes":[{"type":"text","style":"red"}]}'))->>'msg' like '1번째 상자의 모양%', '잘못된 모양은 막힘');
+select test.ok((public.admin_set_lobby_info(null))->'boxes' = 'null'::jsonb, '기본 글로 되돌리기');
+reset role; reset request.jwt.claims;
+
 select '모든 시험 통과' as 결과;

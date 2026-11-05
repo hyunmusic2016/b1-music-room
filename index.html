@@ -361,6 +361,34 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .chrow{display:flex;align-items:center;gap:6px;padding:6px 0;border-top:1px solid var(--line)}.chrow:first-of-type{border-top:0}
 .chrow label{display:flex;align-items:center;gap:6px;margin:0;min-width:46px;font-weight:700}.chrow select{min-height:44px;flex:1;min-width:0;padding:0 6px}.chrow .off{flex:1;color:var(--sub)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ctstat.on{background:#123524;color:#8fe0b0}}
+/* 학원 로비 PC 화면(v0.47.0): room.hyunmusic.com/academy/ → /?academy. 왼쪽 예약 화면 + 오른쪽 안내 상자(info-panel-kit 참고) */
+.lclock{display:none}
+body.lobby .lclock{display:inline-flex;align-items:center;gap:10px;margin-left:12px;font-size:18px;font-weight:600;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
+body.lobby .lclock i{font-style:normal;font-size:12px;font-weight:700;color:#2f8f46;border:1px solid var(--line);border-radius:99px;padding:2px 9px;background:var(--surface)}
+.lobbypage{display:flex;justify-content:center;align-items:flex-start;gap:28px;padding:0 16px}
+.lobbypage>.wrap{margin:0;padding-left:0;padding-right:0;max-width:640px;flex:1 1 640px;min-width:0}
+.lobbyinfo{--lfs:15px;width:380px;flex:none;position:sticky;top:16px;margin-top:16px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 32px);overflow:auto;letter-spacing:var(--lls,0em)}
+.lobbyinfo.hide{display:none}
+.lbox{--fs:calc(var(--lfs) * var(--bs,1));background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:calc(var(--lfs)*.85) 16px;font-size:var(--fs);line-height:1.55;flex:none}
+.lbox h2{margin:0 0 calc(var(--lfs)*.6);font-size:calc(var(--fs) + 3px);font-weight:800;text-align:center;padding-bottom:calc(var(--lfs)*.6);border-bottom:1px solid var(--line)}
+.lbox ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:calc(var(--fs)*.5)}
+.lbox.st-list li{padding-left:12px;position:relative}.lbox.st-list li::before{content:"·";position:absolute;left:0}
+.lbox .warn{color:var(--danger);font-weight:700}
+.lbox.st-alert ul{gap:calc(var(--fs)*.9);text-align:center}
+.lbox.st-alert li{color:var(--danger);font-weight:700;font-size:calc(var(--fs) + 1px)}.lbox.st-alert li::before{content:"· "}
+.lbox.st-center ul{text-align:center}
+.lbox .lqr{display:flex;justify-content:center;margin-bottom:calc(var(--fs)*.6)}
+.lbox .lqr svg{width:calc(var(--lfs)*10);height:calc(var(--lfs)*10);background:#fff;padding:6px;border-radius:6px}
+@media (max-width:960px){.lobbypage{flex-direction:column;align-items:center;gap:0}.lobbyinfo{position:static;width:100%;max-width:560px;max-height:none;margin:0 0 32px}}
+/* 관리자 > 로비 PC 안내 편집 */
+.lbe{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg);display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.lbe.off{border-style:dashed}.lbe.off>:not(.lbe-top){opacity:.5}
+.lbe-top{display:flex;gap:6px;align-items:center}.lbe-top input{flex:1;min-width:0}
+.lbe-top .btn{width:auto;margin:0;min-height:38px;padding:0 10px;font-size:13px}
+.lbe-opt{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--sub)}
+.lbe-opt select{width:auto;min-height:36px}.lbe-opt input[type=range]{width:120px}
+.lbe textarea{min-height:90px}
+.lbprev{width:380px;max-width:100%;margin:0 auto;display:flex;flex-direction:column;gap:12px;--lfs:15px;letter-spacing:var(--lls,0em)}
 /* A4 가격표 인쇄(v0.46.0): 화면 색(다크 모드)과 관계없이 흰 종이에 맞는 고정 색 */
 #a4print{display:none}
 .a4wrap{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff;margin:10px 0}
@@ -412,7 +440,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 </head>
 <body>
 <div class="wrap">
-  <div class="topbar"><h1>B1 음악 연습실 예약</h1><button class="topbtn" id="topBtn" data-go="mine"></button></div>
+  <div class="topbar"><h1>B1 음악 연습실 예약<span class="lclock" id="lclock"></span></h1><button class="topbtn" id="topBtn" data-go="mine"></button></div>
 
   <section id="v-book">
     <button class="mustread" data-info="first">📢 처음 오시는 분 필독!<span aria-hidden="true">›</span></button>
@@ -461,7 +489,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.46.0";
+const APP_VERSION="v0.47.0";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -593,6 +621,7 @@ function go(v){
   postTop();
   ["book","mine","admin"].forEach(k=>$("#v-"+k).classList.toggle("hidden",k!==v));
   setTopBtn(v);
+  if(LOBBY)lobbyShow(v);
   document.title="B1 음악 연습실 예약"+(v==="admin"?" (관리자)":""); // 관리자 화면은 탭 제목 뒤에 (관리자)(v0.44.1)
   if(v==="book"){curDate=null;renderBook();refreshBook()}
   if(v==="admin"&&adminOn)reloadAdmin();
@@ -1400,6 +1429,7 @@ async function reloadOnce(){
   if(adminTab==="proxy")await loadBoard();
   if(setPage==="door"){const c=await rpc("admin_door_codes");A.codes=c.ok?c.codes:null}
   if(setPage==="contact"){const c=await rpc("contact_info");A.contact=c&&c.ok?c.hours:false}
+  if(setPage==="lobby"){const c=await rpc("lobby_info");A.lobby=c&&c.ok?c:{ok:false};A.lobbyDraft=null}
   if(setPage==="pay"||setPage==="fee"){const c=await rpc("pay_info");A.pay=c.ok?c:null}
   if(setPage==="info"){infoSaved=null;await loadInfoSaved();A.infoLoaded=true}
   if(setPage==="roster"){const c=await rpc("admin_roster_status");A.roster=c&&c.ok?c:{ok:false,msg:c&&c.msg}}
@@ -2252,11 +2282,122 @@ function bindBlock2(){
   });
 }
 
+/* ===== 학원 로비 PC 화면(v0.47.0, 서버 045) =====
+   room.hyunmusic.com/academy/ 를 열면 /?academy 로 넘어와 로비 모드: 넓은 화면에서 왼쪽 예약 화면 + 오른쪽 안내 상자.
+   상자는 관리자 > 설정 > 홈 화면 안내 > 로비 PC 안내에서 고침(저장 전에는 LOBBY_DEFAULT). 다른 프로젝트의 info-panel-kit을 이 화면에 맞게 옮김.
+   문구 규칙: 빈 줄 = 항목 나누기, **굵게**, 줄 맨 앞 ! = 빨간 글씨, {주소} = room.hyunmusic.com. QR 상자 = 예약 주소 QR(QR_ROOM). 전화번호는 넣지 않음(작업 원칙 15). */
+const LOBBY=/[?&]academy(=|&|$)/.test(location.search);
+const LOBBY_STYLES=[["list","목록 (·)"],["alert","가운데 빨강"],["plain","일반"],["center","가운데"]];
+const LOBBY_DEFAULT=[
+  {id:"usage",type:"text",title:"이용안내",style:"list",scale:100,hidden:false,body:"오늘과 내일 예약이 가능합니다.\n\n1시간 단위로 예약합니다. 이용 시간이 끝나기 전까지는 지금 시간도 예약할 수 있습니다.\n\n재원생은 하루 1회 예약할 수 있습니다.\n(정액권·횟수권 이용자는 상품 횟수만큼)\n\n일반회원은 관리자에게 등록한 뒤 예약할 수 있습니다.\n\n!이 PC에서는 연습실 예약 외 다른 작업을 하지 마십시오."},
+  {id:"howto",type:"text",title:"예약방법",style:"plain",scale:100,hidden:false,body:"① 왼쪽 시간표에서 원하는 시간 칸을 누릅니다.\n\n② **[재원생 예약하기]** 또는 **[일반회원 예약하기]**를 고릅니다.\n\n③ 이름과 비밀번호(전화번호 뒤 4자리)를 넣고 동의에 체크한 뒤 [예약하기]를 누르면 바로 확정됩니다.\n\n④ 예약 확인·변경·취소는 오른쪽 위 **[내 예약]**에서 합니다(이용 시작 전까지)."},
+  {id:"caution",type:"text",title:"유의사항",style:"alert",scale:100,hidden:false,body:"연습실내 물 이외 음식물 반입금지\n(드럼 카페트 오염시 변상)\n\n방음문 살살 닫기\n(문 고장시 수리비 청구)"},
+  {id:"qr",type:"qr",title:"",style:"center",scale:100,hidden:false,body:"**{주소}**\n\n휴대폰으로도 예약·확인·취소할 수 있습니다.\n\n학원 오시기 전 연습실 예약 현황을 확인해 보세요!"}
+];
+let lobbyBoxes=null,lobbyLs=0; // 손님 화면에 그리는 상자(저장된 것 또는 기본)
+function lobbyLine(t){
+  const w=/^!/.test(t);if(w)t=t.slice(1);
+  let h=esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\{주소\}/g,"room.hyunmusic.com");
+  return w?'<span class="warn">'+h+'</span>':h;
+}
+function lobbyBoxHtml(b){
+  const sc=Math.max(70,Math.min(160,+b.scale||100))/100;
+  const its=String(b.body||"").replace(/\r/g,"").split(/\n\s*\n/).map(x=>x.replace(/^\n+|\n+$/g,"")).filter(x=>x.trim());
+  return '<section class="lbox st-'+esc(b.style||"list")+'" style="--bs:'+sc+'">'+(b.title?'<h2>'+esc(b.title)+'</h2>':'')+
+    (b.type==="qr"?'<div class="lqr" aria-label="예약 주소 QR 코드">'+QR_ROOM+'</div>':'')+
+    (its.length?'<ul>'+its.map(it=>'<li>'+it.split("\n").map(lobbyLine).join("<br>")+'</li>').join("")+'</ul>':'')+'</section>';
+}
+function lobbyRender(boxes){return (boxes||[]).filter(b=>!b.hidden).map(lobbyBoxHtml).join("")}
+function lobbyFit(){ // 넓은 화면: 안내 칸이 화면 높이를 넘으면 글씨를 0.5px씩 줄임(15px → 11px)
+  const a=$("#lobbyInfo");if(!a||a.classList.contains("hide"))return;
+  let f=15;a.style.setProperty("--lfs",f+"px");
+  if(getComputedStyle(a).position!=="sticky")return;
+  while(f>11&&a.scrollHeight>a.clientHeight+1){f-=.5;a.style.setProperty("--lfs",f+"px")}
+}
+function lobbyPaint(){const a=$("#lobbyInfo");if(!a)return;a.style.setProperty("--lls",(+lobbyLs||0)+"em");a.innerHTML=lobbyRender(lobbyBoxes||LOBBY_DEFAULT);lobbyFit()}
+async function lobbyLoad(){const r=await rpc("lobby_info");if(r&&r.ok){lobbyBoxes=Array.isArray(r.boxes)?r.boxes:null;lobbyLs=r.ls||0}lobbyPaint()}
+function lobbyShow(v){const a=$("#lobbyInfo");if(a){a.classList.toggle("hide",v!=="book");lobbyFit()}}
+function lobbyInit(){
+  document.body.classList.add("lobby");
+  const w=document.querySelector(".wrap"),pg=document.createElement("div");pg.className="lobbypage";
+  w.parentNode.insertBefore(pg,w);pg.appendChild(w);
+  const a=document.createElement("aside");a.className="lobbyinfo";a.id="lobbyInfo";a.setAttribute("aria-label","이용 안내");pg.appendChild(a);
+  const tick=()=>{const el=$("#lclock");if(el)el.innerHTML=esc(new Date().toLocaleTimeString("ko-KR",{timeZone:"Asia/Seoul",hour:"numeric",minute:"2-digit",second:"2-digit"}))+'<i>● 자동 새로고침</i>'};
+  tick();setInterval(tick,1000);
+  lobbyPaint();lobbyLoad();setInterval(lobbyLoad,5*60*1000); // 관리자가 고치면 5분 안에 반영
+  addEventListener("resize",lobbyFit);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(lobbyFit);
+}
+/* 관리자 > 설정 > 홈 화면 안내 > 로비 PC 안내: 상자 추가·삭제(두 번 눌러 확인)·숨기기·순서·모양·글씨 크기·전체 자간, 미리 보기, [저장] 전에는 화면에만 */
+const clone=x=>JSON.parse(JSON.stringify(x));
+function lobbyDirty(){return !!A.lobbyDraft&&JSON.stringify(A.lobbyDraft)!==JSON.stringify(A.lobbySaved)}
+function lobbyEditHtml(){
+  if(!A.lobby)return '<p class="hint">불러오는 중입니다…</p>';
+  if(!A.lobby.ok)return '<div class="msg err">로비 안내를 불러오지 못했습니다. Supabase에 045를 실행했는지 확인하십시오.</div>';
+  if(!A.lobbyDraft){A.lobbySaved={boxes:clone(Array.isArray(A.lobby.boxes)?A.lobby.boxes:LOBBY_DEFAULT),ls:+A.lobby.ls||0};A.lobbyDraft=clone(A.lobbySaved)}
+  const D=A.lobbyDraft,n=D.boxes.length,saved=Array.isArray(A.lobby.boxes);
+  const box=(b,i)=>'<div class="lbe'+(b.hidden?' off':'')+'" data-lb="'+i+'"><div class="lbe-top">'+
+      '<input type="text" class="lbT" maxlength="60" placeholder="'+(b.type==="qr"?'제목 (없으면 비워 두기)':'제목')+'" value="'+esc(b.title||"")+'" aria-label="상자 제목">'+
+      '<button type="button" class="btn ghost" data-lbm="'+i+':-1"'+(i===0?' disabled':'')+' aria-label="위로">↑</button>'+
+      '<button type="button" class="btn ghost" data-lbm="'+i+':1"'+(i===n-1?' disabled':'')+' aria-label="아래로">↓</button>'+
+      '<button type="button" class="btn ghost" data-lbh="'+i+'">'+(b.hidden?'보이기':'숨기기')+'</button>'+
+      '<button type="button" class="btn ghost" data-lbd="'+i+'" style="color:var(--danger)">삭제</button></div>'+
+    '<div class="lbe-opt">'+(b.type==="qr"?'<b style="color:var(--ink)">QR 상자</b> (room.hyunmusic.com)':'<select class="lbS" aria-label="모양">'+LOBBY_STYLES.map(x=>'<option value="'+x[0]+'"'+(b.style===x[0]?' selected':'')+'>'+x[1]+'</option>').join("")+'</select>')+
+      '<label style="display:flex;align-items:center;gap:6px">글씨 <input type="range" class="lbR" min="70" max="160" step="5" value="'+(b.scale||100)+'"><span class="lbRv">'+(b.scale||100)+'%</span></label></div>'+
+    '<textarea class="lbB" maxlength="2000" aria-label="상자 내용">'+esc(b.body||"")+'</textarea></div>';
+  return (A.lobbyMsg||'')+
+    '<div class="card"><p class="hint" style="margin-top:0">학원 로비 PC에 켜 두는 화면 <b>room.hyunmusic.com/academy/</b> 의 오른쪽 안내 상자입니다. [저장]해야 로비 화면에 반영됩니다(로비 화면은 5분마다 새로 받아 옵니다).</p>'+
+      '<a class="btn ghost" href="/academy/" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;text-decoration:none">로비 화면 새 탭으로 열기 ↗</a></div>'+
+    '<div class="card"><div class="part" style="margin-top:0">안내 상자</div>'+D.boxes.map(box).join("")+
+      '<div class="btn2"><button type="button" class="btn ghost" id="lbAddT">+ 글 상자 추가</button>'+(D.boxes.some(b=>b.type==="qr")?'':'<button type="button" class="btn ghost" id="lbAddQ">+ QR 상자 추가</button>')+'</div>'+
+      '<div class="lbe-opt" style="margin-top:12px"><label style="display:flex;align-items:center;gap:6px">전체 자간 <input type="range" id="lbLs" min="-0.1" max="0.05" step="0.005" value="'+D.ls+'"><span id="lbLsv"></span></label><button type="button" class="btn ghost" id="lbLs0" style="width:auto;margin:0;min-height:36px;padding:0 10px">기본</button></div>'+
+      '<details class="hist" style="margin-top:10px"><summary>글 쓰는 법</summary><p class="hint">빈 줄 = 항목 나누기 · **글자** = 굵게 · 줄 맨 앞 ! = 빨간 글씨 · {주소} = room.hyunmusic.com<br>모양: 목록(·) / 가운데 빨강(유의사항) / 일반 / 가운데. 전화번호는 넣지 마십시오(문의는 [관리자 문의] 창 한 곳으로).</p></details></div>'+
+    '<div class="card"><div class="part" style="margin-top:0">미리 보기 <small>(로비 화면 오른쪽 칸 폭)</small></div><div class="lbprev" id="lbPrev"></div></div>'+
+    '<div class="card"><div id="lbMsg"></div><div class="btn2"><button class="btn" id="lbGo">저장</button><button class="btn ghost" id="lbUndo">변경 취소</button></div>'+
+      (saved?'<button class="btn ghost" id="lbReset" style="margin-top:8px">기본 글로 되돌리기</button>':'')+
+      (A.lobby.updated_at?'<p class="hint">🗓 마지막 저장: '+priceDate(A.lobby.updated_at)+'</p>':'<p class="hint">아직 저장한 적이 없어 기본 글이 보이고 있습니다.</p>')+'</div>';
+}
+function bindLobbyEdit(){
+  if(!$("#lbGo"))return;
+  const D=A.lobbyDraft,redraw=()=>{const y=window.scrollY;A.lobbyMsg="";renderAdmin();window.scrollTo(0,y)};
+  const lsTxt=v=>{v=Math.round(v*1000)/10;return (v>0?"+":"")+v+"%"};
+  const prev=()=>{const p=$("#lbPrev");p.style.setProperty("--lls",(+D.ls||0)+"em");p.innerHTML=lobbyRender(D.boxes)||'<p class="hint">보이는 상자가 없습니다.</p>';$("#lbLsv").textContent=lsTxt(+D.ls||0);$("#lbGo").disabled=!lobbyDirty();$("#lbUndo").disabled=!lobbyDirty()};
+  document.querySelectorAll("[data-lb]").forEach(c=>{const b=D.boxes[+c.dataset.lb];
+    c.querySelector(".lbT").oninput=e=>{b.title=e.target.value;prev()};
+    c.querySelector(".lbB").oninput=e=>{b.body=e.target.value;prev()};
+    const s=c.querySelector(".lbS");if(s)s.onchange=e=>{b.style=e.target.value;prev()};
+    c.querySelector(".lbR").oninput=e=>{b.scale=+e.target.value;c.querySelector(".lbRv").textContent=e.target.value+"%";prev()};
+  });
+  document.querySelectorAll("[data-lbm]").forEach(x=>x.onclick=()=>{const [i,d]=x.dataset.lbm.split(":").map(Number),j=i+d;if(j<0||j>=D.boxes.length)return;[D.boxes[i],D.boxes[j]]=[D.boxes[j],D.boxes[i]];redraw()});
+  document.querySelectorAll("[data-lbh]").forEach(x=>x.onclick=()=>{const b=D.boxes[+x.dataset.lbh];b.hidden=!b.hidden;redraw()});
+  document.querySelectorAll("[data-lbd]").forEach(x=>x.onclick=()=>{
+    if(x.dataset.armed){D.boxes.splice(+x.dataset.lbd,1);redraw();return}
+    x.dataset.armed="1";x.textContent="삭제 확인";setTimeout(()=>{if(x.isConnected){delete x.dataset.armed;x.textContent="삭제"}},3000)});
+  const uid=()=>"b"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  $("#lbAddT").onclick=()=>{if(D.boxes.length>=20){alert("상자는 20개까지 넣을 수 있습니다.");return}D.boxes.push({id:uid(),type:"text",title:"새 안내",body:"",style:"list",scale:100,hidden:false});redraw()};
+  if($("#lbAddQ"))$("#lbAddQ").onclick=()=>{D.boxes.push(Object.assign(clone(LOBBY_DEFAULT[3]),{id:uid()}));redraw()};
+  $("#lbLs").oninput=e=>{D.ls=+e.target.value;prev()};
+  $("#lbLs0").onclick=()=>{D.ls=0;$("#lbLs").value=0;prev()};
+  $("#lbUndo").onclick=()=>{A.lobbyDraft=clone(A.lobbySaved);redraw()};
+  $("#lbGo").onclick=async()=>{
+    $("#lbGo").disabled=true;const r=await rpc("admin_set_lobby_info",{p:{boxes:D.boxes,ls:D.ls}});
+    if(r.auth){adminExpired();return}
+    if(!r.ok){$("#lbMsg").innerHTML='<div class="msg err">'+esc(r.msg)+'</div>';$("#lbGo").disabled=false;return}
+    A.lobby=r;A.lobbyDraft=null;redraw();A.lobbyMsg='<div class="msg ok">저장하였습니다. 로비 화면은 5분 안에 바뀝니다(바로 보려면 로비 PC에서 새로 고침).</div>';const y=window.scrollY;renderAdmin();window.scrollTo(0,y);A.lobbyMsg="";
+  };
+  if($("#lbReset"))$("#lbReset").onclick=async()=>{
+    if(!confirm("저장한 로비 안내를 지우고 기본 글로 되돌리시겠습니까?"))return;
+    const r=await rpc("admin_set_lobby_info",{p:null});if(r.auth){adminExpired();return}
+    if(!r.ok){$("#lbMsg").innerHTML='<div class="msg err">'+esc(r.msg)+'</div>';return}
+    A.lobby=r;A.lobbyDraft=null;redraw();
+  };
+  prev();
+}
+
 /* ===== 설정 화면 ===== */
 function settingsHtml(){
   // 큰 제목과 [← 뒤로]를 한 줄에(v0.18.11, 뒤로 버튼은 오른쪽)
   const UP=setPage==="status"||setPage==="dormant"||setPage==="black",LN={dormant:"휴면 이용자",black:"블랙리스트"}[setPage]||"이용자 현황";
-  const title=UP?(editUser!==null?"이용자 수정":viewUser!==null?"이용자 정보":LN):{block:"이용 불가 시간 설정",pw:"관리자 비밀번호 변경",door:"출입 비밀번호 변경",contact:"문의 가능 시간",pay:"입금 계좌 변경",fee:"이용료 변경",roster:"재원생 명부 연동",info:A.infoKey?((INFO_KEYS.find(x=>x[0]===A.infoKey)||[])[1]||"안내 글 변경"):"안내 글 변경"}[setPage];
+  const title=UP?(editUser!==null?"이용자 수정":viewUser!==null?"이용자 정보":LN):{block:"이용 불가 시간 설정",pw:"관리자 비밀번호 변경",door:"출입 비밀번호 변경",contact:"문의 가능 시간",lobby:"로비 PC 안내",pay:"입금 계좌 변경",fee:"이용료 변경",roster:"재원생 명부 연동",info:A.infoKey?((INFO_KEYS.find(x=>x[0]===A.infoKey)||[])[1]||"안내 글 변경"):"안내 글 변경"}[setPage];
   const back='<div class="titlerow"><h2>'+title+'</h2><button class="btn ghost small" id="setBack">'+(UP&&editUser!==null?'← 이용자 정보':UP&&viewUser!==null?'← '+LN:setPage==="info"&&A.infoKey?'← 안내 글 변경':'← 설정')+'</button></div>';
   if(UP){
     if(viewUser!==null&&!A.detail)return back+'<p class="hint">불러오는 중입니다…</p>';
@@ -2266,6 +2407,7 @@ function settingsHtml(){
   if(setPage==="pw")return back+setHtml();
   if(setPage==="door")return back+doorHtml();
   if(setPage==="contact")return back+contactHtml();
+  if(setPage==="lobby")return back+lobbyEditHtml();
   if(setPage==="pay")return back+payHtml();
   if(setPage==="fee")return back+feeHtml();
   if(setPage==="roster")return back+rosterHtml();
@@ -2275,7 +2417,7 @@ function settingsHtml(){
   const cat=(t,items)=>'<div class="card"><div class="part" style="margin:0 0 2px">'+t+'</div>'+items+'</div>';
   return cat("이용자 관리",mi("status","이용자 현황")+mi("dormant","휴면 이용자 (90일 이상)")+mi("black","블랙리스트")+mi("roster","재원생 명부 연동"))+
     cat("이용료·출입 정보",mi("fee","이용료 변경")+mi("pay","입금 계좌 변경")+mi("door","출입 비밀번호 변경"))+
-    cat("홈 화면 안내",mi("info","안내 글 변경")+mi("contact","문의 가능 시간"))+
+    cat("홈 화면 안내",mi("info","안내 글 변경")+mi("contact","문의 가능 시간")+mi("lobby","로비 PC 안내 (academy)"))+
     cat("운영·보안",mi("block","이용 불가 시간 설정")+mi("pw","관리자 비밀번호 변경"));
 }
 
@@ -2417,13 +2559,14 @@ function bindInfoEdit(){
   };
 }
 function bindSettings(){
-  document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{setPage=b.dataset.sp;renderAdmin();if(setPage==="block"||setPage==="door"||setPage==="contact"||setPage==="pay"||setPage==="fee"||setPage==="roster"||setPage==="info"){if(setPage==="info"){A.infoKey=null;A.infoDraft=null;A.infoMsg="";A.infoSel={}}reloadAdmin()}});
-  const back=$("#setBack");if(back)back.onclick=()=>{if(setPage==="info"&&A.infoKey){if(window.infoLeave&&!window.infoLeave())return;A.infoKey=null;A.infoDraft=null;A.infoMsg="";renderAdmin();window.scrollTo(0,0);return}if(editUser!==null){editUser=null}else if(viewUser!==null){viewUser=null;A.detail=null}else{setPage=null}uFlash="";renderAdmin()};
+  document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{setPage=b.dataset.sp;renderAdmin();if(setPage==="block"||setPage==="door"||setPage==="contact"||setPage==="lobby"||setPage==="pay"||setPage==="fee"||setPage==="roster"||setPage==="info"){if(setPage==="info"){A.infoKey=null;A.infoDraft=null;A.infoMsg="";A.infoSel={}}reloadAdmin()}});
+  const back=$("#setBack");if(back)back.onclick=()=>{if(setPage==="lobby"&&lobbyDirty()&&!confirm("저장하지 않은 내용이 있습니다. 나가시겠습니까?"))return;if(setPage==="lobby")A.lobbyDraft=null;if(setPage==="info"&&A.infoKey){if(window.infoLeave&&!window.infoLeave())return;A.infoKey=null;A.infoDraft=null;A.infoMsg="";renderAdmin();window.scrollTo(0,0);return}if(editUser!==null){editUser=null}else if(viewUser!==null){viewUser=null;A.detail=null}else{setPage=null}uFlash="";renderAdmin()};
   if(setPage==="status"||setPage==="dormant"||setPage==="black"){if(editUser!==null&&A.detail)bindUserEdit();else if(viewUser!==null&&A.detail)bindUserView();else if(viewUser===null)(setPage==="dormant"?bindDormant():setPage==="black"?bindBlack():bindStatus())}
   if(setPage==="block")bindBlock2();
   if(setPage==="pw")bindSet();
   if(setPage==="door")bindDoor();
   if(setPage==="contact")bindContact();
+  if(setPage==="lobby")bindLobbyEdit();
   if(setPage==="pay")bindPay();
   if(setPage==="fee")bindFee();
   if(setPage==="roster")bindRosterPage();
@@ -2572,6 +2715,7 @@ function renderAdmin(){
 $("#ver").textContent=APP_VERSION;
 $("#addrCopy").onclick=async()=>{const b=$("#addrCopy"),ok=await copyText(b.dataset.addr);b.textContent=ok?"복사했습니다":"복사 실패";setTimeout(()=>{b.textContent="주소 복사"},2000)}; // 푸터 주소 복사(v0.40.6)
 renderBook();refreshBook();
+if(LOBBY)lobbyInit();
 if(location.hash==="#admin")go("admin"); // 관리자는 주소 끝에 #admin을 붙여 바로 들어올 수 있습니다.
 /* 화면 안의 관리자 진입 버튼은 없음(v0.38.17). 주소창에 #admin을 붙이면 새로고침 없이도 관리자 화면으로 */
 addEventListener("hashchange",()=>{if(location.hash==="#admin")go("admin")});
