@@ -413,7 +413,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.44.1";
+const APP_VERSION="v0.44.2";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1120,7 +1120,9 @@ async function openAskSheet(){
   b.innerHTML=(ok?(open?'<div class="ctstat on">● 지금은 문의 가능한 시간입니다.</div>':'<div class="ctstat off">지금은 문의 가능 시간이 아닙니다.<small>아래 문의 가능 시간에 연락하십시오.</small></div>'):'<div class="msg warn" style="margin-top:12px">문의 가능 시간을 불러오지 못했습니다. 잠시 후 다시 열어 보십시오.</div>')+
     '<div class="card" style="margin:12px 0 0"><b>문의 가능 시간</b>'+(ok?hoursHtml(c.hours):'<p class="hint">-</p>')+'</div>'+
     '<div class="card" style="margin:12px 0 0"><b>전화번호</b><p class="ctphone">'+PHONE+'</p>'+
-    '<a class="btn call" id="askCall" href="tel:'+PHONE.replace(/\D/g,"")+'" style="display:flex;align-items:center;justify-content:center;text-decoration:none">전화 걸기</a></div>';
+    '<div class="btn2" style="margin-top:12px"><a class="btn call" id="askCall" href="tel:'+PHONE.replace(/\D/g,"")+'" style="display:flex;align-items:center;justify-content:center;text-decoration:none">전화 걸기</a>'+
+    '<button type="button" class="btn ghost" id="askCopy">전화번호 복사</button></div></div>'; // 전화번호 복사(v0.44.2)
+  $("#askCopy").onclick=async()=>{const b=$("#askCopy"),c=await copyText(PHONE);b.textContent=c?"복사했습니다":"복사 실패";setTimeout(()=>{if($("#askCopy"))b.textContent="전화번호 복사"},2000)};
   $("#askCall").onclick=e=>{if(ok&&!open&&!confirm("지금은 문의 가능 시간이 아닙니다.\n그래도 전화하시겠습니까?"))e.preventDefault()};
 }
 $("#askBtn").onclick=openAskSheet;
