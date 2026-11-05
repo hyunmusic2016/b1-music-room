@@ -356,6 +356,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .ctstat small{display:block;font-weight:500;font-size:13px;margin-top:2px}
 .cthours{margin-top:6px}.cthours div{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line)}.cthours div:first-child{border-top:0}
 .cthours span{color:var(--sub);flex:none}.cthours b{text-align:right}
+.ctoff{margin-top:10px;padding:10px 12px;border-radius:10px;border:1.5px dashed var(--danger);font-size:14px;line-height:1.6}.ctoff b{display:block;color:var(--danger);margin-bottom:2px}.ctoff span{color:var(--sub)}
 .ctphone{font-size:22px;font-weight:800;text-align:center;margin:4px 0 0;letter-spacing:.5px}
 .chrow{display:flex;align-items:center;gap:6px;padding:6px 0;border-top:1px solid var(--line)}.chrow:first-of-type{border-top:0}
 .chrow label{display:flex;align-items:center;gap:6px;margin:0;min-width:46px;font-weight:700}.chrow select{min-height:44px;flex:1;min-width:0;padding:0 6px}.chrow .off{flex:1;color:var(--sub)}
@@ -413,7 +414,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.44.2";
+const APP_VERSION="v0.45.0";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1106,9 +1107,14 @@ function hoursLines(H){
   while(i<7){let j=i;while(j+1<7&&key(d[j+1])===key(d[i]))j++;out.push([DAY7[i]+(j>i?(j===i+1?"·":"~")+DAY7[j]:""),txt(d[i])]);i=j+1}
   return out;
 }
+/* 문의 안 받는 기간(예외, v0.45.0, 서버 043): from·to는 'YYYY-MM-DD HH:MM'(to는 그 시각 전까지). 끝이 00:00이면 전날 "자정까지"로 보여 줌 */
+function offWhen(ts,end){const d=ts.slice(0,10),t=ts.slice(11,16);if(end&&t==="00:00")return mdw(addDays(d,-1))+" 자정";return mdw(d)+" "+(t==="00:00"?"오전 0시":hmKo(t))}
+function offRange(o){return offWhen(o.from,false)+" ~ "+offWhen(o.to,true)}
+function offListHtml(H){const l=H&&Array.isArray(H.off)?H.off:[];if(!l.length)return "";
+  return '<div class="ctoff"><b>문의를 받지 않는 기간</b>'+l.map(o=>'<div>'+offRange(o)+(o.reason?' <span>· '+esc(o.reason)+'</span>':'')+'</div>').join("")+'</div>'}
 function hoursHtml(H){
   const l=hoursLines(H);if(!l.length)return '<p class="hint">문의 가능 시간이 아직 등록되지 않았습니다.</p>';
-  return '<div class="cthours">'+l.map(([a,b])=>'<div><span>'+a+'</span><b>'+b+'</b></div>').join("")+'</div>'+(H.memo?'<p class="hint" style="margin:6px 0 0">'+esc(H.memo)+'</p>':'');
+  return '<div class="cthours">'+l.map(([a,b])=>'<div><span>'+a+'</span><b>'+b+'</b></div>').join("")+'</div>'+(H.memo?'<p class="hint" style="margin:6px 0 0">'+esc(H.memo)+'</p>':'')+offListHtml(H);
 }
 /* 홈 화면 맨 아래 [관리자 문의](v0.44.0): 손님 화면에서 전화번호·전화 걸기는 여기 한 곳뿐. 문의 시간이 아니면 빨간 안내 + 전화 전에 한 번 더 확인 */
 async function openAskSheet(){
@@ -1117,7 +1123,7 @@ async function openAskSheet(){
   $("#bg").classList.add("open");$("#cx").onclick=closeSheet;$("#sheet").scrollTop=0;
   const c=await rpc("contact_info");const b=$("#askBody");if(!b)return;
   const ok=!!(c&&c.ok),open=ok&&c.open===true;
-  b.innerHTML=(ok?(open?'<div class="ctstat on">● 지금은 문의 가능한 시간입니다.</div>':'<div class="ctstat off">지금은 문의 가능 시간이 아닙니다.<small>아래 문의 가능 시간에 연락하십시오.</small></div>'):'<div class="msg warn" style="margin-top:12px">문의 가능 시간을 불러오지 못했습니다. 잠시 후 다시 열어 보십시오.</div>')+
+  b.innerHTML=(ok?(open?'<div class="ctstat on">● 지금은 문의 가능한 시간입니다.</div>':c.off_now?'<div class="ctstat off">지금은 문의를 받지 않는 기간입니다.<small>'+offWhen(c.off_now.to,true)+'까지'+(c.off_now.reason?' · '+esc(c.off_now.reason):'')+'</small></div>':'<div class="ctstat off">지금은 문의 가능 시간이 아닙니다.<small>아래 문의 가능 시간에 연락하십시오.</small></div>'):'<div class="msg warn" style="margin-top:12px">문의 가능 시간을 불러오지 못했습니다. 잠시 후 다시 열어 보십시오.</div>')+
     '<div class="card" style="margin:12px 0 0"><b>문의 가능 시간</b>'+(ok?hoursHtml(c.hours):'<p class="hint">-</p>')+'</div>'+
     '<div class="card" style="margin:12px 0 0"><b>전화번호</b><p class="ctphone">'+PHONE+'</p>'+
     '<div class="btn2" style="margin-top:12px"><a class="btn call" id="askCall" href="tel:'+PHONE.replace(/\D/g,"")+'" style="display:flex;align-items:center;justify-content:center;text-decoration:none">전화 걸기</a>'+
@@ -1994,7 +2000,7 @@ function contactHtml(){
   if(!A.contact)return '<p class="hint">불러오는 중입니다…</p>';
   const H=A.contact,d=Array.isArray(H.days)&&H.days.length===7?H.days:DAY7.map(()=>({on:true,start:"09:00",end:"22:00"}));
   const T=[];for(let m=0;m<=1440;m+=30)T.push(String(Math.floor(m/60)).padStart(2,"0")+":"+(m%60?"30":"00"));
-  const sel=(id,v,list)=>'<select id="'+id+'" aria-label="'+id+'">'+list.map(t=>'<option value="'+t+'"'+(t===v?' selected':'')+'>'+hmKo(t).replace(/시 30분$/,":30")+'</option>').join("")+'</select>';
+  const sel=(id,v,list)=>'<select id="'+id+'" aria-label="'+id+'">'+list.map(t=>'<option value="'+t+'"'+(t===v?' selected':'')+'>'+(t==="00:00"?"오전 0시":hmKo(t).replace(/시 30분$/,":30"))+'</option>').join("")+'</select>';
   return '<div class="card"><p class="hint" style="margin-top:0">손님 화면 맨 아래 [관리자 문의] 창에 보입니다. 지금이 문의 가능 시간이 아니면 손님에게 빨간 안내가 나오고, 전화 걸기 전에 한 번 더 묻습니다.</p>'+
     d.map((x,i)=>'<div class="chrow" data-ci="'+i+'"><label><input type="checkbox" class="chon"'+(x.on?' checked':'')+'>'+DAY7[i]+'</label>'+
       sel("ch_s"+i,x.start||"09:00",T.slice(0,-1))+'<span>~</span>'+sel("ch_e"+i,x.end||"22:00",T.slice(1))+'</div>').join("")+
@@ -2002,15 +2008,35 @@ function contactHtml(){
     '<label for="chMemo">메모 (선택, 100자까지)</label><input type="text" id="chMemo" maxlength="100" autocomplete="off" placeholder="예: 공휴일은 문의를 받지 않습니다." value="'+esc(H.memo||"")+'">'+
     '<div class="part" style="margin-top:16px">손님 화면에 보이는 모습</div><div id="chPrev"></div>'+
     (priceDate(H.updated_at)?'<p class="cdate">🗓 마지막 수정: <b>'+priceDate(H.updated_at)+'</b></p>':'')+
-    '<div id="chMsg"></div><button class="btn" id="chGo">저장</button></div>';
+    '<div id="chMsg"></div><button class="btn" id="chGo">저장</button></div>'+
+    // 문의 안 받는 기간(예외, v0.45.0): 추가·삭제는 바로 저장됨
+    '<div class="card"><div class="part" style="margin-top:0">문의 안 받는 기간 (예외)</div><p class="hint" style="margin-top:0">휴가 등으로 위 시간이라도 연락을 받지 못하는 기간입니다. 이 기간에는 손님 화면에 "지금은 문의를 받지 않는 기간입니다"가 나오고, 사유도 손님에게 보입니다. 기간이 지나면 저절로 사라집니다.</p>'+
+    '<div class="cols" style="grid-template-columns:1.4fr 1fr"><div><label for="coSD">시작 날짜</label><input type="date" id="coSD" value="'+seoulDate()+'" min="'+seoulDate()+'"></div><div><label for="coST">시작 시각</label>'+sel("coST","00:00",T.slice(0,-1))+'</div></div>'+
+    '<div class="cols" style="grid-template-columns:1.4fr 1fr"><div><label for="coED">끝 날짜</label><input type="date" id="coED" value="'+seoulDate()+'" min="'+seoulDate()+'"></div><div><label for="coET">끝 시각</label>'+sel("coET","24:00",T.slice(1))+'</div></div>'+
+    '<p class="hint" id="coPrev" style="margin:6px 0 0"></p>'+
+    '<label for="coR">사유 (선택, 60자까지)</label><input type="text" id="coR" maxlength="60" autocomplete="off" placeholder="예: 휴가">'+
+    '<div id="coMsg"></div><button class="btn" id="coGo">예외 추가</button>'+
+    (Array.isArray(H.off)&&H.off.length?'<div class="part">넣어 둔 예외</div>'+H.off.map(o=>'<div class="item"><div class="row"><div><b>'+offRange(o)+'</b><div class="hint" style="margin:0">'+esc(o.reason||"사유 없음")+'</div></div><button class="btn danger small" data-cod="'+esc(o.id)+'">삭제</button></div></div>').join(""):'<p class="hint">넣어 둔 예외가 없습니다.</p>')+'</div>';
 }
 function bindContact(){
   if(!$("#chGo"))return;
   const read=()=>({days:DAY7.map((_,i)=>({on:$('[data-ci="'+i+'"] .chon').checked,start:$("#ch_s"+i).value,end:$("#ch_e"+i).value})),memo:$("#chMemo").value.trim()});
-  const paint=()=>{const p=read();DAY7.forEach((_,i)=>{const on=p.days[i].on;$("#ch_s"+i).disabled=!on;$("#ch_e"+i).disabled=!on});$("#chPrev").innerHTML='<div class="card" style="margin:6px 0 0">'+hoursHtml(p)+'</div>'};
+  const paint=()=>{const p=read();DAY7.forEach((_,i)=>{const on=p.days[i].on;$("#ch_s"+i).disabled=!on;$("#ch_e"+i).disabled=!on});$("#chPrev").innerHTML='<div class="card" style="margin:6px 0 0">'+hoursHtml({...p,off:(A.contact&&A.contact.off)||[]})+'</div>'};
   document.querySelectorAll(".chrow input,.chrow select,#chMemo").forEach(el=>{el.onchange=paint;el.oninput=paint});
   $("#chCopy").onclick=()=>{const on=$('[data-ci="0"] .chon').checked,a=$("#ch_s0").value,b=$("#ch_e0").value;DAY7.forEach((_,i)=>{$('[data-ci="'+i+'"] .chon').checked=on;$("#ch_s"+i).value=a;$("#ch_e"+i).value=b});paint()};
   paint();
+  // 예외 칸: 끝 시각 24:00은 다음 날 00:00으로 바꿔 보냄
+  const coRead=()=>{const sd=$("#coSD").value,ed=$("#coED").value,st=$("#coST").value,et=$("#coET").value;if(!sd||!ed)return null;
+    return {from:sd+" "+st,to:et==="24:00"?addDays(ed,1)+" 00:00":ed+" "+et}};
+  const coUpd=()=>{const v=coRead();$("#coPrev").textContent=v&&v.to>v.from?"→ "+offRange(v)+"까지 문의를 받지 않습니다.":v?"끝 날짜·시각은 시작보다 늦어야 합니다.":""};
+  ["#coSD","#coST","#coED","#coET"].forEach(q=>{$(q).oninput=coUpd;$(q).onchange=coUpd});
+  $("#coSD").onchange=()=>{if($("#coED").value<$("#coSD").value)$("#coED").value=$("#coSD").value;coUpd()};
+  coUpd();
+  const coAfter=(r,msg)=>{if(r.auth){adminExpired();return}if(!r.ok){$("#coMsg").innerHTML='<div class="msg err">'+esc(r.msg||NET_MSG)+'</div>';return}A.contact=r.hours;renderAdmin();if($("#coMsg"))$("#coMsg").innerHTML='<div class="msg ok">'+msg+'</div>'};
+  $("#coGo").onclick=async()=>{const v=coRead();if(!v||v.to<=v.from){$("#coMsg").innerHTML='<div class="msg err">끝 날짜·시각은 시작보다 늦어야 합니다.</div>';return}
+    $("#coGo").disabled=true;const r=await rpc("admin_add_contact_off",{p_from:v.from,p_to:v.to,p_reason:$("#coR").value.trim()});if($("#coGo"))$("#coGo").disabled=false;
+    coAfter(r,"예외를 추가하였습니다. 손님 화면에 바로 반영됩니다.")};
+  document.querySelectorAll("[data-cod]").forEach(b=>b.onclick=async()=>{if(!confirm("이 예외를 삭제하시겠습니까?"))return;const r=await rpc("admin_del_contact_off",{p_id:b.dataset.cod});coAfter(r,"예외를 삭제하였습니다.")});
   $("#chGo").onclick=async()=>{
     const p=read(),bad=p.days.findIndex(x=>x.on&&x.end<=x.start);
     if(bad>=0){$("#chMsg").innerHTML='<div class="msg err">'+DAY7[bad]+'요일 끝 시각은 시작 시각보다 늦어야 합니다.</div>';return}

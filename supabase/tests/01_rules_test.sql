@@ -916,4 +916,27 @@ select test.ok(not ((public.contact_info())->>'open')::boolean, '일요일(문�
 select test.ok((public.contact_info())->'hours'->>'updated_at' is not null, '저장 날짜가 남음');
 reset role; reset app.fake_now;
 
+-- 43. 043: 문의 안 받는 기간(예외)
+reset role; set app.fake_now = '2026-11-02 10:00';  -- 월 10시(위에서 월~금 10:00~21:00 저장됨)
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
+set role authenticated;
+select test.ok((public.admin_add_contact_off('2026-11-03 09:00', '2026-11-05 00:00', '휴가'))->'hours'->'off'->0->>'reason' = '휴가', '예외 추가');
+select test.ok((public.admin_add_contact_off('2026-11-03 09:00', '2026-11-03 08:00', ''))->>'msg' = '끝 날짜·시각은 시작보다 늦어야 합니다.', '끝이 시작보다 이르면 막힘');
+select test.ok((public.admin_add_contact_off('2026-11-01 09:00', '2026-11-01 12:00', ''))->>'msg' = '이미 지난 기간입니다.', '지난 기간은 막힘');
+select test.ok((public.admin_add_contact_off('2026-11-03 9:00', '2026-11-04 12:00', ''))->>'msg' = '날짜와 시각을 다시 고르십시오.', '형식이 틀리면 막힘');
+select test.ok(jsonb_array_length((public.admin_set_contact_hours('{"days":[{"on":true,"start":"10:00","end":"21:00"},{"on":true,"start":"10:00","end":"21:00"},{"on":true,"start":"10:00","end":"21:00"},{"on":true,"start":"10:00","end":"21:00"},{"on":true,"start":"10:00","end":"21:00"},{"on":true,"start":"13:00","end":"18:30"},{"on":false}],"memo":"공휴일 휴무"}'))->'hours'->'off') = 1, '요일 시간을 저장해도 예외는 남음');
+reset role; reset request.jwt.claims; set role anon;
+select test.denied('select public.admin_add_contact_off(''2026-11-03 09:00'',''2026-11-04 09:00'',''x'')', '익명은 예외 추가 불가');
+select test.ok(((public.contact_info())->>'open')::boolean and (public.contact_info())->'off_now' = 'null'::jsonb, '예외 전(월 10시)은 문의 가능');
+reset role; set app.fake_now = '2026-11-04 12:00'; set role anon;
+select test.ok(not ((public.contact_info())->>'open')::boolean and (public.contact_info())->'off_now'->>'reason' = '휴가', '예외 중(수 12시)은 문의 불가 + 사유');
+reset role; set app.fake_now = '2026-11-05 10:00'; set role anon;
+select test.ok(((public.contact_info())->>'open')::boolean and jsonb_array_length((public.contact_info())->'hours'->'off') = 0, '예외 끝난 뒤(목 10시)는 다시 문의 가능, 끝난 예외는 안 보임');
+reset role; set app.fake_now = '2026-11-02 10:00';
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
+select value->'off'->0->>'id' as off_id from public.settings where key = 'contact_hours' \gset
+set role authenticated;
+select test.ok(jsonb_array_length((public.admin_del_contact_off(:'off_id'))->'hours'->'off') = 0, '예외 삭제');
+reset role; reset request.jwt.claims; reset app.fake_now;
+
 select '모든 시험 통과' as 결과;
