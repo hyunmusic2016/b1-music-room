@@ -361,6 +361,53 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .chrow{display:flex;align-items:center;gap:6px;padding:6px 0;border-top:1px solid var(--line)}.chrow:first-of-type{border-top:0}
 .chrow label{display:flex;align-items:center;gap:6px;margin:0;min-width:46px;font-weight:700}.chrow select{min-height:44px;flex:1;min-width:0;padding:0 6px}.chrow .off{flex:1;color:var(--sub)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ctstat.on{background:#123524;color:#8fe0b0}}
+/* A4 가격표 인쇄(v0.46.0): 화면 색(다크 모드)과 관계없이 흰 종이에 맞는 고정 색 */
+#a4print{display:none}
+.a4wrap{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff;margin:10px 0}
+.a4{width:210mm;height:297mm;box-sizing:border-box;padding:13mm 13mm 11mm;background:#fff;color:#1d2430;display:flex;flex-direction:column;overflow:hidden;font-family:inherit;transform-origin:0 0;word-break:keep-all;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.a4 *{box-sizing:border-box}
+.a4 .ah{display:flex;align-items:center;gap:4mm;border-bottom:1.2mm solid #5b95cc;padding-bottom:4mm}
+.a4 .ah img{height:15mm;width:auto}
+.a4 .ah .an{font-size:.95em;color:#5a6474;font-weight:600}
+.a4 .ah h1{margin:.5mm 0 0;font-size:2.3em;line-height:1.15;font-weight:900;letter-spacing:-.02em;color:#14304d}
+.a4 .asub{display:flex;flex-wrap:wrap;gap:2mm;margin:3.5mm 0 4mm}
+.a4 .asub span{border:.35mm solid #5b95cc;color:#2d6596;border-radius:99px;padding:.8mm 3.2mm;font-size:.9em;font-weight:700}
+.a4 .asub span.k{background:#A0C6E9;border-color:#A0C6E9;color:#14304d}
+.a4 .acols{display:flex;gap:5mm;align-items:flex-start}
+.a4 .acol{flex:1;min-width:0;border:.4mm solid var(--c);border-radius:3mm;overflow:hidden}
+.a4 .acol>h2{margin:0;background:var(--c);color:#fff;font-size:1.35em;font-weight:800;padding:2.2mm 4mm}
+.a4 .acol>h2 small{font-size:.62em;font-weight:600;opacity:.9;margin-left:2mm}
+.a4 .ab{padding:.85em 4mm .95em}
+.a4 .ak{margin-top:.9em}.a4 .ak:first-child{margin-top:0}
+.a4 .akt{display:flex;align-items:baseline;gap:2mm;margin-bottom:1mm}
+.a4 .abd{display:inline-block;border-radius:1.2mm;padding:.5mm 2.4mm;font-weight:800;font-size:.95em}
+.a4 .abd.flat{background:#fbefd6;color:#85590f}.a4 .abd.count{background:#f1e6f0;color:#6e3f6b}.a4 .abd.one{background:#e6eef7;color:#14304d}
+.a4 .akt i{font-style:normal;font-size:.78em;color:#5a6474}
+.a4 .ar{display:flex;align-items:baseline;gap:2mm;padding:.42em 0;border-bottom:.25mm dotted #b9c1cc;font-size:1.02em}
+.a4 .ar:last-child{border-bottom:0}
+.a4 .ar span{flex:1;min-width:0}.a4 .ar b{font-size:1.1em;font-weight:800;white-space:nowrap}
+.a4 .ar.big b{font-size:1.45em}
+.a4 .anote{font-size:.8em;color:#0a6f72;font-weight:700;margin:0 0 2mm}
+.a4 .aexp{margin-top:4.5mm;border:.3mm solid #c9d3df;border-radius:3mm;padding:3mm 4mm;background:#f6f8fb;font-size:.86em;line-height:1.55}
+.a4 .aexp p{margin:0}.a4 .aexp p+p{margin-top:1.2mm}
+.a4 .apay{margin-top:4mm;border:.4mm solid #14304d;border-radius:3mm;padding:3mm 4mm;display:flex;flex-wrap:wrap;align-items:baseline;gap:1mm 4mm}
+.a4 .apay .t{font-weight:800;color:#14304d;margin-right:1mm}.a4 .apay .n{font-size:1.25em;font-weight:900;letter-spacing:.02em}
+.a4 .apay .h{color:#5a6474;font-size:.9em}
+.a4 .agap{flex:1;min-height:3mm}
+.a4 .afoot{display:flex;gap:5mm;align-items:center;border-top:.35mm solid #c9d3df;padding-top:4mm}
+.a4 .afoot svg{width:27mm;height:27mm;flex:none}
+.a4 .afoot .fu{font-size:1.5em;font-weight:900;color:#14304d;letter-spacing:-.01em}
+.a4 .afoot .fl{font-size:.86em;color:#3a4352;line-height:1.55;margin-top:1mm}
+.a4 .afoot .fd{font-size:.8em;color:#5a6474;margin-top:1.5mm}
+.a4opt{display:flex;flex-wrap:wrap;gap:6px 16px;margin:8px 0}
+.a4opt label{display:flex;align-items:center;gap:6px;font-size:15px;min-height:36px}
+@media print{
+  @page{size:A4;margin:0}
+  html,body{background:#fff!important;margin:0!important;padding:0!important}
+  body.printing>*:not(#a4print){display:none!important}
+  body.printing #a4print{display:block!important}
+  body.printing #a4print .a4{transform:none!important;height:296mm;page-break-after:avoid;break-after:avoid}
+}
 </style>
 </head>
 <body>
@@ -414,7 +461,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.45.1";
+const APP_VERSION="v0.46.0";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1908,7 +1955,77 @@ function feeHtml(){
       '<div class="prow"><input type="text" id="fe_fee" class="pp" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="예: 7,000" value="'+esc(fee)+'"><span>원</span></div></div>'+
       box("ext_flat","정액권",FLAT)+box("ext_count","횟수권",CNT))+
     group("재원생","--stu-text",box("stu_flat","정액권",FLAT)+box("stu_count","횟수권",CNT),36)+
-    '<div class="card"><p class="hint" style="margin-top:0">상품 추가·삭제와 가격 변경은 [저장]을 눌러야 반영됩니다. 횟수와 가격이 모두 빈 줄은 저장하지 않습니다.</p><div id="feMsg"></div><button class="btn" id="feGo">저장</button></div>';
+    '<div class="card"><p class="hint" style="margin-top:0">상품 추가·삭제와 가격 변경은 [저장]을 눌러야 반영됩니다. 횟수와 가격이 모두 빈 줄은 저장하지 않습니다.</p><div id="feMsg"></div><button class="btn" id="feGo">저장</button></div>'+
+    '<div class="card"><div class="part" style="margin-top:0">A4 가격표 인쇄</div><p class="hint" style="margin-top:0">저장된 이용료로 학원에 붙일 A4 한 장 가격표를 만들어 인쇄합니다(예약 주소 QR 코드 포함).</p><button class="btn ghost" id="feA4">🖨 A4 가격표 만들기·인쇄</button></div>';
+}
+/* A4 가격표 인쇄(v0.46.0): 관리자 > 설정 > 이용료 변경 맨 아래. 저장된 이용료(price_info)·입금 계좌(pay_info)로
+   A4 한 장(210×297mm)을 그려 미리 보여 주고, [인쇄]하면 그 한 장만 인쇄(PDF로 저장도 인쇄 창에서). 글이 넘치면 글자를 줄여 한 장에 맞춤.
+   전화번호는 넣지 않음(작업 원칙 15의 뜻: 문의는 예약 홈페이지의 [관리자 문의]). QR 코드 = https://room.hyunmusic.com/ (미리 만든 그림) */
+const QR_ROOM='<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 33 33" shape-rendering="crispEdges"><rect x="-2" y="-2" width="33" height="33" fill="#fff"/><path stroke="#000" d="M0 0.5h7m2 0h1m1 0h4m1 0h1m1 0h3m1 0h7m-29 1h1m5 0h1m1 0h1m2 0h1m1 0h2m1 0h2m1 0h1m2 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m3 0h5m5 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h1m4 0h1m1 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m3 0h3m2 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m2 0h2m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-21 1h2m2 0h1m1 0h2m2 0h1m-18 1h1m1 0h4m1 0h2m1 0h1m4 0h1m1 0h1m2 0h2m1 0h2m1 0h1m-27 1h2m1 0h1m2 0h3m2 0h1m1 0h7m3 0h2m1 0h1m-28 1h1m2 0h6m1 0h3m4 0h1m3 0h2m2 0h2m-27 1h1m3 0h2m1 0h2m1 0h1m1 0h2m3 0h1m2 0h1m2 0h3m2 0h1m-29 1h3m2 0h5m5 0h1m2 0h1m1 0h3m4 0h1m-28 1h2m2 0h2m4 0h1m2 0h2m2 0h2m3 0h1m1 0h1m1 0h1m1 0h1m-29 1h4m2 0h2m2 0h1m2 0h2m2 0h1m1 0h1m3 0h1m1 0h1m2 0h1m-27 1h2m3 0h1m1 0h3m1 0h1m2 0h5m3 0h3m-26 1h3m1 0h2m2 0h1m3 0h5m2 0h1m2 0h1m1 0h1m2 0h1m-29 1h2m1 0h3m2 0h1m3 0h1m3 0h1m1 0h3m3 0h2m-26 1h2m1 0h1m1 0h4m2 0h2m1 0h2m3 0h1m4 0h1m1 0h1m1 0h1m-29 1h3m1 0h2m2 0h2m1 0h1m1 0h1m4 0h1m2 0h2m3 0h3m-29 1h8m3 0h3m1 0h1m1 0h1m2 0h5m1 0h2m-20 1h1m1 0h2m1 0h3m2 0h3m3 0h3m-27 1h7m2 0h2m4 0h6m1 0h1m1 0h1m1 0h1m-27 1h1m5 0h1m1 0h1m3 0h1m1 0h1m1 0h2m1 0h2m3 0h2m1 0h2m-29 1h1m1 0h3m1 0h1m1 0h4m1 0h1m2 0h9m3 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m2 0h1m3 0h2m5 0h1m1 0h3m-28 1h1m1 0h3m1 0h1m2 0h3m1 0h2m1 0h1m1 0h1m1 0h2m1 0h2m1 0h3m-29 1h1m5 0h1m1 0h1m1 0h1m1 0h1m1 0h2m2 0h1m3 0h1m1 0h3m1 0h1m-29 1h7m3 0h1m1 0h2m2 0h1m2 0h2m1 0h3"/></svg>';
+const A4_PX=[794,1123]; // 96dpi에서 A4 크기
+function a4Html(P,pay,o){
+  const won=v=>Number(v).toLocaleString("ko-KR")+'원';
+  const rows=(l,word)=>l.map(x=>'<div class="ar"><span>'+word+' <b style="font-size:inherit;font-weight:700">'+x.n+'회</b> · 30일</span><b>'+won(x.price)+'</b></div>').join("");
+  const kind=(k,l,word,exp)=>l&&l.length?'<div class="ak"><div class="akt"><span class="abd '+k+'">'+PROD[k]+'</span><i>'+exp+'</i></div>'+rows(l,word)+'</div>':'';
+  const FL='30일 · 하루 정해진 횟수',CT='30일 · 총 정해진 횟수';
+  const ext=(P.fee?'<div class="ak"><div class="akt"><span class="abd one">1회 이용료</span><i>1시간 1번</i></div><div class="ar big"><span>1회 (1시간)</span><b>'+won(P.fee)+'</b></div></div>':'')+
+    kind("flat",P.ext_flat,"하루",FL)+kind("count",P.ext_count,"총",CT);
+  const stu=o.stu?kind("flat",P.stu_flat,"하루",FL)+kind("count",P.stu_count,"총",CT):'';
+  const col=(t,sm,c,x,note)=>'<div class="acol" style="--c:'+c+'"><h2>'+t+(sm?'<small>'+sm+'</small>':'')+'</h2><div class="ab">'+(note||'')+x+'</div></div>';
+  const hasF=(P.ext_flat||[]).length||(o.stu&&(P.stu_flat||[]).length),hasC=(P.ext_count||[]).length||(o.stu&&(P.stu_count||[]).length);
+  const pi=pay&&pay.ok&&pay.number?pay:null,upd=priceDate(P.updated_at);
+  return '<div class="a4">'+
+    '<div class="ah"><img src="'+LOGO_SRC+'" alt=""><div><div class="an">현실용음악학원</div><h1>B1 음악 연습실 이용료 안내</h1></div></div>'+
+    '<div class="asub"><span class="k">1회 = 1시간 예약</span><span>24시간 운영</span><span>오늘·내일 예약</span><span>홈페이지에서 바로 예약·확정</span></div>'+
+    (ext||stu?'<div class="acols">'+(ext?col("일반회원","","#9C5238",ext):'')+(stu?col("재원생","현실용음악학원 재원생 전용","#0e9194",stu):'')+'</div>'
+      :'<p>등록된 이용료가 없습니다.</p>')+
+    (hasF||hasC?'<div class="aexp">'+
+      (hasF?'<p><span class="abd flat">정액권</span> 시작일부터 30일 동안 <b>매일 정해진 횟수</b>만큼 예약할 수 있습니다. 하루 횟수는 매일 다시 채워지며, 쓰지 않은 횟수는 다음 날로 넘어가지 않습니다.</p>':'')+
+      (hasC?'<p><span class="abd count">횟수권</span> 시작일부터 30일 안에 <b>총 정해진 횟수</b>만큼 원하는 날에 예약할 수 있습니다(하루 제한 없음). 30일이 지나면 남은 횟수는 쓸 수 없습니다.</p>':'')+
+      '<p>예약을 취소하면 쓴 횟수를 돌려받습니다. 정액권·횟수권 구매는 관리자에게 문의하십시오.</p></div>':'')+
+    (o.pay&&pi?'<div class="apay"><span class="t">입금 계좌</span><span class="n">'+esc(pi.bank||"")+' '+esc(pi.number)+'</span>'+(pi.holder?'<span class="h">예금주 '+esc(pi.holder)+'</span>':'')+'</div>':'')+
+    '<div class="agap"></div>'+
+    '<div class="afoot">'+QR_ROOM+'<div><div class="fu">room.hyunmusic.com</div>'+
+      '<div class="fl">QR 코드를 찍으면 예약 화면이 열립니다. 예약 확인·변경·취소는 [내 예약]에서 하십시오.<br>문의는 예약 화면 맨 아래 [관리자 문의]에서 문의 가능 시간을 확인하신 뒤 하십시오.<br>'+esc(ADDRESS)+'</div>'+
+      (upd?'<div class="fd">'+upd+' 기준 이용료입니다.</div>':'')+'</div></div>'+
+  '</div>';
+}
+function a4Fit(el){ // 한 장을 넘치면 글자·줄 간격을 조금씩 줄임(13px부터 8px까지)
+  let f=13;el.style.fontSize=f+"px";
+  while(f>8&&el.scrollHeight>el.clientHeight+1){f-=.5;el.style.fontSize=f+"px"}
+  return f;
+}
+async function openA4(){
+  $("#sheet").className="sheet";
+  $("#sheet").innerHTML='<div class="row"><h2 style="margin:0">A4 가격표</h2><button class="btn ghost small" id="cx">닫기</button></div><div id="a4Body"><p class="hint">불러오는 중입니다…</p></div>';
+  $("#bg").classList.add("open");$("#cx").onclick=closeSheet;
+  const [P,pay]=await Promise.all([rpc("price_info"),rpc("pay_info")]);if(!$("#a4Body"))return;
+  if(!P||!P.ok){$("#a4Body").innerHTML='<div class="msg err">'+esc(P&&P.msg||NET_MSG)+'</div>';return}
+  const hasStu=(P.stu_flat||[]).length||(P.stu_count||[]).length,hasPay=pay&&pay.ok&&pay.number;
+  const o={stu:!!hasStu,pay:!!hasPay};
+  $("#a4Body").innerHTML='<p class="hint" style="margin:6px 0">저장된 이용료로 만듭니다. 가격을 바꿨다면 먼저 [저장]하십시오.</p>'+
+    '<div class="a4opt">'+(hasStu?'<label><input type="checkbox" id="a4Stu" checked> 재원생 가격 넣기</label>':'')+
+      (hasPay?'<label><input type="checkbox" id="a4Pay" checked> 입금 계좌 넣기</label>':'')+'</div>'+
+    '<div class="a4wrap" id="a4Prev"></div>'+
+    '<button class="btn" id="a4Go">🖨 인쇄하기</button>'+
+    '<p class="hint">인쇄 창에서 용지 <b>A4</b>, 배율 <b>100%(기본)</b>로 인쇄하십시오. 인쇄 창의 [PDF로 저장]을 고르면 파일로 저장됩니다. 머리글·바닥글(날짜·주소) 칸은 끄는 것이 깔끔합니다.</p>';
+  let fs=13;
+  const paint=()=>{
+    const w=$("#a4Prev");if(!w)return;
+    w.innerHTML=a4Html(P,pay,o);const a=w.firstChild;
+    fs=a4Fit(a);
+    const sc=w.clientWidth/A4_PX[0];a.style.transform="scale("+sc+")";w.style.height=Math.ceil(A4_PX[1]*sc)+"px";
+  };
+  paint();
+  if($("#a4Stu"))$("#a4Stu").onchange=e=>{o.stu=e.target.checked;paint()};
+  if($("#a4Pay"))$("#a4Pay").onchange=e=>{o.pay=e.target.checked;paint()};
+  $("#a4Go").onclick=()=>{
+    const pr=$("#a4print");pr.innerHTML=a4Html(P,pay,o);pr.firstChild.style.fontSize=fs+"px";
+    document.body.classList.add("printing");
+    const done=()=>{document.body.classList.remove("printing");pr.innerHTML="";window.removeEventListener("afterprint",done)};
+    window.addEventListener("afterprint",done);
+    setTimeout(()=>{window.print();setTimeout(()=>{if(!matchMedia("print").matches)done()},1500)},50);
+  };
 }
 function bindFee(){
   if(!$("#feGo"))return;
@@ -1916,6 +2033,7 @@ function bindFee(){
   document.querySelectorAll("[data-padd]").forEach(b=>b.onclick=()=>{readPriceDraft();const l=priceDraft()[b.dataset.padd];if(l.length<10)l.push({n:"",price:""});redraw();
     const rows=document.querySelectorAll('[data-pk="'+b.dataset.padd+'"] .prow');if(rows.length)rows[rows.length-1].querySelector(".pn").focus()});
   document.querySelectorAll("[data-pdel]").forEach(b=>b.onclick=()=>{readPriceDraft();const [k,i]=b.dataset.pdel.split(":");priceDraft()[k].splice(+i,1);redraw()});
+  $("#feA4").onclick=openA4;
   $("#feGo").onclick=async()=>{
     readPriceDraft();const d=priceDraft(),p={fee:$("#fe_fee").value};PRICE_KINDS.forEach(([k])=>p[k]=d[k]);
     $("#feGo").disabled=true;const r=await rpc("admin_set_prices",{p});if($("#feGo"))$("#feGo").disabled=false;
@@ -2467,5 +2585,6 @@ function autoRefresh(){
 setInterval(autoRefresh,30000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)autoRefresh()});
 </script>
+<div id="a4print"></div>
 </body>
 </html>
