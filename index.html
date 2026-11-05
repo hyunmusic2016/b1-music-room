@@ -429,8 +429,9 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 .a4 .acol{flex:1;min-width:0;border:.4mm solid var(--c);border-radius:3mm;overflow:hidden}
 .a4 .acol>h2{margin:0;background:var(--c);color:#fff;font-size:1.35em;font-weight:800;padding:2.2mm 4mm}
 .a4 .acol>h2 small{font-size:.62em;font-weight:600;opacity:.9;margin-left:2mm}
-.a4 .ab{padding:.85em 4mm .95em}
-.a4 .ak{margin-top:.9em}.a4 .ak:first-child{margin-top:0}
+.a4 .ab{padding:.7em 3mm .8em;background:#f6f8fb}
+.a4 .ak{margin-top:.7em;background:#fff;border:.3mm solid #d3d9e2;border-radius:2.5mm;padding:.55em 3.5mm .6em} /* 1회 이용료·정액권·횟수권은 따로 된 상자(v0.50.1) */
+.a4 .ak:first-child{margin-top:0}
 .a4 .akt{display:flex;align-items:baseline;gap:2mm;margin-bottom:1mm}
 .a4 .abd{display:inline-block;border-radius:1.2mm;padding:.5mm 2.4mm;font-weight:800;font-size:1.2em}
 .a4 .abd.flat{background:#fbefd6;color:#85590f}.a4 .abd.count{background:#f1e6f0;color:#6e3f6b}.a4 .abd.one{background:#e6eef7;color:#14304d}
@@ -514,7 +515,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.50.0";
+const APP_VERSION="v0.50.1";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
