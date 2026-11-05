@@ -939,4 +939,19 @@ set role authenticated;
 select test.ok(jsonb_array_length((public.admin_del_contact_off(:'off_id'))->'hours'->'off') = 0, '예외 삭제');
 reset role; reset request.jwt.claims; reset app.fake_now;
 
+-- 44. 044: 예외 수정
+reset role; set app.fake_now = '2026-11-02 10:00';
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
+set role authenticated;
+select public.admin_add_contact_off('2026-11-03 09:00', '2026-11-04 00:00', '휴가');
+reset role;
+select value->'off'->0->>'id' as off_id from public.settings where key = 'contact_hours' \gset
+set role authenticated;
+select test.ok((public.admin_edit_contact_off(:'off_id', '2026-11-06 10:00', '2026-11-07 18:30', '교육'))->'hours'->'off'->0 = jsonb_build_object('id', :'off_id', 'from', '2026-11-06 10:00', 'to', '2026-11-07 18:30', 'reason', '교육'), '예외 수정');
+select test.ok((public.admin_edit_contact_off(:'off_id', '2026-11-06 10:00', '2026-11-06 09:00', ''))->>'msg' = '끝 날짜·시각은 시작보다 늦어야 합니다.', '수정도 끝<시작이면 막힘');
+select test.ok((public.admin_edit_contact_off('없는번호', '2026-11-06 10:00', '2026-11-07 10:00', ''))->>'msg' like '이미 지워졌거나%', '없는 예외는 막힘');
+reset role; reset request.jwt.claims; set role anon;
+select test.denied('select public.admin_edit_contact_off(''x'',''2026-11-06 10:00'',''2026-11-07 10:00'',''x'')', '익명은 예외 수정 불가');
+reset role; reset app.fake_now;
+
 select '모든 시험 통과' as 결과;

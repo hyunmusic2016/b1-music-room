@@ -414,7 +414,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.45.0";
+const APP_VERSION="v0.45.1";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -2015,8 +2015,8 @@ function contactHtml(){
     '<div class="cols" style="grid-template-columns:1.4fr 1fr"><div><label for="coED">끝 날짜</label><input type="date" id="coED" value="'+seoulDate()+'" min="'+seoulDate()+'"></div><div><label for="coET">끝 시각</label>'+sel("coET","24:00",T.slice(1))+'</div></div>'+
     '<p class="hint" id="coPrev" style="margin:6px 0 0"></p>'+
     '<label for="coR">사유 (선택, 60자까지)</label><input type="text" id="coR" maxlength="60" autocomplete="off" placeholder="예: 휴가">'+
-    '<div id="coMsg"></div><button class="btn" id="coGo">예외 추가</button>'+
-    (Array.isArray(H.off)&&H.off.length?'<div class="part">넣어 둔 예외</div>'+H.off.map(o=>'<div class="item"><div class="row"><div><b>'+offRange(o)+'</b><div class="hint" style="margin:0">'+esc(o.reason||"사유 없음")+'</div></div><button class="btn danger small" data-cod="'+esc(o.id)+'">삭제</button></div></div>').join(""):'<p class="hint">넣어 둔 예외가 없습니다.</p>')+'</div>';
+    '<div id="coMsg"></div><div id="coBtns"><button class="btn" id="coGo">예외 추가</button></div>'+
+    (Array.isArray(H.off)&&H.off.length?'<div class="part">넣어 둔 예외</div>'+H.off.map(o=>'<div class="item"><div class="row"><div><b>'+offRange(o)+'</b><div class="hint" style="margin:0">'+esc(o.reason||"사유 없음")+'</div></div><div style="display:flex;gap:6px;flex:none"><button class="btn edit small" data-coe="'+esc(o.id)+'">수정</button><button class="btn danger small" data-cod="'+esc(o.id)+'">삭제</button></div></div></div>').join(""):'<p class="hint">넣어 둔 예외가 없습니다.</p>')+'</div>';
 }
 function bindContact(){
   if(!$("#chGo"))return;
@@ -2033,9 +2033,19 @@ function bindContact(){
   $("#coSD").onchange=()=>{if($("#coED").value<$("#coSD").value)$("#coED").value=$("#coSD").value;coUpd()};
   coUpd();
   const coAfter=(r,msg)=>{if(r.auth){adminExpired();return}if(!r.ok){$("#coMsg").innerHTML='<div class="msg err">'+esc(r.msg||NET_MSG)+'</div>';return}A.contact=r.hours;renderAdmin();if($("#coMsg"))$("#coMsg").innerHTML='<div class="msg ok">'+msg+'</div>'};
-  $("#coGo").onclick=async()=>{const v=coRead();if(!v||v.to<=v.from){$("#coMsg").innerHTML='<div class="msg err">끝 날짜·시각은 시작보다 늦어야 합니다.</div>';return}
-    $("#coGo").disabled=true;const r=await rpc("admin_add_contact_off",{p_from:v.from,p_to:v.to,p_reason:$("#coR").value.trim()});if($("#coGo"))$("#coGo").disabled=false;
-    coAfter(r,"예외를 추가하였습니다. 손님 화면에 바로 반영됩니다.")};
+  // 예외 수정(v0.45.1, 서버 044): [수정]을 누르면 위 칸에 그 예외를 채우고, 버튼이 [예외 수정 저장]·[수정 취소]로 바뀜
+  let coEdit=null;
+  const coMode=id=>{coEdit=id;$("#coBtns").innerHTML=id?'<div class="btn2"><button class="btn edit" id="coGo">예외 수정 저장</button><button class="btn ghost" id="coCancel">수정 취소</button></div>':'<button class="btn" id="coGo">예외 추가</button>';
+    $("#coGo").onclick=coSave;if(id)$("#coCancel").onclick=()=>{renderAdmin()};
+    document.querySelectorAll("[data-coe]").forEach(b=>b.closest(".item").style.outline=b.dataset.coe===id?"2px solid var(--accent-strong)":"")};
+  const coSave=async()=>{const v=coRead();if(!v||v.to<=v.from){$("#coMsg").innerHTML='<div class="msg err">끝 날짜·시각은 시작보다 늦어야 합니다.</div>';return}
+    $("#coGo").disabled=true;const r=coEdit?await rpc("admin_edit_contact_off",{p_id:coEdit,p_from:v.from,p_to:v.to,p_reason:$("#coR").value.trim()}):await rpc("admin_add_contact_off",{p_from:v.from,p_to:v.to,p_reason:$("#coR").value.trim()});if($("#coGo"))$("#coGo").disabled=false;
+    coAfter(r,coEdit?"예외를 수정하였습니다. 손님 화면에 바로 반영됩니다.":"예외를 추가하였습니다. 손님 화면에 바로 반영됩니다.")};
+  $("#coGo").onclick=coSave;
+  document.querySelectorAll("[data-coe]").forEach(b=>b.onclick=()=>{const o=(A.contact.off||[]).find(x=>x.id===b.dataset.coe);if(!o)return;
+    const ed=o.to.slice(11,16)==="00:00"?addDays(o.to.slice(0,10),-1):o.to.slice(0,10),et=o.to.slice(11,16)==="00:00"?"24:00":o.to.slice(11,16);
+    $("#coSD").min="";$("#coED").min="";$("#coSD").value=o.from.slice(0,10);$("#coST").value=o.from.slice(11,16);$("#coED").value=ed;$("#coET").value=et;$("#coR").value=o.reason||"";
+    $("#coMsg").innerHTML='<div class="msg">위 칸에서 고친 뒤 [예외 수정 저장]을 누르십시오.</div>';coMode(o.id);coUpd();$("#coSD").scrollIntoView({block:"center"})});
   document.querySelectorAll("[data-cod]").forEach(b=>b.onclick=async()=>{if(!confirm("이 예외를 삭제하시겠습니까?"))return;const r=await rpc("admin_del_contact_off",{p_id:b.dataset.cod});coAfter(r,"예외를 삭제하였습니다.")});
   $("#chGo").onclick=async()=>{
     const p=read(),bad=p.days.findIndex(x=>x.on&&x.end<=x.start);
