@@ -433,6 +433,7 @@ body.lobby .slot span{font-size:11.5px}
 .a4 .ar.big b{font-size:1.4em}
 .a4 .anote{font-size:.8em;color:#0a6f72;font-weight:700;margin:0 0 2mm}
 .a4 .aexp{margin-top:5mm;border:.3mm solid #c9d3df;border-radius:3mm;padding:4mm 5mm;background:#f6f8fb;font-size:1.2em;line-height:1.6}
+.a4 .adate{margin-top:4mm;text-align:right;font-size:1.05em;color:#5a6474}
 .a4 .aexp p{margin:0}.a4 .aexp p+p{margin-top:2mm}
 .a4 .apay{margin-top:4mm;border:.4mm solid #14304d;border-radius:3mm;padding:3mm 4mm;display:flex;flex-wrap:wrap;align-items:baseline;gap:1mm 4mm}
 .a4 .apay .t{font-weight:800;color:#14304d;margin-right:1mm}.a4 .apay .n{font-size:1.25em;font-weight:900;letter-spacing:.02em}
@@ -505,7 +506,7 @@ body.lobby .slot span{font-size:11.5px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.47.3";
+const APP_VERSION="v0.47.4";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -2028,11 +2029,12 @@ function a4Html(P,pay,o){
       (hasF?'<p><span class="abd flat">정액권</span> 시작일부터 30일 동안 <b>매일 정해진 횟수</b>만큼 예약할 수 있습니다. 하루 횟수는 매일 다시 채워지며, 쓰지 않은 횟수는 다음 날로 넘어가지 않습니다.</p>':'')+
       (hasC?'<p><span class="abd count">횟수권</span> 시작일부터 30일 안에 <b>총 정해진 횟수</b>만큼 원하는 날에 예약할 수 있습니다(하루 제한 없음). 30일이 지나면 남은 횟수는 쓸 수 없습니다.</p>':'')+
       '<p>예약을 취소하면 쓴 횟수를 돌려받습니다. 정액권·횟수권 구매는 관리자에게 문의하십시오.</p></div>':'')+
+    (priceDate(P.updated_at)?'<div class="adate">'+priceDate(P.updated_at)+' 기준 이용료입니다.</div>':'')+ // 기준 날짜(v0.47.4)
   '</div>';
 }
-function a4Fit(el){ // 한 장을 넘치면 글자·줄 간격을 조금씩 줄임(15px부터 8px까지)
+function a4Fit(el){ // 한 장을 넘치면 글자·줄 간격을 조금씩 줄임(15px부터 7px까지)
   let f=15;el.style.fontSize=f+"px";
-  while(f>8&&el.scrollHeight>el.clientHeight+1){f-=.5;el.style.fontSize=f+"px"}
+  while(f>7&&el.scrollHeight>el.clientHeight+1){f-=.5;el.style.fontSize=f+"px"}
   return f;
 }
 async function openA4(){
