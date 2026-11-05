@@ -515,7 +515,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.50.2";
+const APP_VERSION="v0.50.3";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -2027,7 +2027,11 @@ function feeHtml(){
       box("ext_flat","정액권",FLAT)+box("ext_count","횟수권",CNT))+
     group("재원생","--stu-text",box("stu_flat","정액권",FLAT)+box("stu_count","횟수권",CNT),36)+
     '<div class="card"><p class="hint" style="margin-top:0">상품 추가·삭제와 가격 변경은 [저장]을 눌러야 반영됩니다. 횟수와 가격이 모두 빈 줄은 저장하지 않습니다.</p><div id="feMsg"></div><button class="btn" id="feGo">저장</button></div>'+
-    '<div class="card"><div class="part" style="margin-top:0">A4 가격표 인쇄</div><p class="hint" style="margin-top:0">저장된 이용료로 학원에 붙일 A4 한 장 가격표를 만들어 인쇄합니다(예약 주소 QR 코드 포함).</p><button class="btn ghost" id="feA4">🖨 A4 가격표 만들기·인쇄</button></div>';
+    '<div class="card"><div class="part" style="margin-top:0">가격표</div><p class="hint" style="margin-top:0">저장된 이용료로 A4 한 장 가격표를 만듭니다. 가격을 바꿨다면 먼저 [저장]하십시오.</p>'+ // v0.50.3: 이미지 저장·주소 복사를 이 상자로
+      '<button class="btn ghost" id="feA4">🖨 A4 가격표 만들기·인쇄</button>'+
+      '<div class="btn2" style="margin-top:8px"><button class="btn ghost" id="feImg">🖼 이미지로 저장</button><button class="btn ghost" id="feUrl">🔗 주소 복사</button></div>'+
+      '<p class="hint" style="margin:8px 0 0">가격표 페이지: <a href="'+PRICE_URL+'" target="_blank" rel="noopener" style="font-weight:700;word-break:break-all">'+PRICE_URL+'</a> · 블로그·홈페이지에 링크로 넣으면 누를 때마다 지금 저장된 가격이 보입니다.</p>'+
+      '<div id="feImgMsg"></div></div>';
 }
 /* A4 가격표 인쇄(v0.46.0): 관리자 > 설정 > 이용료 변경 맨 아래. 저장된 이용료(price_info)·입금 계좌(pay_info)로
    A4 한 장(210×297mm)을 그려 미리 보여 주고, [인쇄]하면 그 한 장만 인쇄(PDF로 저장도 인쇄 창에서). 글이 넘치면 글자를 줄여 한 장에 맞춤.
@@ -2064,6 +2068,24 @@ function a4Fit(el){ // 한 장을 넘치면 글자·줄 간격을 조금씩 줄�
 const PRICE_URL="https://room.hyunmusic.com/price/"; // 가격표만 보이는 페이지(v0.49.0)
 let h2cLoad=null; // 이미지 저장용 html2canvas(누를 때만 받아 옴, 버전 고정)
 function loadH2C(){if(window.html2canvas)return Promise.resolve();return h2cLoad||(h2cLoad=new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";sc.onload=ok;sc.onerror=()=>{h2cLoad=null;no(new Error("load"))};document.head.appendChild(sc)}))}
+async function a4SaveImage(btn,msgEl){ // 이미지로 저장(v0.50.0, v0.50.3부터 이용료 변경의 [가격표] 상자에서): 저장된 이용료로 A4 한 장 PNG(1588×2246)
+  const label=btn.textContent,msg=t=>{if(msgEl&&msgEl.isConnected)msgEl.innerHTML=t};
+  btn.disabled=true;btn.textContent="만드는 중…";msg("");
+  try{
+    const [P]=await Promise.all([rpc("price_info"),loadH2C()]);
+    if(!P||!P.ok)throw new Error("price");
+    const o={stu:!!((P.stu_flat||[]).length||(P.stu_count||[]).length)};
+    const box=document.createElement("div");box.style.cssText="position:fixed;left:-10000px;top:0;width:210mm;background:#fff";
+    box.innerHTML=a4Html(P,null,o);document.body.appendChild(box);
+    let cv;try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;a4Fit(box.firstChild);cv=await window.html2canvas(box.firstChild,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false})}finally{box.remove()}
+    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));if(!blob)throw new Error("blob");
+    const name="B1_price_"+(P.updated_at||seoulDate())+".png",file=new File([blob],name,{type:"image/png"});
+    if(matchMedia("(pointer:coarse)").matches&&navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:"B1 음악 연습실 이용료 안내"})}catch(e){if(e&&e.name!=="AbortError")throw e}}
+    else{const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
+    msg('<div class="msg ok">이미지를 만들었습니다. 내려받은 파일(휴대폰은 사진첩)을 확인하십시오.</div>');
+  }catch(e){console.error(e);msg('<div class="msg err">이미지를 만들지 못했습니다. 인터넷 연결을 확인하시거나, [A4 가격표 만들기·인쇄] → [인쇄하기]에서 [PDF로 저장]을 쓰십시오.</div>')}
+  if(btn.isConnected){btn.disabled=false;btn.textContent=label}
+}
 async function openA4(){
   $("#sheet").className="sheet";
   $("#sheet").innerHTML='<div class="row"><h2 style="margin:0">A4 가격표</h2><button class="btn ghost small" id="cx">닫기</button></div><div id="a4Body"><p class="hint">불러오는 중입니다…</p></div>';
@@ -2076,12 +2098,7 @@ async function openA4(){
     '<div class="a4opt">'+(hasStu?'<label><input type="checkbox" id="a4Stu" checked> 재원생 가격 넣기</label>':'')+
 '</div>'+
     '<div class="a4wrap" id="a4Prev"></div>'+
-    '<div class="btn2"><button class="btn" id="a4Go">🖨 인쇄하기</button><button class="btn ghost" id="a4Img">🖼 이미지로 저장</button></div><div id="a4Msg"></div>'+
-    '<div class="card" style="margin:12px 0 0"><div class="part" style="margin-top:0">가격표 페이지 주소</div>'+ // 실시간 가격표 페이지(v0.50.2)
-      '<p style="margin:0;font-weight:800;word-break:break-all">'+PRICE_URL+'</p>'+
-      '<p class="hint" style="margin:4px 0 8px">블로그·홈페이지에 링크로 넣으면 누를 때마다 지금 저장된 가격이 보입니다.</p>'+
-      '<div class="btn2"><button type="button" class="btn ghost" id="a4Url">주소 복사</button><a class="btn ghost" href="'+PRICE_URL+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;text-decoration:none">새 탭으로 열기 ↗</a></div></div>'+
-    '<p class="hint">이미지로 저장하면 A4 크기 그림(PNG)으로 내려받습니다. 휴대폰에서는 공유 창이 뜨면 [이미지 저장]을 고르십시오.</p>'+
+    '<button class="btn" id="a4Go">🖨 인쇄하기</button>'+
     '<p class="hint">인쇄 창에서 용지 <b>A4</b>, 배율 <b>100%(기본)</b>로 인쇄하십시오. 인쇄 창의 [PDF로 저장]을 고르면 파일로 저장됩니다. 머리글·바닥글(날짜·주소) 칸은 끄는 것이 깔끔합니다.</p>';
   let fs=13;
   const paint=()=>{
@@ -2092,25 +2109,6 @@ async function openA4(){
   };
   paint();
   if($("#a4Stu"))$("#a4Stu").onchange=e=>{o.stu=e.target.checked;paint()};
-  $("#a4Url").onclick=async()=>{const b=$("#a4Url"),ok=await copyText(PRICE_URL);b.textContent=ok?"복사했습니다":"복사 실패";setTimeout(()=>{if($("#a4Url"))b.textContent="주소 복사"},2000)};
-  $("#a4Img").onclick=async()=>{ // 이미지로 저장(v0.50.0): html2canvas로 A4 한 장을 PNG(가로 1588px)로
-    const b=$("#a4Img"),msg=t=>{if($("#a4Msg"))$("#a4Msg").innerHTML=t};
-    b.disabled=true;b.textContent="만드는 중…";msg("");
-    try{
-      await loadH2C();
-      const box=document.createElement("div");box.style.cssText="position:fixed;left:-10000px;top:0;width:210mm;background:#fff";
-      box.innerHTML=a4Html(P,pay,o);box.firstChild.style.fontSize=fs+"px";document.body.appendChild(box);
-      if(document.fonts&&document.fonts.ready)await document.fonts.ready;
-      let cv;try{cv=await window.html2canvas(box.firstChild,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false})}finally{box.remove()}
-      const blob=await new Promise(r=>cv.toBlob(r,"image/png"));if(!blob)throw new Error("blob");
-      const name="B1_price_"+(P.updated_at||seoulDate(new Date()))+".png",file=new File([blob],name,{type:"image/png"});
-      const touch=matchMedia("(pointer:coarse)").matches;
-      if(touch&&navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:"B1 음악 연습실 이용료 안내"})}catch(e){if(e&&e.name!=="AbortError")throw e}}
-      else{const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
-      msg('<div class="msg ok">이미지를 만들었습니다. 내려받은 파일(또는 사진첩)을 확인하십시오.</div>');
-    }catch(e){console.error(e);msg('<div class="msg err">이미지를 만들지 못했습니다. 인터넷 연결을 확인하시거나, [인쇄하기]에서 [PDF로 저장]을 쓰십시오.</div>')}
-    if($("#a4Img")){b.disabled=false;b.textContent="🖼 이미지로 저장"}
-  };
   $("#a4Go").onclick=()=>{
     const pr=$("#a4print");pr.innerHTML=a4Html(P,pay,o);pr.firstChild.style.fontSize=fs+"px";
     document.body.classList.add("printing");
@@ -2126,6 +2124,8 @@ function bindFee(){
     const rows=document.querySelectorAll('[data-pk="'+b.dataset.padd+'"] .prow');if(rows.length)rows[rows.length-1].querySelector(".pn").focus()});
   document.querySelectorAll("[data-pdel]").forEach(b=>b.onclick=()=>{readPriceDraft();const [k,i]=b.dataset.pdel.split(":");priceDraft()[k].splice(+i,1);redraw()});
   $("#feA4").onclick=openA4;
+  $("#feImg").onclick=()=>a4SaveImage($("#feImg"),$("#feImgMsg"));
+  $("#feUrl").onclick=async()=>{const b=$("#feUrl"),ok=await copyText(PRICE_URL);b.textContent=ok?"복사했습니다":"복사 실패";setTimeout(()=>{if(b.isConnected)b.textContent="🔗 주소 복사"},2000)};
   $("#feGo").onclick=async()=>{
     readPriceDraft();const d=priceDraft(),p={fee:$("#fe_fee").value};PRICE_KINDS.forEach(([k])=>p[k]=d[k]);
     $("#feGo").disabled=true;const r=await rpc("admin_set_prices",{p});if($("#feGo"))$("#feGo").disabled=false;
