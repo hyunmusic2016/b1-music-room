@@ -505,7 +505,7 @@ body.lobby .slot span{font-size:11.5px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.47.1";
+const APP_VERSION="v0.47.2";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -2433,7 +2433,7 @@ function settingsHtml(){
   const cat=(t,items)=>'<div class="card"><div class="part" style="margin:0 0 2px">'+t+'</div>'+items+'</div>';
   return cat("이용자 관리",mi("status","이용자 현황")+mi("dormant","휴면 이용자 (90일 이상)")+mi("black","블랙리스트")+mi("roster","재원생 명부 연동"))+
     cat("이용료·출입 정보",mi("fee","이용료 변경")+mi("pay","입금 계좌 변경")+mi("door","출입 비밀번호 변경"))+
-    cat("홈 화면 안내",mi("info","안내 글 변경")+mi("contact","문의 가능 시간")+mi("lobby","로비 PC 안내 (academy)"))+
+    cat("홈 화면 안내",mi("info","안내 글 변경")+mi("contact","문의 가능 시간")+mi("lobby","로비 PC 안내"))+
     cat("운영·보안",mi("block","이용 불가 시간 설정")+mi("pw","관리자 비밀번호 변경"));
 }
 
