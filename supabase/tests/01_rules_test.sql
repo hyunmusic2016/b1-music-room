@@ -968,4 +968,15 @@ select test.ok((public.admin_set_lobby_info('{"boxes":[{"type":"text","style":"r
 select test.ok((public.admin_set_lobby_info(null))->'boxes' = 'null'::jsonb, '기본 글로 되돌리기');
 reset role; reset request.jwt.claims;
 
+-- 46. 046: 안내 글 제목
+reset role; set role anon;
+select test.ok((public.info_pages())->'titles' = '{}'::jsonb, '처음에는 바꾼 제목 없음');
+select test.denied('select public.admin_set_info_title(''way'',''x'')', '익명은 제목 저장 불가');
+reset role; set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((public.admin_set_info_title('way', '  찾아오는 길 '))->'titles'->>'way' = '찾아오는 길', '제목 저장(앞뒤 공백 정리)');
+select test.ok((public.admin_set_info_title('nope', 'x'))->>'msg' = '잘못된 안내 창입니다.', '없는 창은 막힘');
+select test.ok((public.admin_set_info_title('way', repeat('가', 31)))->>'msg' like '제목은 30자%', '31자는 막힘');
+select test.ok((public.admin_set_info_title('way', ''))->'titles' = '{}'::jsonb, '비우면 기본 제목');
+reset role; reset request.jwt.claims;
+
 select '모든 시험 통과' as 결과;

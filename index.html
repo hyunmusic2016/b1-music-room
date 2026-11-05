@@ -506,7 +506,7 @@ body.lobby .slot span{font-size:11.5px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.47.4";
+const APP_VERSION="v0.48.0";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1177,7 +1177,7 @@ async function openPriceSheet(){
   const expSecs=infoSections("price").filter(x=>x.t!=="정액권"&&x.t!=="횟수권"||(x.t==="정액권"?hasF:hasC));
   const expHtml=expSecs.map(x=>{const b=infoBodyHtml(x.b)+photosHtml(x),hd=x.t==="정액권"?'<span class="badge big flat" style="margin-left:0">정액권</span>':x.t==="횟수권"?'<span class="badge big count" style="margin-left:0">횟수권</span>':x.t?'<b>'+infoInline(x.t)+'</b>':'';
     return inner(hd+'<div class="pexp info" style="margin:6px 0 0">'+b+'</div>')}).join("");
-  if(expHtml){h+=group("정액권·횟수권 안내","--ink",expHtml);hasExp=true}
+  if(expHtml){h+=group(esc(infoTitle("price")),"--ink",expHtml);hasExp=true}
   if(ext)h+=group("일반회원","--ext-text",ext,hasExp?36:12);
   // 재원생도 같은 모양(v0.28.1), 일반회원과 간격을 더 두고 재원생 전용 강조(v0.34.1)
   // 재원생 정액권·횟수권(v0.38.0): 재원생 전용 안내는 큰 상자 제목 바로 아래 한 번
@@ -1267,7 +1267,20 @@ const INFO_DEFAULT={
   {t:"주의사항",b:"예약한 시간에만 이용하십시오.\n입력 예정"}]}
 };
 let infoSaved=null; // 서버에 저장된 안내 글(info_pages, 035). null = 아직 못 받음
-async function loadInfoSaved(){const r=await rpc("info_pages");if(r&&r.ok&&r.pages&&typeof r.pages==="object")infoSaved=r.pages;return infoSaved}
+/* 안내 글 제목(v0.48.0, 서버 046): 관리자가 바꾼 제목이 있으면 홈 화면 버튼·안내 창 제목·관리자 목록에 그 제목, 없으면 기본 제목 */
+let infoTitles={};
+const INFO_TITLE_DEF={first:"처음 오시는 분 필독!",price:"정액권·횟수권 안내",way:"오시는 길",room:"시설 안내",stu:"재원생 안내·주의사항",ext:"일반회원 안내·주의사항"};
+function infoTitle(k){return (infoTitles&&typeof infoTitles[k]==="string"&&infoTitles[k].trim())||INFO_TITLE_DEF[k]||""}
+function infoListName(k){return k==="price"?"이용료 보기 · "+infoTitle(k):infoTitle(k)}
+function paintInfoBtns(){ // 홈 화면 버튼 글자
+  const set=(k,h)=>document.querySelectorAll('#v-book [data-info="'+k+'"]').forEach(b=>{b.innerHTML=h});
+  const own=k=>!!(infoTitles&&infoTitles[k]);
+  set("first",'📢 '+esc(infoTitle("first"))+'<span aria-hidden="true">›</span>');
+  set("way",'📍 '+esc(infoTitle("way")));set("room",'🎹 '+esc(infoTitle("room")));
+  set("stu",own("stu")?esc(infoTitle("stu")):'재원생<br>안내·주의사항');
+  set("ext",own("ext")?esc(infoTitle("ext")):'일반회원<br>안내·주의사항');
+}
+async function loadInfoSaved(){const r=await rpc("info_pages");if(r&&r.ok&&r.pages&&typeof r.pages==="object"){infoSaved=r.pages;infoTitles=r.titles&&typeof r.titles==="object"?r.titles:{};paintInfoBtns()}return infoSaved}
 function infoInline(t){ // 글 한 줄 → 안전한 HTML(먼저 esc, 그다음 **굵게**·입력 예정·학원/관리자 문의 전화번호)
   return esc(withAsk(t)).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/입력 예정/g,TODO);
 }
@@ -1353,9 +1366,9 @@ function infoPageHtml(k,secs){
   return h;
 }
 function openInfo(k,draft){
-  const t=(INFO_KEYS.find(x=>x[0]===k)||[])[1];if(!t)return;
+  if(!(INFO_KEYS.find(x=>x[0]===k)))return;
   $("#sheet").className="sheet";
-  const paint=()=>{
+  const paint=()=>{const t=esc(infoTitle(k));
     $("#sheet").innerHTML='<div class="row" style="align-items:flex-start"><h2 style="margin:0">'+t+(draft?' <small class="hint">(미리 보기)</small>':'')+'</h2><button class="btn ghost small" id="cx">닫기</button></div><div id="infoBody" data-k="'+k+'">'+infoPageHtml(k,draft)+'</div>';
     $("#cx").onclick=closeSheet;
     const ac=$("#infoAddrCopy");if(ac)ac.onclick=async()=>{const ok=await copyText(ADDRESS);ac.textContent=ok?"복사했습니다":"복사 실패";setTimeout(()=>{ac.textContent="주소 복사"},2000)};
@@ -2408,7 +2421,7 @@ function bindLobbyEdit(){
 function settingsHtml(){
   // 큰 제목과 [← 뒤로]를 한 줄에(v0.18.11, 뒤로 버튼은 오른쪽)
   const UP=setPage==="status"||setPage==="dormant"||setPage==="black",LN={dormant:"휴면 이용자",black:"블랙리스트"}[setPage]||"이용자 현황";
-  const title=UP?(editUser!==null?"이용자 수정":viewUser!==null?"이용자 정보":LN):{block:"이용 불가 시간 설정",pw:"관리자 비밀번호 변경",door:"출입 비밀번호 변경",contact:"문의 가능 시간",lobby:"로비 PC 안내",pay:"입금 계좌 변경",fee:"이용료 변경",roster:"재원생 명부 연동",info:A.infoKey?((INFO_KEYS.find(x=>x[0]===A.infoKey)||[])[1]||"안내 글 변경"):"안내 글 변경"}[setPage];
+  const title=UP?(editUser!==null?"이용자 수정":viewUser!==null?"이용자 정보":LN):{block:"이용 불가 시간 설정",pw:"관리자 비밀번호 변경",door:"출입 비밀번호 변경",contact:"문의 가능 시간",lobby:"로비 PC 안내",pay:"입금 계좌 변경",fee:"이용료 변경",roster:"재원생 명부 연동",info:A.infoKey?esc(infoListName(A.infoKey)):"안내 글 변경"}[setPage];
   const back='<div class="titlerow"><h2>'+title+'</h2><button class="btn ghost small" id="setBack">'+(UP&&editUser!==null?'← 이용자 정보':UP&&viewUser!==null?'← '+LN:setPage==="info"&&A.infoKey?'← 안내 글 변경':'← 설정')+'</button></div>';
   if(UP){
     if(viewUser!==null&&!A.detail)return back+'<p class="hint">불러오는 중입니다…</p>';
@@ -2439,7 +2452,7 @@ function infoEditHtml(){
   if(!A.infoKey){ // 목록(v0.43.3): 홈 화면 위에서 아래 순서, 누르면 그 글만 고치는 화면
     return (infoSaved===null?'<div class="msg err">서버에서 안내 글을 불러오지 못했습니다. Supabase에 035를 실행했는지 확인하십시오.</div>':'')+
       '<div class="card">'+
-      INFO_KEYS.map(([kk,l],i)=>{const v=infoSaved&&infoSaved[kk];return '<div class="item"><button type="button" data-ik="'+kk+'" class="ilist"><span style="flex:1;min-width:0"><b>'+l+'</b><small class="hint" style="display:block;margin:2px 0 0">'+(v?'✎ '+esc(priceDate(v.updated_at)||v.updated_at)+' 저장한 글':'기본 글')+'</small></span><span class="chev" aria-hidden="true">›</span></button></div>'}).join("")+'</div>';
+      INFO_KEYS.map(([kk],i)=>{const v=infoSaved&&infoSaved[kk];return '<div class="item"><button type="button" data-ik="'+kk+'" class="ilist"><span style="flex:1;min-width:0"><b>'+esc(infoListName(kk))+'</b><small class="hint" style="display:block;margin:2px 0 0">'+(v?'✎ '+esc(priceDate(v.updated_at)||v.updated_at)+' 저장한 글':'기본 글')+'</small></span><span class="chev" aria-hidden="true">›</span></button></div>'}).join("")+'</div>';
   }
   const k=A.infoKey,sv=infoSaved&&infoSaved[k];
   const secs=A.infoDraft||JSON.parse(JSON.stringify(infoSections(k)));A.infoDraft=secs;
@@ -2472,7 +2485,12 @@ function infoEditHtml(){
           '<div class="iesz" role="group" aria-label="한 줄 사진 수"><span class="hint">한 줄에</span>'+[["1","1장"],["2","2장"],["3","3장"]].map(([v,l])=>'<button type="button" class="btn ghost small'+((v==="1"?one:same(v))?' on':'')+'" data-icol="'+i+':'+v+'">'+l+'</button>').join("")+'</div>'+
           '<div class="iesz" role="group" aria-label="사진 크기"><span class="hint">크기</span>'+[["l","크게"],["m","보통"],["s","작게"]].map(([v,l])=>'<button type="button" class="btn ghost small'+(same("1"+v)?' on':'')+'" data-isz="'+i+':'+v+'">'+l+'</button>').join("")+'<small class="hint" style="margin:0">(한 줄 1장일 때)</small></div>'+
           '<div class="iesz-prev">'+photosHtml(x)+'</div>'})():'')+'</div>').join("");
-  return '<div class="card">'+tabs+st+help+'</div>'+rows+
+  const own=infoTitles&&infoTitles[k];
+  const tcard='<div class="card"><div class="part" style="margin-top:0">제목</div>'+
+    '<input type="text" id="ieTitle" maxlength="30" value="'+esc(own||"")+'" placeholder="'+esc(INFO_TITLE_DEF[k])+'" aria-label="안내 글 제목">'+
+    '<p class="hint" style="margin:6px 0 0">'+(k==="price"?'[이용료 보기] 창 안 설명 상자의 제목입니다.':'홈 화면 버튼과 안내 창 맨 위에 보이는 제목입니다.')+' 비우고 저장하면 기본 제목(<b>'+esc(INFO_TITLE_DEF[k])+'</b>)으로 돌아갑니다. 30자까지.</p>'+
+    '<div id="ieTMsg"></div><button type="button" class="btn ghost" id="ieTSave" style="margin-top:8px"'+(infoSaved===null?' disabled':'')+'>제목 저장</button></div>';
+  return tcard+'<div class="card">'+tabs+st+help+'</div>'+rows+
     '<button type="button" class="btn ghost" id="ieAdd"'+(secs.length>=20?' disabled':'')+'>+ 칸 추가</button>'+
     '<div class="card"><div id="ieMsg">'+(A.infoMsg||'')+'</div><div class="btn2"><button class="btn" id="ieSave"'+(infoSaved===null?' disabled':'')+'>저장</button><button class="btn ghost" id="iePrev">미리 보기</button></div>'+
     (sv?'<button class="btn ghost small" id="ieReset" style="margin-top:12px;color:var(--danger)">기본 글로 되돌리기</button>':'')+'</div>';
@@ -2560,6 +2578,18 @@ function bindInfoEdit(){
     if(!r.ok){A.infoMsg='<div class="msg err">'+esc(r.msg)+'</div>';redraw();return}
     infoSaved=r.pages||{};{const now=new Set(savedPhotos(k));removePhotos(before.filter(x=>!now.has(x)));A.infoUp=[]} /* 빠진 사진은 저장 공간에서도 지움 */A.infoDraft=null;A.infoMsg='<div class="msg ok">저장했습니다. 손님 화면에 바로 반영됩니다.</div>';redraw();
   };
+  $("#ieTSave").onclick=async()=>{ // 제목만 따로 저장(v0.48.0, 서버 046). 칸 내용은 아래 [저장]으로
+    const v=$("#ieTitle").value.trim();if(/[\r\n]/.test(v))return;
+    $("#ieTSave").disabled=true;const r=await rpc("admin_set_info_title",{p_key:k,p_title:v});
+    if(r.auth){adminExpired();return}
+    if(!$("#ieTSave"))return;
+    $("#ieTSave").disabled=false;
+    if(!r.ok){$("#ieTMsg").innerHTML='<div class="msg err">'+esc(r.msg)+'</div>';return}
+    infoTitles=r.titles&&typeof r.titles==="object"?r.titles:{};paintInfoBtns();
+    const a=readInfoDraft();A.infoDraft=a;const y=window.scrollY;redraw();window.scrollTo(0,y);
+    $("#ieTMsg").innerHTML='<div class="msg ok">'+(v?'제목을 저장했습니다. 홈 화면에 바로 반영됩니다.':'기본 제목으로 되돌렸습니다.')+'</div>';
+  };
+  $("#ieTitle").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();$("#ieTSave").click()}};
   if($("#ieReset"))$("#ieReset").onclick=async()=>{
     if(!confirm("저장한 글을 지우고 기본 글로 되돌리시겠습니까?"))return;
     const before=savedPhotos(k).concat(A.infoUp);
@@ -2727,6 +2757,7 @@ $("#ver").textContent=APP_VERSION;
 $("#addrCopy").onclick=async()=>{const b=$("#addrCopy"),ok=await copyText(b.dataset.addr);b.textContent=ok?"복사했습니다":"복사 실패";setTimeout(()=>{b.textContent="주소 복사"},2000)}; // 푸터 주소 복사(v0.40.6)
 renderBook();refreshBook();
 if(LOBBY)lobbyInit();
+loadInfoSaved(); // 홈 화면 버튼에 바꾼 제목(v0.48.0)
 if(location.hash==="#admin")go("admin"); // 관리자는 주소 끝에 #admin을 붙여 바로 들어올 수 있습니다.
 /* 화면 안의 관리자 진입 버튼은 없음(v0.38.17). 주소창에 #admin을 붙이면 새로고침 없이도 관리자 화면으로 */
 addEventListener("hashchange",()=>{if(location.hash==="#admin")go("admin")});
