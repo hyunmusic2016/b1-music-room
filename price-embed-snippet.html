@@ -1,0 +1,15 @@
+<!-- 블로그·홈페이지에 붙여 넣는 B1 음악 연습실 이용료 안내(실시간 가격)
+     · 열 때마다 room.hyunmusic.com에서 최신 가격을 받아 와 보여 줍니다(관리자 > 설정 > 이용료 변경에서 바꾸면 반영).
+     · 아래 스크립트가 실행되는 곳(아임웹 코드 칸 등)에서는 칸 높이가 내용에 맞게 저절로 바뀝니다.
+     · 스크립트가 막히는 곳에서는 처음 높이(1100px)로 보입니다. 아래가 잘리면 height 숫자를 늘리십시오. -->
+<iframe id="b1PriceFrame" src="https://room.hyunmusic.com/?price" title="B1 음악 연습실 이용료 안내"
+  style="display:block;width:100%;max-width:820px;height:1100px;margin:0 auto;border:0" scrolling="no" loading="lazy"></iframe>
+<script>
+(function(){
+  var f=document.getElementById("b1PriceFrame");
+  window.addEventListener("message",function(e){
+    if(e.origin!=="https://room.hyunmusic.com"||!e.data||e.source!==f.contentWindow)return; // 이용료 안내가 보낸 것만
+    if(e.data.type==="drum-room-height"&&e.data.height>0)f.style.height=e.data.height+"px";
+  });
+})();
+</script>
