@@ -888,4 +888,32 @@ select test.ok((select value->'way'->'sections'->1->'lay' from public.settings w
 select test.ok((select value->'way'->'sections'->2 from public.settings where key = 'info_pages') = '{"t":"c","b":"x"}'::jsonb and (select value->'way'->'sections'->3 from public.settings where key = 'info_pages') = '{"t":"d","b":"","imgs":["way/3.jpg"]}'::jsonb, '041 변환: 사진 없는 칸·기본값 칸 정리');
 reset request.jwt.claims;
 
+-- 42. 042: 문의 가능 시간(요일별 시작·끝, 지금 문의 가능한지 서버가 판단)
+reset role;
+set app.fake_now = '2026-11-02 10:00';  -- 월요일 10시
+set role anon;
+select test.ok((public.contact_info())->'hours'->'days'->0->>'start' = '09:00', '처음 값 매일 09:00~22:00');
+select test.ok(((public.contact_info())->>'open')::boolean, '처음 값: 월 10시는 문의 가능');
+select test.denied('select public.admin_set_contact_hours(''{}'')', '익명은 문의 시간 저장 불가');
+reset role;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
+set role authenticated;
+select test.ok((public.admin_set_contact_hours('{"days":[{"on":true,"start":"10:00","end":"21:00"},{"on":true,"start":"10:00","end":"21:00"},{"on":true,"start":"10:00","end":"21:00"},{"on":true,"start":"10:00","end":"21:00"},{"on":true,"start":"10:00","end":"21:00"},{"on":true,"start":"13:00","end":"18:30"},{"on":false}],"memo":"공휴일 휴무"}'))->'hours'->>'memo' = '공휴일 휴무', '문의 시간 저장');
+select test.ok((public.admin_set_contact_hours('{"days":[{"on":true,"start":"10:00","end":"09:00"},{"on":false},{"on":false},{"on":false},{"on":false},{"on":false},{"on":false}]}'))->>'msg' = '월요일 끝 시각은 시작 시각보다 늦어야 합니다.', '끝이 시작보다 이르면 막힘');
+select test.ok((public.admin_set_contact_hours('{"days":[{"on":true,"start":"10:15","end":"21:00"},{"on":false},{"on":false},{"on":false},{"on":false},{"on":false},{"on":false}]}'))->>'msg' = '월요일 시각을 다시 고르십시오.', '30분 단위가 아니면 막힘');
+select test.ok((public.admin_set_contact_hours('{"days":[]}'))->>'msg' = '잘못된 요청입니다.', '요일 7개가 아니면 막힘');
+reset role; reset request.jwt.claims;
+set app.fake_now = '2026-11-02 09:59'; set role anon;
+select test.ok(not ((public.contact_info())->>'open')::boolean, '월 09:59는 문의 시간 아님');
+reset role; set app.fake_now = '2026-11-02 20:59'; set role anon;
+select test.ok(((public.contact_info())->>'open')::boolean, '월 20:59는 문의 가능');
+reset role; set app.fake_now = '2026-11-02 21:00'; set role anon;
+select test.ok(not ((public.contact_info())->>'open')::boolean, '월 21:00(끝 시각)은 문의 시간 아님');
+reset role; set app.fake_now = '2026-11-07 18:00'; set role anon;
+select test.ok(((public.contact_info())->>'open')::boolean, '토 18:00은 문의 가능(13:00~18:30)');
+reset role; set app.fake_now = '2026-11-08 12:00'; set role anon;
+select test.ok(not ((public.contact_info())->>'open')::boolean, '일요일(문의 안 받음)은 문의 시간 아님');
+select test.ok((public.contact_info())->'hours'->>'updated_at' is not null, '저장 날짜가 남음');
+reset role; reset app.fake_now;
+
 select '모든 시험 통과' as 결과;
