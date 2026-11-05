@@ -365,11 +365,27 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .lclock{display:none}
 body.lobby .lclock{display:inline-flex;align-items:center;gap:10px;margin-left:12px;font-size:18px;font-weight:600;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
 body.lobby .lclock i{font-style:normal;font-size:12px;font-weight:700;color:#2f8f46;border:1px solid var(--line);border-radius:99px;padding:2px 9px;background:var(--surface)}
-.lobbypage{display:flex;justify-content:center;align-items:flex-start;gap:28px;padding:0 16px}
-.lobbypage>.wrap{margin:0;padding-left:0;padding-right:0;max-width:640px;flex:1 1 640px;min-width:0}
-.lobbyinfo{--lfs:15px;width:380px;flex:none;position:sticky;top:16px;margin-top:16px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 32px);overflow:auto;letter-spacing:var(--lls,0em)}
+.lobbypage{display:flex;justify-content:center;align-items:flex-start;gap:14px;padding:0 12px}
+.lobbypage>.wrap{margin:0;padding:10px 0 24px;max-width:520px;flex:1 1 520px;min-width:0}
+.lobbyinfo{--lfs:14px;width:clamp(230px,34%,310px);flex:none;position:sticky;top:10px;margin-top:10px;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 20px);overflow:auto;letter-spacing:var(--lls,0em)}
 .lobbyinfo.hide{display:none}
-.lbox{--fs:calc(var(--lfs) * var(--bs,1));background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:calc(var(--lfs)*.85) 16px;font-size:var(--fs);line-height:1.55;flex:none}
+/* 듀얼 탭(화면 반쪽)에서도 예약 화면과 안내가 한 화면에: 로비에서는 시간표를 4칸씩·작게 */
+body.lobby h1{font-size:21px}
+body.lobby .topbar{margin:2px 0 10px}
+body.lobby .lclock{font-size:14px;margin-left:8px;gap:6px}
+body.lobby .lclock i{font-size:11px;padding:1px 7px}
+body.lobby .topbtn{min-height:38px;padding:0 11px;font-size:13px}
+body.lobby .mustread{min-height:40px;margin-bottom:8px;font-size:15px;padding:6px 10px}
+body.lobby .tabs{margin:8px 0}
+body.lobby .tab{min-height:44px}
+body.lobby .legend{margin:6px 0;gap:8px}
+body.lobby #v-book .part{margin:10px 0 6px;padding-bottom:4px;font-size:14px}
+body.lobby .grid{grid-template-columns:repeat(4,1fr);gap:5px}
+body.lobby .slot{min-height:48px;padding:5px 7px;border-radius:8px}
+body.lobby .slot b{font-size:13px;letter-spacing:-.02em}
+body.lobby .slot span{font-size:11.5px}
+@media (max-width:760px){body.lobby h1{font-size:18px}body.lobby .lclock{font-size:12.5px}body.lobby .lclock i{display:none}body.lobby .mustread{font-size:14px}body.lobby .slot{padding:5px}body.lobby .slot b{font-size:12px;white-space:nowrap;letter-spacing:-.03em}}
+.lbox{--fs:calc(var(--lfs) * var(--bs,1));background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:calc(var(--lfs)*.8) 13px;font-size:var(--fs);line-height:1.55;flex:none}
 .lbox h2{margin:0 0 calc(var(--lfs)*.6);font-size:calc(var(--fs) + 3px);font-weight:800;text-align:center;padding-bottom:calc(var(--lfs)*.6);border-bottom:1px solid var(--line)}
 .lbox ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:calc(var(--fs)*.5)}
 .lbox.st-list li{padding-left:12px;position:relative}.lbox.st-list li::before{content:"·";position:absolute;left:0}
@@ -378,8 +394,8 @@ body.lobby .lclock i{font-style:normal;font-size:12px;font-weight:700;color:#2f8
 .lbox.st-alert li{color:var(--danger);font-weight:700;font-size:calc(var(--fs) + 1px)}.lbox.st-alert li::before{content:"· "}
 .lbox.st-center ul{text-align:center}
 .lbox .lqr{display:flex;justify-content:center;margin-bottom:calc(var(--fs)*.6)}
-.lbox .lqr svg{width:calc(var(--lfs)*10);height:calc(var(--lfs)*10);background:#fff;padding:6px;border-radius:6px}
-@media (max-width:960px){.lobbypage{flex-direction:column;align-items:center;gap:0}.lobbyinfo{position:static;width:100%;max-width:560px;max-height:none;margin:0 0 32px}}
+.lbox .lqr svg{width:calc(var(--lfs)*8.5);height:calc(var(--lfs)*8.5);background:#fff;padding:6px;border-radius:6px}
+@media (max-width:600px){.lobbypage{flex-direction:column;align-items:center;gap:0}.lobbyinfo{position:static;width:100%;max-width:560px;max-height:none;margin:0 0 32px}}
 /* 관리자 > 로비 PC 안내 편집 */
 .lbe{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg);display:flex;flex-direction:column;gap:8px;margin:10px 0}
 .lbe.off{border-style:dashed}.lbe.off>:not(.lbe-top){opacity:.5}
@@ -388,7 +404,7 @@ body.lobby .lclock i{font-style:normal;font-size:12px;font-weight:700;color:#2f8
 .lbe-opt{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--sub)}
 .lbe-opt select{width:auto;min-height:36px}.lbe-opt input[type=range]{width:120px}
 .lbe textarea{min-height:90px}
-.lbprev{width:380px;max-width:100%;margin:0 auto;display:flex;flex-direction:column;gap:12px;--lfs:15px;letter-spacing:var(--lls,0em)}
+.lbprev{width:310px;max-width:100%;margin:0 auto;display:flex;flex-direction:column;gap:10px;--lfs:14px;letter-spacing:var(--lls,0em)}
 /* A4 가격표 인쇄(v0.46.0): 화면 색(다크 모드)과 관계없이 흰 종이에 맞는 고정 색 */
 #a4print{display:none}
 .a4wrap{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff;margin:10px 0}
@@ -489,7 +505,7 @@ body.lobby .lclock i{font-style:normal;font-size:12px;font-weight:700;color:#2f8
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.47.0";
+const APP_VERSION="v0.47.1";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -2288,9 +2304,9 @@ function bindBlock2(){
    문구 규칙: 빈 줄 = 항목 나누기, **굵게**, 줄 맨 앞 ! = 빨간 글씨, {주소} = room.hyunmusic.com. QR 상자 = 예약 주소 QR(QR_ROOM). 전화번호는 넣지 않음(작업 원칙 15). */
 const LOBBY=/[?&]academy(=|&|$)/.test(location.search);
 const LOBBY_STYLES=[["list","목록 (·)"],["alert","가운데 빨강"],["plain","일반"],["center","가운데"]];
-const LOBBY_DEFAULT=[
-  {id:"usage",type:"text",title:"이용안내",style:"list",scale:100,hidden:false,body:"오늘과 내일 예약이 가능합니다.\n\n1시간 단위로 예약합니다. 이용 시간이 끝나기 전까지는 지금 시간도 예약할 수 있습니다.\n\n재원생은 하루 1회 예약할 수 있습니다.\n(정액권·횟수권 이용자는 상품 횟수만큼)\n\n일반회원은 관리자에게 등록한 뒤 예약할 수 있습니다.\n\n!이 PC에서는 연습실 예약 외 다른 작업을 하지 마십시오."},
-  {id:"howto",type:"text",title:"예약방법",style:"plain",scale:100,hidden:false,body:"① 왼쪽 시간표에서 원하는 시간 칸을 누릅니다.\n\n② **[재원생 예약하기]** 또는 **[일반회원 예약하기]**를 고릅니다.\n\n③ 이름과 비밀번호(전화번호 뒤 4자리)를 넣고 동의에 체크한 뒤 [예약하기]를 누르면 바로 확정됩니다.\n\n④ 예약 확인·변경·취소는 오른쪽 위 **[내 예약]**에서 합니다(이용 시작 전까지)."},
+const LOBBY_DEFAULT=[ // 일반회원 내용은 뺌(v0.47.1, 로비는 재원생용)
+  {id:"usage",type:"text",title:"이용안내",style:"list",scale:100,hidden:false,body:"오늘과 내일 예약이 가능합니다.\n\n재원생은 하루 1회 예약할 수 있습니다.\n(정액권·횟수권 이용자는 상품 횟수만큼)"},
+  {id:"howto",type:"text",title:"예약방법",style:"plain",scale:100,hidden:false,body:"① 왼쪽 시간표에서 원하는 시간 칸을 누릅니다.\n\n② **[재원생 예약하기]**를 고릅니다.\n\n③ 이름과 비밀번호(본인 휴대전화 번호 뒤 4자리, 없으면 보호자 번호)를 넣고 동의에 체크한 뒤 [예약하기]를 누르면 바로 확정됩니다.\n\n④ 예약 확인·변경·취소는 오른쪽 위 **[내 예약]**에서 합니다(이용 시작 전까지)."},
   {id:"caution",type:"text",title:"유의사항",style:"alert",scale:100,hidden:false,body:"연습실내 물 이외 음식물 반입금지\n(드럼 카페트 오염시 변상)\n\n방음문 살살 닫기\n(문 고장시 수리비 청구)"},
   {id:"qr",type:"qr",title:"",style:"center",scale:100,hidden:false,body:"**{주소}**\n\n휴대폰으로도 예약·확인·취소할 수 있습니다.\n\n학원 오시기 전 연습실 예약 현황을 확인해 보세요!"}
 ];
@@ -2308,11 +2324,11 @@ function lobbyBoxHtml(b){
     (its.length?'<ul>'+its.map(it=>'<li>'+it.split("\n").map(lobbyLine).join("<br>")+'</li>').join("")+'</ul>':'')+'</section>';
 }
 function lobbyRender(boxes){return (boxes||[]).filter(b=>!b.hidden).map(lobbyBoxHtml).join("")}
-function lobbyFit(){ // 넓은 화면: 안내 칸이 화면 높이를 넘으면 글씨를 0.5px씩 줄임(15px → 11px)
+function lobbyFit(){ // 나란히 놓일 때: 안내 칸이 화면 높이를 넘으면 글씨를 0.5px씩 줄임(14px → 10.5px)
   const a=$("#lobbyInfo");if(!a||a.classList.contains("hide"))return;
-  let f=15;a.style.setProperty("--lfs",f+"px");
+  let f=14;a.style.setProperty("--lfs",f+"px");
   if(getComputedStyle(a).position!=="sticky")return;
-  while(f>11&&a.scrollHeight>a.clientHeight+1){f-=.5;a.style.setProperty("--lfs",f+"px")}
+  while(f>10.5&&a.scrollHeight>a.clientHeight+1){f-=.5;a.style.setProperty("--lfs",f+"px")}
 }
 function lobbyPaint(){const a=$("#lobbyInfo");if(!a)return;a.style.setProperty("--lls",(+lobbyLs||0)+"em");a.innerHTML=lobbyRender(lobbyBoxes||LOBBY_DEFAULT);lobbyFit()}
 async function lobbyLoad(){const r=await rpc("lobby_info");if(r&&r.ok){lobbyBoxes=Array.isArray(r.boxes)?r.boxes:null;lobbyLs=r.ls||0}lobbyPaint()}
