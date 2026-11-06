@@ -358,6 +358,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .cthours span{color:var(--sub);flex:none}.cthours b{text-align:right}
 .ctoff{margin-top:10px;padding:10px 12px;border-radius:10px;border:1.5px dashed var(--danger);font-size:14px;line-height:1.6}.ctoff b{display:block;color:var(--danger);margin-bottom:2px}.ctoff span{color:var(--sub)}
 .ctphone{font-size:22px;font-weight:800;text-align:center;margin:4px 0 0;letter-spacing:.5px}
+.ctphone2{font-size:15px;font-weight:600;text-align:center;margin:2px 0 0;color:var(--sub);letter-spacing:.3px} /* 학원 일반 전화(v0.51.7, 걸기·복사는 휴대전화) */
 .chrow{display:flex;align-items:center;gap:6px;padding:6px 0;border-top:1px solid var(--line)}.chrow:first-of-type{border-top:0}
 .chrow label{display:flex;align-items:center;gap:6px;margin:0;min-width:46px;font-weight:700}.chrow select{min-height:44px;flex:1;min-width:0;padding:0 6px}.chrow .off{flex:1;color:var(--sub)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ctstat.on{background:#123524;color:#8fe0b0}}
@@ -515,13 +516,14 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.51.6";
+const APP_VERSION="v0.51.7";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
 const SUPABASE_KEY="sb_publishable_EuDlhpMAm69J4qB0pMFVYA_bh5RWzo2";
 const DAYS_KO=["일","월","화","수","목","금","토"];
 const PHONE="010-7753-8730"; // 손님 화면에서는 [관리자 문의] 창에만 보임(v0.44.0)
+const PHONE2="032-506-1073"; // 학원 일반 전화: [관리자 문의] 창에 글자로만 보임(v0.51.7, 걸기·복사는 PHONE)
 const ASK_WHERE="홈 화면 맨 아래 [관리자 문의]"; // 안내 문구 뒤에 전화번호 대신 붙이는 말(v0.44.0)
 // 입금 계좌(은행명·예금주·계좌번호·일반 이용료)는 서버에 저장하고 관리자 > 설정 > 입금 계좌 변경에서 바꿉니다(v0.22.0, 서버 018).
 // 계좌가 보이는 화면은 열 때마다 서버(pay_info)에서 새로 받아 오므로, 저장하면 곳곳에 바로 반영됩니다.
@@ -1237,7 +1239,7 @@ async function openAskSheet(back){ // back: 다른 창에서 열었을 때 [← 
   const ok=!!(c&&c.ok),open=ok&&c.open===true;
   b.innerHTML=(ok?(open?'<div class="ctstat on">● 지금은 문의 가능한 시간입니다.</div>':c.off_now?'<div class="ctstat off">지금은 문의를 받지 않는 기간입니다.<small>'+offWhen(c.off_now.to,true)+'까지'+(c.off_now.reason?' · '+esc(c.off_now.reason):'')+'</small></div>':'<div class="ctstat off">지금은 문의 가능 시간이 아닙니다.<small>아래 문의 가능 시간에 연락하십시오.</small></div>'):'<div class="msg warn" style="margin-top:12px">문의 가능 시간을 불러오지 못했습니다. 잠시 후 다시 열어 보십시오.</div>')+
     '<div class="card" style="margin:12px 0 0"><b>문의 가능 시간</b>'+(ok?hoursHtml(c.hours):'<p class="hint">-</p>')+'</div>'+
-    '<div class="card" style="margin:12px 0 0"><b>전화번호</b><p class="ctphone">'+PHONE+'</p>'+
+    '<div class="card" style="margin:12px 0 0"><b>전화번호</b><p class="ctphone">'+PHONE+'</p><p class="ctphone2">학원 전화 '+PHONE2+'</p>'+
     '<div class="btn2" style="margin-top:12px"><a class="btn call" id="askCall" href="tel:'+PHONE.replace(/\D/g,"")+'" style="display:flex;align-items:center;justify-content:center;text-decoration:none">전화 걸기</a>'+
     '<button type="button" class="btn ghost" id="askCopy">전화번호 복사</button></div></div>'; // 전화번호 복사(v0.44.2)
   $("#askCopy").onclick=async()=>{const b=$("#askCopy"),c=await copyText(PHONE);b.textContent=c?"복사했습니다":"복사 실패";setTimeout(()=>{if($("#askCopy"))b.textContent="전화번호 복사"},2000)};
