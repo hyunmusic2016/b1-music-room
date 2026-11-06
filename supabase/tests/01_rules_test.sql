@@ -979,4 +979,18 @@ select test.ok((public.admin_set_info_title('way', repeat('가', 31)))->>'msg' l
 select test.ok((public.admin_set_info_title('way', ''))->'titles' = '{}'::jsonb, '비우면 기본 제목');
 reset role; reset request.jwt.claims;
 
+-- 47. 047: 재원생 추가 이용료(하루 1시간 무료 이후 1시간마다)
+reset role; set role anon;
+select test.ok((public.price_info())->>'stu_extra' = '3000', '처음 값 3,000원이 공개 조회에 보임');
+reset role; set app.fake_now = '2027-06-01 10:00'; set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select (public.admin_set_prices('{"fee":"9000","stu_count":[{"n":"10","price":"50000"}]}'))->>'updated_at' as sx_d0 \gset
+select test.ok((public.admin_set_prices('{"fee":"9000","stu_count":[{"n":"10","price":"50000"}]}'))->>'stu_extra' = '3000', '보내지 않으면 추가 이용료 그대로');
+select test.ok((public.admin_set_prices('{"fee":"9000","stu_count":[{"n":"10","price":"50000"}],"stu_extra":"3,000원"}'))->>'updated_at' = :'sx_d0', '같은 값이면 수정 날짜 그대로');
+reset role; set app.fake_now = '2027-06-02 10:00'; set role authenticated;
+select test.ok((public.admin_set_prices('{"fee":"9000","stu_count":[{"n":"10","price":"50000"}],"stu_extra":"4,000"}'))->>'stu_extra' = '4000', '추가 이용료 바꾸기(쉼표 정리)');
+select test.ok((public.price_info())->>'updated_at' = '2027-06-02', '추가 이용료만 바꿔도 날짜가 오늘로');
+select test.ok((public.admin_set_prices('{"fee":"9000","stu_extra":"삼천"}'))->>'msg' like '재원생 추가 이용료는 숫자만%', '숫자가 아니면 막힘');
+select test.ok((public.admin_set_prices('{"fee":"9000","stu_count":[{"n":"10","price":"50000"}],"stu_extra":""}'))->>'stu_extra' = '', '비울 수 있음');
+reset role; reset app.fake_now; reset request.jwt.claims;
+
 select '모든 시험 통과' as 결과;
