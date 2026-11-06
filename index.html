@@ -168,7 +168,10 @@ textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니�
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 16px}
 .topbar h1{margin:0;display:flex;align-items:center;gap:8px;min-width:0;white-space:nowrap}
 @media (max-width:380px){.topbar h1{font-size:23px;gap:6px}}
-.hlogo{height:1.35em;width:auto;display:block;flex:none} /* 제목 앞 학원 로고(v0.52.0) */
+.hlogo{height:2.05em;width:auto;display:block;flex:none} /* 제목 두 줄 높이에 맞춘 학원 로고(v0.52.1) */
+.htxt{display:flex;flex-direction:column;justify-content:center}
+.h1a{font-size:.66em;line-height:1.2;font-weight:800;letter-spacing:-.01em}
+.h1b{line-height:1.15}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hlogo{filter:invert(1) hue-rotate(180deg)}}
 :root[data-theme="dark"] .hlogo{filter:invert(1) hue-rotate(180deg)}
 .topbtn{display:inline-flex;align-items:center;gap:6px;flex:none;min-height:44px;padding:0 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px;font-weight:700;white-space:nowrap;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.06)}
@@ -471,7 +474,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 </head>
 <body>
 <div class="wrap">
-  <div class="topbar"><h1><img class="hlogo" id="hLogo" alt="현실용음악학원 로고"><span class="htxt">음악연습실 예약</span><span class="lclock" id="lclock"></span></h1><button class="topbtn" id="topBtn" data-go="mine"></button></div>
+  <div class="topbar"><h1><img class="hlogo" id="hLogo" alt="현실용음악학원 로고"><span class="htxt"><span class="h1a">현실용음악학원</span><span class="h1b">음악연습실 예약</span></span><span class="lclock" id="lclock"></span></h1><button class="topbtn" id="topBtn" data-go="mine"></button></div>
 
   <section id="v-book">
     <button class="mustread" data-info="first">📢 처음 오시는 분 필독!<span aria-hidden="true">›</span></button>
@@ -520,7 +523,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.52.0";
+const APP_VERSION="v0.52.1";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
