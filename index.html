@@ -515,7 +515,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.51.5";
+const APP_VERSION="v0.51.6";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1310,10 +1310,15 @@ function infoInline(t){ // 글 한 줄 → 안전한 HTML(먼저 esc, 그다음 
 const EXTREG_MARK=/^\{\s*일반회원\s*등록하기\s*\}$/; // 이 줄만 있으면 [일반회원 등록하기] 버튼(v0.51.5)
 const EXTREG_BTN='<button type="button" class="btn first" data-extreg>일반회원 등록하기 ›</button>';
 function infoBodyHtml(b){
-  let ls=String(b||"").split("\n").map(x=>x.trim()).filter(Boolean);
+  let ls=String(b||"").split("\n").map(x=>x.trim());
   const reg=ls.some(x=>EXTREG_MARK.test(x));
-  if(reg){ls=ls.filter(x=>!EXTREG_MARK.test(x));return infoBodyCore(ls)+EXTREG_BTN}
-  return infoBodyCore(ls);
+  if(reg)ls=ls.filter(x=>!EXTREG_MARK.test(x));
+  // 빈 줄(엔터로 비운 줄) = 칸 띄우기(v0.51.6): 빈 줄로 나뉜 묶음마다 따로 그리고, 사이에 빈 줄 수만큼(3줄까지) 간격
+  const groups=[];let cur=[],gap=0;
+  ls.forEach(x=>{if(x){if(!cur.length&&groups.length)cur.gap=gap;cur.push(x);gap=0}else{if(cur.length){groups.push(cur);cur=[]}gap++}});
+  if(cur.length)groups.push(cur);
+  const h=groups.map((g,i)=>(i?'<div style="height:'+(0.9*Math.min(g.gap||1,3))+'em"></div>':'')+infoBodyCore(g)).join("");
+  return h+(reg?EXTREG_BTN:"");
 }
 function infoBodyCore(ls){
   if(!ls.length)return "";
@@ -2531,6 +2536,7 @@ function infoEditHtml(){
     (k==="price"?'<li>제목을 <b>정액권</b> 또는 <b>횟수권</b>으로 쓰면 배지로 보이고, 그 상품이 이용료 표에 있을 때만 손님에게 보입니다.</li>':'')+
     '<li>**굵게** 처럼 별표 두 개로 감싸면 굵은 글씨가 됩니다.</li>'+
     '<li>"입력 예정"이라고 쓰면 점선 상자로 보입니다.</li>'+
+    '<li>엔터로 <b>빈 줄</b>을 넣으면 그만큼 칸이 띄워집니다(빈 줄 1~3줄).</li>'+
     '<li>한 줄에 <b>{일반회원 등록하기}</b>만 쓰면 그 칸 아래에 [일반회원 등록하기] 버튼이 생깁니다(일반회원 예약 창의 버튼과 같은 화면).</li>'+
     '<li><b>{추가 이용료}</b>라고 쓰면 이용료 변경에 저장된 재원생 추가 이용료(예: 3,000원)로 바뀌어 보입니다. 금액을 바꾸면 글을 고치지 않아도 함께 바뀝니다.</li>'+
     '<li>"관리자에게 문의하십시오." 뒤에는 "(홈 화면 맨 아래 [관리자 문의])"가 자동으로 붙습니다. 손님 화면의 전화번호는 [관리자 문의] 창 한 곳에만 둡니다(글에 전화번호를 직접 쓰지 마십시오).</li>'+
