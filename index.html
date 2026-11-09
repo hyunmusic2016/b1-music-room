@@ -356,6 +356,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .card.ie.drop{outline:3px dashed var(--accent-strong);outline-offset:-3px;background:color-mix(in srgb,var(--accent) 18%,var(--surface))}
 .ieadd.sm{width:auto;height:36px;padding:0 12px;border-width:1.5px;font-size:12.5px}
 .ieadd{display:flex;align-items:center;justify-content:center;width:84px;height:84px;border:2px dashed var(--line);border-radius:8px;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer;text-align:center;margin:0}
+.card.ie.iehid{opacity:.62;border-style:dashed}.iehidb{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;color:var(--danger);border:1px solid var(--danger);vertical-align:middle}
 .card.ie textarea{width:100%;font:inherit;font-size:15px;line-height:1.5;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-sizing:border-box;resize:vertical}
 .info h3{font-size:16px;margin:0 0 6px}.info ol,.info ul{margin:4px 0 0;padding-left:20px}.info li{margin:4px 0;line-height:1.55}
 /* 이용 안내 창(v0.61.0): 위 색 머리띠(B안) + 왼쪽 색 띠·아이콘·✓ 목록 카드(A안) */
@@ -552,7 +553,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.61.0";
+const APP_VERSION="v0.62.0";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1234,7 +1235,7 @@ async function openPriceSheet(){
   // 제목이 "정액권"인 칸(예전 글)은 보이지 않음(v0.53.0)
   const hasC=ec.length||sc.length;
   const isPass=t=>t==="이용권"||t==="횟수권";
-  const expSecs=infoSections("price").filter(x=>x.t!=="정액권"&&(!isPass(x.t)||hasC));
+  const expSecs=infoSections("price").filter(x=>!x.hide&&x.t!=="정액권"&&(!isPass(x.t)||hasC));
   const expHtml=expSecs.map(x=>{const b=infoBodyHtml(x.b)+photosHtml(x),hd=isPass(x.t)?'':x.t?'<b>'+infoInline(x.t)+'</b>':'';
     return inner(hd+'<div class="pexp info" style="margin:'+(hd?6:0)+'px 0 0">'+b+'</div>')}).join("");
   let any=false;const add=(t,col,x)=>{if(!x)return;h+=group(t,col,x,any?36:12);any=true};
@@ -1445,7 +1446,7 @@ function infoPageHtml(k,secs){
       '<div class="maps"><button type="button" class="btn ghost" id="infoAddrCopy">주소 복사</button>'+
       '<a class="btn ghost" target="_blank" rel="noopener" href="https://map.naver.com/p/search/'+encodeURIComponent(ADDRESS.split(",")[0])+'">네이버 지도</a>'+
       '<a class="btn ghost" target="_blank" rel="noopener" href="https://map.kakao.com/link/search/'+encodeURIComponent(ADDRESS.split(",")[0])+'">카카오맵</a></div>');
-  (secs||infoSections(k)).forEach(x=>{const b=infoBodyHtml(x.b),ph=photosHtml(x);if(x.t||b||ph)h+=card(x.t?infoInline(x.t):"",b+ph,x.t)});
+  (secs||infoSections(k)).filter(x=>!x.hide).forEach(x=>{const b=infoBodyHtml(x.b),ph=photosHtml(x);if(x.t||b||ph)h+=card(x.t?infoInline(x.t):"",b+ph,x.t)});
   // v0.60.3: 안내 창 맨 아래 고정 상자("궁금하신 점은 … [관리자 문의] …")는 삭제(사용자 요청)
   return h;
 }
@@ -2181,7 +2182,7 @@ const A4_PX=[794,1123]; // 96dpi에서 A4 크기
 /* A4 가격표·/price/ 페이지의 "이용권 안내"(v0.59.10): [이용료 보기]와 같은 글(안내 글 변경의 "이용권 안내", 기본 글 포함, {이용권 기간} 바뀜). 사진·버튼은 넣지 않음 */
 function a4ExpHtml(){
   const isPass=t=>t==="이용권"||t==="횟수권";
-  return infoSections("price").filter(x=>x.t!=="정액권").map(x=>'<div class="aexp">'+(x.t&&!isPass(x.t)?'<b class="aexpt">'+infoInline(x.t)+'</b>':'')+infoBodyHtml(x.b).replace(EXTREG_BTN,"")+'</div>').join("");
+  return infoSections("price").filter(x=>!x.hide&&x.t!=="정액권").map(x=>'<div class="aexp">'+(x.t&&!isPass(x.t)?'<b class="aexpt">'+infoInline(x.t)+'</b>':'')+infoBodyHtml(x.b).replace(EXTREG_BTN,"")+'</div>').join("");
 }
 function a4Html(P,pay,o){
   const won=v=>Number(v).toLocaleString("ko-KR")+'원';
@@ -2652,12 +2653,14 @@ function infoEditHtml(){
     '<li><b>{이용권 기간}</b>이라고 쓰면 이용료 변경에 저장된 이용권 기간(예: 30일)으로 바뀌어 보입니다.</li>'+
     '<li><b>{추가 이용료}</b>라고 쓰면 이용료 변경에 저장된 재원생 추가 이용료(예: 3,000원)로 바뀌어 보입니다. 금액을 바꾸면 글을 고치지 않아도 함께 바뀝니다.</li>'+
     '<li>"관리자에게 문의하십시오." 뒤에는 "(홈 화면 맨 아래 [관리자 문의])"가 자동으로 붙습니다. 손님 화면의 전화번호는 [관리자 문의] 창 한 곳에만 둡니다(글에 전화번호를 직접 쓰지 마십시오).</li>'+
+    '<li>칸 오른쪽 위 <b>[🙈 숨기기]</b>를 누르고 [저장]하면 그 칸은 지우지 않고 손님 화면에서만 감춰집니다. 다시 보이게 하려면 [👁 보이기] 후 [저장]하십시오.</li>'+
     '<li>칸마다 사진을 원하는 만큼 넣을 수 있습니다(내용 아래에 보임). 올릴 때 자동으로 크기를 줄입니다.</li>'+
     '<li>사진 순서는 작은 사진을 눌러 다른 사진 자리로 <b>끌어다 놓으면</b> 바뀝니다(마우스·손가락 모두). 사진의 숫자가 순서입니다.</li>'+
     '<li>사진 배치는 <b>사진마다</b> 정합니다. 작은 사진을 <b>살짝 눌러 고른 뒤</b>(여러 장 가능, ✓ 표시) <b>한 줄에</b> 1장·2장·3장, <b>크기</b> 크게(화면 폭 가득)·보통(약 70%)·작게(약 45%, 가운데)를 누르면 고른 사진에만 적용됩니다. 안 고르면 모든 사진에 적용됩니다. 예: 2·3번만 골라 "2장"을 누르면 그 둘만 나란히 놓입니다. 2장·3장은 정사각형으로 잘려 보이고, 크기는 한 줄 1장일 때만 씁니다. 모양은 바로 아래 점선 상자에 미리 보입니다.</li>'+
     (INFO_DEFAULT[k].addr?'<li>맨 위 주소 상자(주소 복사·지도 버튼)는 고정이라 여기서 고치지 않습니다.</li>':'')+
     '</ul></details>';
-  const rows=secs.map((x,i)=>'<div class="card ie" data-i="'+i+'"><div class="row" style="align-items:center;gap:6px"><b style="flex:1">칸 '+(i+1)+'</b>'+
+  const rows=secs.map((x,i)=>'<div class="card ie'+(x.hide?' iehid':'')+'" data-i="'+i+'"><div class="row" style="align-items:center;gap:6px;flex-wrap:wrap"><b style="flex:1">칸 '+(i+1)+(x.hide?' <span class="iehidb">숨김 · 손님에게 안 보임</span>':'')+'</b>'+
+      '<button type="button" class="btn ghost small" data-ihd="'+i+'">'+(x.hide?'👁 보이기':'🙈 숨기기')+'</button>'+
       '<button type="button" class="btn ghost small" data-iu="'+i+'"'+(i?'':' disabled')+' aria-label="위로">↑</button><button type="button" class="btn ghost small" data-idn="'+i+'"'+(i<secs.length-1?'':' disabled')+' aria-label="아래로">↓</button><button type="button" class="btn ghost small" data-ix="'+i+'" style="color:var(--danger)">✕ 삭제</button></div>'+
       '<label>제목</label><input type="text" class="ie-t" maxlength="60" value="'+esc(x.t||"")+'">'+
       '<label>내용</label><textarea class="ie-b" maxlength="3000" rows="'+Math.min(12,Math.max(3,String(x.b||"").split("\n").length+1))+'">'+esc(x.b||"")+'</textarea>'+
@@ -2682,12 +2685,12 @@ function infoEditHtml(){
 }
 const LAY_NAME={"1l":"1장","1m":"1장·보통","1s":"1장·작게","2":"2장","3":"3장"};
 // lay는 항상 사진 수와 같은 길이로 들고 다님(사진 빼기·순서 바꾸기·올리기 때 함께 움직임)
-function readInfoDraft(){const d=A.infoDraft||[];return [...document.querySelectorAll(".card.ie")].map((c,i)=>{const o={t:c.querySelector(".ie-t").value,b:c.querySelector(".ie-b").value};const im=(d[i]&&d[i].imgs)||[];if(im.length){o.imgs=im.slice();o.lay=layOf(d[i])}return o})}
+function readInfoDraft(){const d=A.infoDraft||[];return [...document.querySelectorAll(".card.ie")].map((c,i)=>{const o={t:c.querySelector(".ie-t").value,b:c.querySelector(".ie-b").value};if(d[i]&&d[i].hide)o.hide=true;const im=(d[i]&&d[i].imgs)||[];if(im.length){o.imgs=im.slice();o.lay=layOf(d[i])}return o})}
 function bindInfoEdit(){
   if(A.infoKey&&!$("#ieSave"))return;
   if(!A.infoKey){window.infoLeave=null;document.querySelectorAll("[data-ik]").forEach(b=>b.onclick=()=>{A.infoKey=b.dataset.ik;A.infoDraft=null;A.infoMsg="";A.infoSel={};renderAdmin();window.scrollTo(0,0)});return}
   const k=A.infoKey,redraw=()=>{renderAdmin()};
-  const norm=a=>JSON.stringify(a.map(x=>({t:x.t||"",b:x.b||"",i:(x.imgs||[]).join(","),z:layOf(x).join(",")})));
+  const norm=a=>JSON.stringify(a.map(x=>({t:x.t||"",b:x.b||"",i:(x.imgs||[]).join(","),z:layOf(x).join(","),h:!!x.hide})));
   const orig=norm(infoSections(k));A.infoUp=A.infoUp||[]; // infoUp: 이번에 올렸지만 아직 저장 안 한 사진
   const dropUnsaved=()=>{const keep=new Set(savedPhotos(k));removePhotos(A.infoUp.filter(x=>!keep.has(x)));A.infoUp=[]};
   // [← 안내 글 변경]으로 목록에 돌아갈 때: 저장 안 한 내용이 있으면 확인, 이번에 올린 사진은 지움
@@ -2695,6 +2698,8 @@ function bindInfoEdit(){
   const mv=(i,d)=>{A.infoSel={};const a=readInfoDraft(),j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];A.infoDraft=a;A.infoMsg="";redraw()};
   document.querySelectorAll("[data-iu]").forEach(b=>b.onclick=()=>mv(+b.dataset.iu,-1));
   document.querySelectorAll("[data-idn]").forEach(b=>b.onclick=()=>mv(+b.dataset.idn,1));
+  // v0.62.0: 칸 숨기기·보이기(저장해야 손님 화면에 반영, 서버 053)
+  document.querySelectorAll("[data-ihd]").forEach(b=>b.onclick=()=>{const a=readInfoDraft(),x=a[+b.dataset.ihd];if(x.hide)delete x.hide;else x.hide=true;A.infoDraft=a;A.infoMsg="";redraw()});
   document.querySelectorAll("[data-ix]").forEach(b=>b.onclick=()=>{A.infoSel={};const a=readInfoDraft();a.splice(+b.dataset.ix,1);A.infoDraft=a;A.infoMsg="";redraw()});
   const applyLay=(i,f)=>{const a=readInfoDraft(),x=a[i],sel=((A.infoSel||{})[i]||[]),tg=sel.length?sel:x.imgs.map((_,j)=>j);tg.forEach(j=>{x.lay[j]=f(x.lay[j])});A.infoDraft=a;A.infoMsg="";redraw()};
   document.querySelectorAll("[data-icol]").forEach(b=>b.onclick=()=>{const [i,v]=b.dataset.icol.split(":");applyLay(+i,old=>v==="1"?(old&&old[0]==="1"?old:"1l"):v)});

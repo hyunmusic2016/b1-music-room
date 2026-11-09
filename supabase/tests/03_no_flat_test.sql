@@ -86,4 +86,13 @@ select test.ok(not ((public.admin_roster_list())::text like '%pw_hash%' or (publ
 select test.ok(exists (select 1 from jsonb_array_elements((public.admin_roster_list())->'rows') e where e->>'user_id' is not null), '연결된 이용자 번호가 옴(052)');
 reset role; reset request.jwt.claims;
 select test.ok(not has_function_privilege('anon', 'public.admin_roster_list()', 'execute'), '익명은 명부 목록 함수를 못 부름(052)');
-select '모든 시험 통과(048~052)' as 결과;
+
+-- 053: 안내 글 칸 숨기기
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((public.admin_set_info_page('room', '[{"t":"보임","b":"가"},{"t":"숨김","b":"나","hide":true}]'::jsonb))->>'ok' = 'true', '숨긴 칸 저장(053)');
+select test.ok(((public.info_pages())->'pages'->'room'->'sections'->1->>'hide') = 'true', '숨긴 칸에 hide 저장(053)');
+select test.ok(not ((public.info_pages())->'pages'->'room'->'sections'->0 ? 'hide'), '보이는 칸에는 hide 없음(053)');
+select test.ok((public.admin_set_info_page('room', '[{"t":"","b":"","hide":true}]'::jsonb))->>'ok' = 'false', '빈 칸은 숨겨도 버림(053)');
+select public.admin_set_info_page('room', null);
+reset role; reset request.jwt.claims;
+select '모든 시험 통과(048~053)' as 결과;
