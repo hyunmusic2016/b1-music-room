@@ -115,6 +115,7 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
 .btn.violet{background:#6b3fa0;color:#fff} /* 블랙리스트 등록(v0.21.0) */
 .badge.black{background:transparent;color:#6b3fa0;border-color:#6b3fa0}
 .rsync{font-size:11.5px;font-weight:400;color:var(--sub);margin-left:8px;white-space:nowrap}.rsync b{font-weight:600;color:var(--sub)}
+.prich{margin-top:3px;font-size:13px;line-height:1.5}.prich b{font-weight:700}.prich span{font-size:12px;color:var(--sub);margin-left:6px}
 .stseg{display:flex;gap:6px;margin:0 0 8px}.stseg .btn{flex:1;margin:0;min-height:40px}.stseg .btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent-strong)}
 .badge.black.hist{border-style:dashed}
 textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니지만 전에 블랙리스트였던 이용자(관리자 화면에만) */
@@ -536,7 +537,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.59.5";
+const APP_VERSION="v0.59.6";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -674,6 +675,9 @@ function soonHtml(q){
   return '<div class="msg warn" style="margin:8px 0 0;text-align:left">⏰ '+PROD[q.kind]+' 기간이 <b>'+mdw(q.end)+'</b>에 끝납니다('+(n===1?'오늘까지':n+'일 남음')+'). 계속 이용하시려면 관리자에게 연장을 문의하십시오. ('+ASK_WHERE+')</div>';
 }
 function prodLeftText(p){return "총 "+p.total+"시간 중 "+p.left.total+"시간 남음"}
+/* 이용자 현황 줄의 이용권 표시(v0.59.6): 예약 창과 같은 모양 — "총 N시간 중 M시간 남음"(굵게, 구분 색) + "11/9(월) ~ 1/7(목) · 60일 남음"(작은 회색) */
+function shDate(ds){const [y,m,d]=ds.split("-").map(Number);return m+"/"+d+"("+DAYS_KO[new Date(Date.UTC(y,m-1,d)).getUTCDay()]+")"}
+function prodRich(p,col){return '<div class="prich"><b style="color:var('+col+')">'+prodLeftText(p)+'</b><span>'+shDate(p.start)+' ~ '+shDate(p.end)+' · '+leftText(p)+'</span></div>'}
 function prodLine(q){
   const t=seoulDate(),pre=q.start>t?' · <b>시작 예정</b>':'';
   return q.start+' ~ '+q.end+pre+' · 총 '+q.total+'시간 · 남은 '+q.left.total+'시간';
@@ -1774,7 +1778,7 @@ function rosterItem(r,u){
   const ps=u?prodsOf(u):[];
   const st=ps.map(x=>'<span class="badge '+x.kind+'">'+PROD[x.kind]+'</span>').join('');
   const line=u?(u.phone||u.part?'<div class="hint">'+esc(fmtPhone(u.phone)||u.phone||"전화번호 없음")+(u.part?' · '+esc(u.part):'')+'</div>':'')+(u.memo?'<div class="hint">'+esc(u.memo)+'</div>':'')+
-    (ps.length?'<div class="hint">'+prodLine(ps[0])+'</div>':(u.last?'<div class="hint">만료된 '+PROD[u.last.kind]+': '+u.last.end+' 종료</div>':'')):'';
+    (ps.length?prodRich(ps[0],'--stu-text'):(u.last?'<div class="hint">만료된 '+PROD[u.last.kind]+': '+u.last.end+' 종료</div>':'')):'';
   return '<div class="item uitem" '+(u?'data-sv="'+u.id+'"':'data-rreg="'+esc(r.no)+'" data-rname="'+esc(r.name)+'"')+(ps.length?' data-pass="1"':'')+' data-n="'+esc(normName(r.name))+'" role="button" tabindex="0" aria-label="'+esc(r.name)+' 정보 보기">'+
     '<div class="row" style="align-items:center"><div style="flex:1;min-width:0"><b style="color:var(--stu-text)">'+esc(r.name)+'</b><span class="hint" style="margin:0 0 0 6px;display:inline">등록번호 '+esc(r.no)+'</span>'+st+line+'</div>'+
     '<div style="display:flex;gap:6px;flex:none;align-items:center"><span class="chev" aria-hidden="true">›</span></div></div></div>';
@@ -1782,7 +1786,7 @@ function rosterItem(r,u){
 function curOf(u,kind){return prodsOf(u).find(q=>q.kind===kind)||null}
 function statusItem(u,kind,extra,btn){
   const col=u.type==="ext"?'--ext-text':'--stu-text',q=kind==="none"?u.last:(curOf(u,kind)||u.current);
-  const line=kind==="none"?(q?'<div class="hint">만료된 '+PROD[q.kind]+': '+q.end+' 종료</div>':''):'<div class="hint">'+prodLine(q)+'</div>';
+  const line=kind==="none"?(q?'<div class="hint">만료된 '+PROD[q.kind]+': '+q.end+' 종료</div>':''):prodRich(q,col);
   // 재원생은 [통화] 버튼 없음(v0.59.0)
   const call=u.type==="ext"?'<button class="btn small" style="background:#1e8e4e;color:#fff" data-sc="'+u.id+'"'+(u.phone?'':' disabled')+'>통화</button>':'';
   return '<div class="item uitem" data-sv="'+u.id+'"'+(kind!=="none"?' data-pass="1"':'')+' data-n="'+esc(normName(u.name))+'" role="button" tabindex="0" aria-label="'+esc(u.name)+' 정보 보기"><div class="row" style="align-items:center"><div style="flex:1;min-width:0"><b style="color:var('+col+')">'+esc(u.name)+'</b>'+(u.type==="stu"&&u.roster_no?'<span class="hint" style="margin:0 0 0 6px;display:inline">등록번호 '+esc(u.roster_no)+'</span>':'')+(kind!=="none"?prodsOf(u).map(x=>'<span class="badge '+x.kind+'">'+PROD[x.kind]+'</span>').join(''):'')+(u.status==="blacklisted"?'<span class="badge black">블랙리스트</span>':u.black_count>0?'<span class="badge black hist">블랙리스트 이력</span>':'')+
