@@ -148,6 +148,7 @@ textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니�
 .plrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-top:1px solid var(--line);padding:10px 0}
 .plrow:first-of-type{border-top:0}
 .plrow b{font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.plrow>b{font-weight:800} /* 가격 글씨 한 단계 굵게(v0.60.5) */
 .plrow.pick{width:100%;background:none;border:0;border-top:1px solid var(--line);font:inherit;color:var(--ink);text-align:left;cursor:pointer;border-radius:8px;padding:10px 6px}
 .plrow.pick:first-of-type{border-top:0}
 .plrow.pick:hover:not(:disabled),.plrow.pick:focus-visible{background:var(--line)}
@@ -540,7 +541,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.60.4";
+const APP_VERSION="v0.60.5";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
