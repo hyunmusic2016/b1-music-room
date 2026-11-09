@@ -539,7 +539,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.60.2";
+const APP_VERSION="v0.60.3";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1426,7 +1426,7 @@ function infoPageHtml(k,secs){
       '<a class="btn ghost" target="_blank" rel="noopener" href="https://map.naver.com/p/search/'+encodeURIComponent(ADDRESS.split(",")[0])+'">네이버 지도</a>'+
       '<a class="btn ghost" target="_blank" rel="noopener" href="https://map.kakao.com/link/search/'+encodeURIComponent(ADDRESS.split(",")[0])+'">카카오맵</a></div>');
   (secs||infoSections(k)).forEach(x=>{const b=infoBodyHtml(x.b),ph=photosHtml(x);if(x.t||b||ph)h+=card(x.t?infoInline(x.t):"",b+ph)});
-  if(d.call)h+=card("",'<p style="margin:0">궁금하신 점은 '+ASK_WHERE+'에서 문의 가능 시간을 확인하신 뒤 연락하십시오.</p>');
+  // v0.60.3: 안내 창 맨 아래 고정 상자("궁금하신 점은 … [관리자 문의] …")는 삭제(사용자 요청)
   return h;
 }
 function openInfo(k,draft){
@@ -2635,7 +2635,7 @@ function infoEditHtml(){
     '<li>사진 순서는 작은 사진을 눌러 다른 사진 자리로 <b>끌어다 놓으면</b> 바뀝니다(마우스·손가락 모두). 사진의 숫자가 순서입니다.</li>'+
     '<li>사진 배치는 <b>사진마다</b> 정합니다. 작은 사진을 <b>살짝 눌러 고른 뒤</b>(여러 장 가능, ✓ 표시) <b>한 줄에</b> 1장·2장·3장, <b>크기</b> 크게(화면 폭 가득)·보통(약 70%)·작게(약 45%, 가운데)를 누르면 고른 사진에만 적용됩니다. 안 고르면 모든 사진에 적용됩니다. 예: 2·3번만 골라 "2장"을 누르면 그 둘만 나란히 놓입니다. 2장·3장은 정사각형으로 잘려 보이고, 크기는 한 줄 1장일 때만 씁니다. 모양은 바로 아래 점선 상자에 미리 보입니다.</li>'+
     (INFO_DEFAULT[k].addr?'<li>맨 위 주소 상자(주소 복사·지도 버튼)는 고정이라 여기서 고치지 않습니다.</li>':'')+
-    (INFO_DEFAULT[k].call?'<li>맨 아래 "궁금하신 점은 홈 화면 맨 아래 [관리자 문의]…" 상자는 고정입니다.</li>':'')+'</ul></details>';
+    '</ul></details>';
   const rows=secs.map((x,i)=>'<div class="card ie" data-i="'+i+'"><div class="row" style="align-items:center;gap:6px"><b style="flex:1">칸 '+(i+1)+'</b>'+
       '<button type="button" class="btn ghost small" data-iu="'+i+'"'+(i?'':' disabled')+' aria-label="위로">↑</button><button type="button" class="btn ghost small" data-idn="'+i+'"'+(i<secs.length-1?'':' disabled')+' aria-label="아래로">↓</button><button type="button" class="btn ghost small" data-ix="'+i+'" style="color:var(--danger)">✕ 삭제</button></div>'+
       '<label>제목</label><input type="text" class="ie-t" maxlength="60" value="'+esc(x.t||"")+'">'+
