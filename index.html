@@ -447,6 +447,15 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 .a4 .ar:last-child{border-bottom:0}
 .a4 .ar span{flex:1;min-width:0}.a4 .ar b{font-size:1.1em;font-weight:800;white-space:nowrap}
 .a4 .ar.big b{font-size:1.3em}
+.a4 .asec{margin-top:4mm;border:.35mm solid #c9d3df;border-radius:3.5mm;padding:3mm 4mm 4mm;background:#f6f8fb} /* 큰 상자(v0.56.5) */
+.a4 .asec:first-of-type{margin-top:0}
+.a4 .ast{margin:0 0 3mm;font-size:1.45em;font-weight:900;color:#14304d;border-bottom:.5mm solid #5b95cc;padding-bottom:1.5mm}
+.a4 .ast .abd{font-size:.85em}
+.a4 .asubt{font-size:1.12em;font-weight:800;color:#1d2430;margin:0 0 2mm}
+.a4 .acols+.asubt{margin-top:4mm;padding-top:3mm;border-top:.3mm dashed #b9c1cc}
+.a4 .asec .ab{background:#fff}
+.a4 .asec .aexp{margin-top:0;background:#fff}
+.a4 .anote2{font-size:.95em;color:#0a6f72;font-weight:700}
 .a4 .anote{font-size:.8em;color:#0a6f72;font-weight:700;margin:0 0 2mm}
 .a4 .aexp{margin-top:5mm;border:.3mm solid #c9d3df;border-radius:3mm;padding:4mm 5mm;background:#f6f8fb;font-size:1.05em;line-height:1.6}
 .a4 .adate{margin-top:4mm;text-align:right;font-size:1.05em;color:#5a6474}
@@ -522,7 +531,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.56.4";
+const APP_VERSION="v0.56.5";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -2058,21 +2067,21 @@ const A4_PX=[794,1123]; // 96dpi에서 A4 크기
 function a4Html(P,pay,o){
   const won=v=>Number(v).toLocaleString("ko-KR")+'원';
   const rows=(l,word)=>l.map(x=>'<div class="ar"><span>'+word+' <b style="font-size:inherit;font-weight:700">'+x.n+'시간</b> · 30일</span><b>'+won(x.price)+'</b></div>').join("");
-  const kind=(k,l,word,exp)=>l&&l.length?'<div class="ak"><div class="akt"><span class="abd '+k+'">'+PROD[k]+'</span><i>'+exp+'</i></div>'+rows(l,word)+'</div>':'';
-  const CT='30일 · 정해진 총 시간';
-  const ext=(P.fee?'<div class="ak"><div class="akt"><span class="abd one">1시간 이용료</span><i>예약 1시간</i></div><div class="ar big"><span>1시간</span><b>'+won(P.fee)+'</b></div></div>':'')+
-    kind("count",P.ext_count,"총",CT);
-  const stu=o.stu?(P.stu_extra?'<div class="ak"><div class="akt"><span class="abd one">추가 이용료</span><i>하루 1시간 무료 이후</i></div><div class="ar big"><span>추가 1시간</span><b>'+won(P.stu_extra)+'</b></div></div>':'')+kind("count",P.stu_count,"총",CT):'';
-  const col=(t,sm,c,x,note)=>'<div class="acol" style="--c:'+c+'"><h2>'+t+(sm?'<small>'+sm+'</small>':'')+'</h2><div class="ab">'+(note||'')+x+'</div></div>';
-  const hasC=(P.ext_count||[]).length||(o.stu&&(P.stu_count||[]).length);
+  // v0.56.5: [이용료 보기]와 같은 순서 = 1시간 이용료(일반회원 | 재원생) → 이용권(이용권 가격: 일반회원 | 재원생, 이용권 안내)
+  const stuOn=!!o.stu,ec=P.ext_count||[],sc=stuOn?(P.stu_count||[]):[];
+  const col=(t,sm,c,x)=>x?'<div class="acol" style="--c:'+c+'"><h2>'+t+(sm?'<small>'+sm+'</small>':'')+'</h2><div class="ab">'+x+'</div></div>':'';
+  const pair=(a,b)=>a||b?'<div class="acols">'+col("일반회원","","#9C5238",a)+col("재원생","재원생 전용","#0e9194",b)+'</div>':'';
+  const feeE=P.fee?'<div class="ar big"><span>1시간</span><b>'+won(P.fee)+'</b></div>':'';
+  const feeS=stuOn&&P.stu_extra?'<div class="anote2">하루 1시간 무료 · 이후 1시간마다(이용권과 별개)</div><div class="ar big"><span>추가 1시간</span><b>'+won(P.stu_extra)+'</b></div>':'';
+  const feeSec=feeE||feeS?'<div class="asec"><h2 class="ast">1시간 이용료</h2>'+pair(feeE,feeS)+'</div>':'';
+  const passSec=ec.length||sc.length?'<div class="asec"><h2 class="ast"><span class="abd count">이용권</span></h2><div class="asubt">이용권 가격</div>'+pair(rows(ec,"총"),rows(sc,"총"))+
+    '<div class="asubt">이용권 안내</div><div class="aexp">'+
+      '<p>시작일부터 30일 안에 <b>정해진 총 시간</b>만큼 원하는 날에 예약할 수 있습니다(하루 제한 없음). 30일이 지나면 남은 시간은 쓸 수 없습니다.</p>'+
+      '<p>예약을 취소하면 쓴 시간을 돌려받습니다. 이용권 구매는 관리자에게 문의하십시오.</p></div></div>':'';
   return '<div class="a4">'+
     '<div class="ah"><img src="'+LOGO_SRC+'" alt=""><div><div class="an">현실용음악학원</div><h1>B1 음악 연습실 이용료 안내</h1></div></div>'+
     '<div class="asub"><span class="k">예약은 1시간 단위입니다</span><span>24시간 운영</span><span>오늘·내일 예약</span><span>홈페이지에서 바로 예약·확정</span></div>'+
-    (ext||stu?'<div class="acols">'+(ext?col("일반회원","","#9C5238",ext):'')+(stu?col("재원생","현실용음악학원 재원생 전용","#0e9194",stu):'')+'</div>'
-      :'<p>등록된 이용료가 없습니다.</p>')+
-    (hasC?'<div class="aexp">'+
-      '<p><span class="abd count">이용권</span> 시작일부터 30일 안에 <b>정해진 총 시간</b>만큼 원하는 날에 예약할 수 있습니다(하루 제한 없음). 30일이 지나면 남은 시간은 쓸 수 없습니다.</p>'+
-      '<p>예약을 취소하면 쓴 시간을 돌려받습니다. 이용권 구매는 관리자에게 문의하십시오.</p></div>':'')+
+    (feeSec||passSec?feeSec+passSec:'<p>등록된 이용료가 없습니다.</p>')+
     (priceDate(P.updated_at)?'<div class="adate">'+priceDate(P.updated_at)+' 기준 이용료입니다.</div>':'')+ // 기준 날짜(v0.47.4)
   '</div>';
 }
