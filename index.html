@@ -517,7 +517,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.54.0";
+const APP_VERSION="v0.54.1";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -600,7 +600,7 @@ function noFlat(v){
   return v;
 }
 /* v0.54.0: "횟수"라는 말을 쓰지 않음(서버 049). 049 실행 전 서버가 옛 문구를 주더라도 시간 문구로 바꿔 보여 줌 */
-function hoursMsg(m){return String(m).replace(/횟수권/g,"이용권").replace(/시도 횟수를 초과했습니다\./g,"비밀번호를 여러 번 잘못 입력했습니다.")
+function hoursMsg(m){return String(m).replace(/횟수권/g,"이용권")
   .replace(/하루에 한 번만 예약할 수 있습니다/g,"하루 1시간만 예약할 수 있습니다").replace(/(\d+)회를 모두 사용했습니다/g,"$1시간을 모두 사용했습니다")
   .replace(/횟수를 늘리거나/g,"시간을 늘리거나").replace(/(\d+)회 사용했습니다\. 총 이용 횟수는 (\d+)회 이상/g,"$1시간 사용했습니다. 총 이용 시간은 $2시간 이상")
   .replace(/총 이용 횟수/g,"총 이용 시간").replace(/번째 줄: 횟수를/g,"번째 줄: 시간을").replace(/1회 이용료/g,"1시간 이용료")}
@@ -744,7 +744,7 @@ function doneHtml(title,name,prod,date,hour,note){
 // 재원생 예약 창: 이름+비밀번호를 넣으면 명부 확인 결과를 보여 줌(v0.37.0, 서버 026). 명부 확인이 꺼져 있으면 r.roster가 없어 아무것도 안 보임
 function stuCheckHtml(r,D){
   if(!r)return"";
-  if(r.locked)return'<div class="stuchk no">비밀번호를 여러 번 잘못 입력했습니다. 15분 뒤에 다시 시도하십시오.</div>';
+  if(r.locked)return'<div class="stuchk no">시도 횟수를 초과했습니다. 15분 뒤에 다시 시도하십시오.</div>';
   if(r.roster===undefined)return"";
   const has=prodsOf(r).some(p=>p.start<=D&&D<=p.end); // 이용권이 있는 등록 재원생은 명부 예외(v0.38.0, 서버 030)
   if(r.roster||has)return'<div class="stuchk ok"><span class="ic" aria-hidden="true">✓</span><span><b>재원생입니다.</b> 예약하실 수 있습니다.</span></div>';
@@ -1792,7 +1792,7 @@ function bindDormant(){
 let blQ="";
 const dOnly=t=>(t||"").slice(0,10);
 // 복귀한 이용자의 블랙리스트 이력 한 줄(관리자 화면에만, v0.21.2)
-const blackHist=u=>u.status!=="blacklisted"&&u.black_count>0?'블랙리스트 이력 '+u.black_count+'번 · 마지막 '+dOnly(u.black_at)+(u.black_restored_at?' ~ '+dOnly(u.black_restored_at)+' 복귀':'')+(u.black_reason?' · 사유: '+esc(u.black_reason):''):'';
+const blackHist=u=>u.status!=="blacklisted"&&u.black_count>0?'블랙리스트 이력 '+u.black_count+'회 · 마지막 '+dOnly(u.black_at)+(u.black_restored_at?' ~ '+dOnly(u.black_restored_at)+' 복귀':'')+(u.black_reason?' · 사유: '+esc(u.black_reason):''):'';
 function blackUsers(){return A.users.filter(u=>u.status==="blacklisted").sort((a,b)=>(b.status_at||"").localeCompare(a.status_at||"")||b.id-a.id)}
 function blackHtml(){
   const us=blackUsers();

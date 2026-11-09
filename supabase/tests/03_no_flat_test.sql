@@ -48,7 +48,9 @@ reset role; reset app.fake_now;
 
 -- 049: "회·횟수" → "시간" 문구
 select test.ok((select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-                 where n.nspname = 'public' and regexp_replace(p.prosrc, '--[^\n]*', '', 'g') like '%횟수%') = 0, '서버 문구에 "횟수"가 남지 않음(049)');
+                 where n.nspname = 'public' and replace(regexp_replace(p.prosrc, '--[^\n]*', '', 'g'), '시도 횟수', '') like '%횟수%') = 0, '서버 문구에 이용 "횟수"가 남지 않음(049, 비밀번호 시도 횟수는 그대로)');
+select test.ok((select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'public' and p.prosrc like '%비밀번호를 여러 번 잘못%') = 0, '비밀번호 잠금 문구는 원래 "시도 횟수를 초과했습니다."(050)');
 set app.fake_now = '2028-03-02 10:00'; set role anon;
 select test.ok((public.reserve('2028-03-02', 13, '시간학생', '4901', true, 'stu'))->>'ok' = 'true', '재원생 예약');
 select test.ok((public.reserve('2028-03-02', 15, '시간학생', '4901', true, 'stu'))->>'msg' like '하루 1시간만 예약할 수 있습니다.%', '재원생 두 번째는 "하루 1시간만 예약할 수 있습니다."(049)');
@@ -57,4 +59,4 @@ set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set r
 select test.ok((public.admin_set_prices('{"fee":"7000","ext_count":[{"n":"10시간","price":"60000"}]}'))->'ext_count'->0->>'n' = '10', '이용료 표에 "10시간"이라고 써도 숫자 10으로 저장(049)');
 select test.ok((public.admin_set_prices('{"ext_count":[{"n":"abc","price":"5000"}]}'))->>'msg' like '%번째 줄: 시간을 1~999%', '이용료 표 오류 문구 "시간을"(049)');
 reset role; reset request.jwt.claims; reset app.fake_now;
-select '모든 시험 통과(048·049)' as 결과;
+select '모든 시험 통과(048~050)' as 결과;
