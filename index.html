@@ -131,9 +131,12 @@ textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니�
 .prow .pdel{flex:none;width:44px;min-height:44px;margin:0;padding:0}
 .pexp{font-size:13.5px;color:var(--sub);margin:0 0 6px;line-height:1.6}
 /* "예약은 1시간 단위" 강조(v0.26.1) */
-.onehr{border:2px solid var(--accent-strong);background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:14px 12px;margin:10px 0;text-align:center}
-.onehr b{display:block;font-size:20px;font-weight:900}
-.onehr span{display:block;font-size:13.5px;margin-top:4px}
+.onehr{border:1.5px solid var(--accent-strong);background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:7px 10px;margin:8px 0;text-align:center}
+.onehr b{display:block;font-size:15px;font-weight:800}
+.onehr span{display:block;font-size:12px;margin-top:1px}
+.plwho{margin:10px 0 0}.plwho+.plwho{margin-top:22px}
+.plwhot{font-size:16px;font-weight:800;margin-bottom:2px}.plwhot small{display:block;font-size:12px;font-weight:600;margin-top:2px}
+.plwhot+.plrow{border-top:0}
 .plrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-top:1px solid var(--line);padding:10px 0}
 .plrow:first-of-type{border-top:0}
 .plrow b{font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -517,7 +520,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.55.0";
+const APP_VERSION="v0.56.0";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -1172,32 +1175,31 @@ async function openPriceSheet(){
   const won=v=>Number(v).toLocaleString("ko-KR")+'원';
   const rows=(l,word)=>l.map(x=>'<div class="plrow"><span>'+word+' <b style="font-size:inherit">'+x.n+'시간</b> · 30일</span><b>'+won(x.price)+'</b></div>').join("");
   const box=(title,col,inner)=>'<div class="card" style="margin:12px 0 0"><div class="part" style="margin-top:0;color:var('+col+')">'+title+'</div>'+inner+'</div>';
-  // 가격 상자에는 배지 + 가격 줄만, 설명은 아래 "이용권 안내" 상자에 따로(v0.38.2)
-  const sub=(name,cls,l,word)=>l.length?'<div style="margin-top:10px"><span class="badge big '+cls+'" style="margin-left:0">'+name+'</span><div style="margin-top:4px">'+rows(l,word)+'</div></div>':'';
   const ec=P.ext_count||[],sc=P.stu_count||[]; // v0.53.0: 정액권 없어짐
   let h=(priceDate(P.updated_at)?'<p style="text-align:center;font-size:13px;color:var(--sub);margin:8px 0 0">🗓 <b style="color:var(--ink)">'+priceDate(P.updated_at)+'</b> 기준 최신 이용료입니다.</p>':'')+'<div class="onehr"><b>예약은 1시간 단위입니다</b><span>이용료와 이용권은 모두 1시간 단위로 셉니다.</span></div>';
   // 일반회원: 큰 상자 하나 안에 1시간 이용료·이용권 상자(v0.28.0, 비어 있는 상자는 숨김)
   const inner=x=>x?'<div class="card" style="margin:10px 0">'+x.replace('<div style="margin-top:10px">','<div>')+'</div>':'';
-  // v0.55.0: 1시간 이용료는 맨 위 따로 된 상자로, 일반회원 상자에는 이용권 가격만
-  const fee=P.fee?inner('<div class="plrow" style="border-top:0;padding:0"><span>일반회원 · 1시간</span><b>'+won(P.fee)+'</b></div>'):'';
-  const ext=inner(sub("이용권","count",ec,"총"));
+  // v0.56.0: 순서 = 1시간 이용료(일반회원·재원생) → 이용권(일반회원·재원생) → 이용권 안내. 구분(일반회원·재원생)마다 따로 된 상자, 사이를 띄움
   const group=(title,col,x,mt)=>'<div class="cardgroup" style="margin-top:'+(mt||12)+'px"><div class="part" style="margin:12px 4px 2px;color:var('+col+');font-size:20px;font-weight:800">'+title+'</div>'+x+'</div>'; // 제목 15px → 20px(v0.35.1)
-  // 이용권 설명은 따로 된 큰 상자 하나에, 가격보다 위(v0.38.2·v0.38.3)
-  const hasC=ec.length||sc.length;let hasExp=false;
+  const who=(name,col,body,note)=>body?'<div class="card plwho"><div class="plwhot" style="color:var('+col+')">'+name+(note?'<small>'+note+'</small>':'')+'</div>'+body+'</div>':'';
+  const STU_NOTE='🎓 현실용음악학원 재원생 전용';
+  const rowsOf=l=>l.length?rows(l,"총"):'';
+  const feeExt=P.fee?'<div class="plrow"><span>1시간</span><b>'+won(P.fee)+'</b></div>':'';
+  const feeStu=P.stu_extra?'<p class="pexp" style="margin:6px 0 0">재원생은 <b>하루 1시간 무료</b>입니다. 더 이용하시려면 1시간마다 아래 금액을 내십시오(이용권과 별개).</p><div class="plrow"><span>추가 1시간</span><b>'+won(P.stu_extra)+'</b></div>':''; // v0.51.0
+  const feeHtml=who("일반회원","--ext-text",feeExt)+who("재원생","--stu-text",feeStu,STU_NOTE);
+  const passHtml=who("일반회원","--ext-text",rowsOf(ec))+who("재원생","--stu-text",rowsOf(sc),STU_NOTE);
   // 설명 글은 안내 글 변경(price 창)에서 고칠 수 있음(v0.43.2, 서버 037). 제목이 "이용권"(예전 글의 "횟수권"도)인 칸은 이용권을 팔 때만,
   // 제목이 "정액권"인 칸(예전 글)은 보이지 않음(v0.53.0)
+  const hasC=ec.length||sc.length;
   const isPass=t=>t==="이용권"||t==="횟수권";
   const expSecs=infoSections("price").filter(x=>x.t!=="정액권"&&(!isPass(x.t)||hasC));
   const expHtml=expSecs.map(x=>{const b=infoBodyHtml(x.b)+photosHtml(x),hd=isPass(x.t)?'<span class="badge big count" style="margin-left:0">이용권</span>':x.t?'<b>'+infoInline(x.t)+'</b>':'';
     return inner(hd+'<div class="pexp info" style="margin:6px 0 0">'+b+'</div>')}).join("");
-  if(fee)h+=group("1시간 이용료","--ext-text",fee);
-  if(expHtml){h+=group(esc(infoTitle("price")),"--ink",expHtml,fee?36:12);hasExp=true}
-  if(ext)h+=group("일반회원","--ext-text",ext,hasExp||fee?36:12);
-  // 재원생도 같은 모양(v0.28.1), 일반회원과 간격을 더 두고 재원생 전용 강조(v0.34.1)
-  // 재원생 이용권(v0.38.0): 재원생 전용 안내는 큰 상자 제목 바로 아래 한 번
-  const sx=P.stu_extra?'<b>추가 이용료</b><p class="pexp" style="margin:4px 0 0">재원생은 <b>하루 1시간 무료</b>입니다. 더 이용하시려면 1시간마다 아래 금액을 내십시오(이용권과 별개).</p><div class="plrow"><span>추가 1시간</span><b>'+won(P.stu_extra)+'</b></div>':''; // v0.51.0
-  if(sc.length||sx)h+=group("재원생","--stu-text",'<div class="stuonly" style="margin:6px 0 0">🎓 아래 내용은 <u>현실용음악학원 재원생</u>만 해당합니다.</div>'+inner(sx)+inner(sub("이용권","count",sc,"총")),fee||ext||hasExp?36:12);
-  if(!fee&&!ext&&!sc.length&&!sx)h+='<p class="hint">이용료가 아직 등록되지 않았습니다. 관리자에게 문의하십시오. ('+ASK_WHERE+')</p>';
+  let any=false;const add=(t,col,x)=>{if(!x)return;h+=group(t,col,x,any?36:12);any=true};
+  add("1시간 이용료","--ink",feeHtml);
+  add('<span class="badge big count" style="margin-left:0;font-size:inherit">이용권</span>',"--ink",passHtml);
+  add(esc(infoTitle("price")),"--ink",expHtml);
+  if(!feeHtml&&!passHtml)h+='<p class="hint">이용료가 아직 등록되지 않았습니다. 관리자에게 문의하십시오. ('+ASK_WHERE+')</p>';
   if(pi&&pi.ok&&pi.number)h+=box("입금 계좌","--ink",payBoxHtml(Object.assign({},pi,{fee:""})));
   h+='<p class="hint" style="text-align:center;margin-top:14px">이용권 구매와 문의는 관리자에게 하십시오. ('+ASK_WHERE+')</p>';
   $("#plBody").innerHTML=h;bindPayCopy($("#plBody"));
