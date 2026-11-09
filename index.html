@@ -123,14 +123,14 @@ textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니�
 .cardgroup{border:1.5px solid var(--line);border-radius:16px;padding:4px 10px;background:var(--line-soft,rgba(120,110,90,.07));margin:10px 0} /* 이용자 수정: 정보·상품·저장 상자를 큰 상자로 묶음(v0.21.11) */
 .card.blackbox,.card.farbox{margin-top:40px} /* 블랙리스트는 묶음 상자와 간격을 두어 떨어뜨림 */
 .btn2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-/* 이용료 변경의 상품 한 줄: 하루/총 [N]회 · [가격]원 [✕] (v0.26.0) */
+/* 이용료 변경의 상품 한 줄: 총 [N]시간 · [가격]원 [✕] (v0.26.0) */
 .prow{display:flex;align-items:center;gap:6px;margin:8px 0;white-space:nowrap}
 .prow input{margin:0;padding:10px 8px}
 .prow .pn{width:58px;flex:none;text-align:center}
 .prow .pp{flex:1;min-width:0;text-align:right}
 .prow .pdel{flex:none;width:44px;min-height:44px;margin:0;padding:0}
 .pexp{font-size:13.5px;color:var(--sub);margin:0 0 6px;line-height:1.6}
-/* "1회 = 1시간" 강조(v0.26.1) */
+/* "예약은 1시간 단위" 강조(v0.26.1) */
 .onehr{border:2px solid var(--accent-strong);background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:14px 12px;margin:10px 0;text-align:center}
 .onehr b{display:block;font-size:20px;font-weight:900}
 .onehr span{display:block;font-size:13.5px;margin-top:4px}
@@ -432,7 +432,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 .a4 .acol>h2{margin:0;background:var(--c);color:#fff;font-size:1.35em;font-weight:800;padding:2.2mm 4mm}
 .a4 .acol>h2 small{font-size:.62em;font-weight:600;opacity:.9;margin-left:2mm}
 .a4 .ab{padding:.7em 3mm .8em;background:#f6f8fb}
-.a4 .ak{margin-top:.7em;background:#fff;border:.3mm solid #d3d9e2;border-radius:2.5mm;padding:.55em 3.5mm .6em} /* 1회 이용료·이용권은 따로 된 상자(v0.50.1) */
+.a4 .ak{margin-top:.7em;background:#fff;border:.3mm solid #d3d9e2;border-radius:2.5mm;padding:.55em 3.5mm .6em} /* 1시간 이용료·이용권은 따로 된 상자(v0.50.1) */
 .a4 .ak:first-child{margin-top:0}
 .a4 .akt{display:flex;align-items:baseline;gap:2mm;margin-bottom:1mm}
 .a4 .abd{display:inline-block;border-radius:1.2mm;padding:.5mm 2.4mm;font-weight:800;font-size:1.08em}
@@ -517,7 +517,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.53.0";
+const APP_VERSION="v0.54.0";
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
    규칙(중복, 하루 횟수, 상품 횟수, 비밀번호 확인)은 모두 서버 함수가 최종 결정합니다. */
 const SUPABASE_URL="https://ibcvbnpqmlqmdwxkepbl.supabase.co";
@@ -531,12 +531,12 @@ const ASK_WHERE="홈 화면 맨 아래 [관리자 문의]"; // 안내 문구 뒤
 function payBoxHtml(pi){ // 계좌 상자(계좌번호 복사 버튼 포함). pi: pay_info 응답
   if(!pi||!pi.ok)return '<div class="ro" style="margin-top:8px">'+esc(NET_MSG)+'</div>';
   if(!pi.number)return '<div class="ro" style="margin-top:8px">입금 계좌가 아직 등록되지 않았습니다. 관리자에게 문의하십시오. ('+ASK_WHERE+')</div>';
-  return '<div class="ro" style="margin-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:10px"><div style="flex:1 1 auto">'+esc(pi.bank)+' <b style="white-space:nowrap">'+esc(pi.number)+'</b>'+feeLine(pi)+'<div style="font-size:13px;color:var(--sub);margin-top:2px">예금주: '+esc(pi.holder)+'</div></div>'+ // 1회 이용료는 설정 > 이용료 변경(v0.25.0, 비어 있으면 줄 없음), 예금주는 참고용이라 작은 회색 글씨로 맨 아래(v0.25.2)
+  return '<div class="ro" style="margin-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:10px"><div style="flex:1 1 auto">'+esc(pi.bank)+' <b style="white-space:nowrap">'+esc(pi.number)+'</b>'+feeLine(pi)+'<div style="font-size:13px;color:var(--sub);margin-top:2px">예금주: '+esc(pi.holder)+'</div></div>'+ // 1시간 이용료는 설정 > 이용료 변경(v0.25.0, 비어 있으면 줄 없음), 예금주는 참고용이라 작은 회색 글씨로 맨 아래(v0.25.2)
     '<button type="button" class="btn ghost small" data-copyacc="'+esc(pi.number)+'" style="flex:none;margin:0">계좌번호 복사</button></div>';
 }
 // 이용료 표 마지막 수정 날짜(서버 023, price_info.updated_at "2026-10-30") → "2026년 10월 30일"(v0.30.0)
 function priceDate(d){if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d))return "";const [y,m,dd]=d.split("-").map(Number);return y+"년 "+m+"월 "+dd+"일"}
-function feeLine(pi){return pi&&pi.fee?'<br>1회(1시간) 이용료 <b>'+Number(pi.fee).toLocaleString("ko-KR")+'원</b>':""}
+function feeLine(pi){return pi&&pi.fee?'<br>1시간 이용료 <b>'+Number(pi.fee).toLocaleString("ko-KR")+'원</b>':""}
 // "이용료 입금 계좌" 상자(예약 확정 화면, 내 예약에서 같이 씀, v0.25.0). 내용은 loadPayBox로 채움.
 function payCardHtml(id){return '<div class="card" style="text-align:left;margin:12px 0 0"><b>이용료 입금 계좌</b><p style="margin:6px 0 0">아래 계좌로 이용료를 입금하신 뒤 이용하십시오.</p><div id="'+id+'"><div class="ro" style="margin-top:8px">불러오는 중입니다…</div></div></div>'}
 function loadPayBox(sel,still){rpc("pay_info").then(pi=>{const el=$(sel);if(el&&(!still||still())){el.innerHTML=payBoxHtml(pi);bindPayCopy(el)}})} // 열 때마다 새로 받아 옴
@@ -599,6 +599,11 @@ function noFlat(v){
     if(Array.isArray(x))v[k]=noFlat(x);else noFlat(x)}
   return v;
 }
+/* v0.54.0: "횟수"라는 말을 쓰지 않음(서버 049). 049 실행 전 서버가 옛 문구를 주더라도 시간 문구로 바꿔 보여 줌 */
+function hoursMsg(m){return String(m).replace(/횟수권/g,"이용권").replace(/시도 횟수를 초과했습니다\./g,"비밀번호를 여러 번 잘못 입력했습니다.")
+  .replace(/하루에 한 번만 예약할 수 있습니다/g,"하루 1시간만 예약할 수 있습니다").replace(/(\d+)회를 모두 사용했습니다/g,"$1시간을 모두 사용했습니다")
+  .replace(/횟수를 늘리거나/g,"시간을 늘리거나").replace(/(\d+)회 사용했습니다\. 총 이용 횟수는 (\d+)회 이상/g,"$1시간 사용했습니다. 총 이용 시간은 $2시간 이상")
+  .replace(/총 이용 횟수/g,"총 이용 시간").replace(/번째 줄: 횟수를/g,"번째 줄: 시간을").replace(/1회 이용료/g,"1시간 이용료")}
 async function rpc(fn,args){
   if(!sb)return {ok:false,msg:NET_MSG};
   try{
@@ -610,7 +615,7 @@ async function rpc(fn,args){
     }
     if(data&&data.ok===false&&data.msg==="관리자 로그인이 필요합니다.")data.auth=true;
     noFlat(data);
-    if(data&&typeof data.msg==="string")data.msg=withAsk(data.msg.replace(/횟수권/g,"이용권"));
+    if(data&&typeof data.msg==="string")data.msg=withAsk(hoursMsg(data.msg));
     if(data&&Array.isArray(data.options))data.options.forEach(o=>{if(o&&typeof o.why==="string")o.why=withAsk(o.why)});
     return data;
   }catch(e){console.error(fn,e);return {ok:false,msg:NET_MSG}}
@@ -642,10 +647,10 @@ function soonHtml(q){
   const n=spanDays(t,q.end);if(n<1||n>SOON_DAYS)return "";
   return '<div class="msg warn" style="margin:8px 0 0;text-align:left">⏰ '+PROD[q.kind]+' 기간이 <b>'+mdw(q.end)+'</b>에 끝납니다('+(n===1?'오늘까지':n+'일 남음')+'). 계속 이용하시려면 관리자에게 연장을 문의하십시오. ('+ASK_WHERE+')</div>';
 }
-function prodLeftText(p){return "총 "+p.total+"회 중 "+p.left.total+"회 남음"}
+function prodLeftText(p){return "총 "+p.total+"시간 중 "+p.left.total+"시간 남음"}
 function prodLine(q){
   const t=seoulDate(),pre=q.start>t?' · <b>시작 예정</b>':'';
-  return q.start+' ~ '+q.end+pre+' · 총 '+q.total+'회 · 남은 '+q.left.total+'회';
+  return q.start+' ~ '+q.end+pre+' · 총 '+q.total+'시간 · 남은 '+q.left.total+'시간';
 }
 /* 서버가 주는 상품 목록(033부터 목록, 그 전 응답이면 product 하나). 정액권은 noFlat이 미리 버리므로 이용권만 남음 */
 function prodsOf(r){if(!r)return [];if(Array.isArray(r.products))return r.products;if(Array.isArray(r.currents))return r.currents;const p=r.product||r.current;return p?[p]:[]}
@@ -739,7 +744,7 @@ function doneHtml(title,name,prod,date,hour,note){
 // 재원생 예약 창: 이름+비밀번호를 넣으면 명부 확인 결과를 보여 줌(v0.37.0, 서버 026). 명부 확인이 꺼져 있으면 r.roster가 없어 아무것도 안 보임
 function stuCheckHtml(r,D){
   if(!r)return"";
-  if(r.locked)return'<div class="stuchk no">시도 횟수를 초과했습니다. 15분 뒤에 다시 시도하십시오.</div>';
+  if(r.locked)return'<div class="stuchk no">비밀번호를 여러 번 잘못 입력했습니다. 15분 뒤에 다시 시도하십시오.</div>';
   if(r.roster===undefined)return"";
   const has=prodsOf(r).some(p=>p.start<=D&&D<=p.end); // 이용권이 있는 등록 재원생은 명부 예외(v0.38.0, 서버 030)
   if(r.roster||has)return'<div class="stuchk ok"><span class="ic" aria-hidden="true">✓</span><span><b>재원생입니다.</b> 예약하실 수 있습니다.</span></div>';
@@ -773,7 +778,7 @@ function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
     return null;
   };
   const setExpired=p=>{const day=D===allowedDates()[0]?"오늘":"내일",P=PROD[p.kind];prodWarnKind=P;
-    prodWarn=P+" 기간("+sh(p.end)+"까지)이 지나 "+day+" 예약은 "+P+"이 아닌 일반 예약"+(!EXT?"(하루 1회)":"")+"으로 잡힙니다."};
+    prodWarn=P+" 기간("+sh(p.end)+"까지)이 지나 "+day+" 예약은 "+P+"이 아닌 일반 예약"+(!EXT?"(하루 1시간)":"")+"으로 잡힙니다."};
   const badge=()=>{
     clearTimeout(bt);$("#rBadge").innerHTML="";prodWarn="";prodWarnKind="";warnOk=false;
     const n=$("#rName").value.trim(),pw=$("#rPw").value;
@@ -860,15 +865,15 @@ function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
 /* 관리자 예약(v0.16.0): 비밀번호 없이 이름으로 예약. 이름을 넣으면 등록 이용자를 찾아 보여 주고(동명이인은 선택),
    일반예약(일반 이용자와 같은 규칙) / 슈퍼패스(제한·차감 없음) 중 하나를 고릅니다. 최종 판단은 서버(admin_reserve). */
 const MODE_HELP={
-  normal:"일반 이용자와 같은 규칙으로 예약합니다. 재원생은 하루 1회까지, 이용권 이용자는 횟수가 차감되고 다 쓰면 예약되지 않습니다. 상품이 없는 일반회원은 횟수 제한이 없고, 등록되지 않은 일반회원은 예약할 수 없습니다.",
-  super:"하루 횟수, 이용자 등록, 이용권 확인 없이 바로 확정합니다. 이용권 횟수도 차감되지 않습니다. 이미 예약된 시간, 지난 시간, 이용 불가 시간만 막습니다."
+  normal:"일반 이용자와 같은 규칙으로 예약합니다. 재원생은 하루 1시간까지, 이용권 이용자는 이용권 시간이 차감되고 다 쓰면 예약되지 않습니다. 상품이 없는 일반회원은 시간 제한이 없고, 등록되지 않은 일반회원은 예약할 수 없습니다.",
+  super:"하루 시간 제한, 이용자 등록, 이용권 확인 없이 바로 확정합니다. 이용권 시간도 차감되지 않습니다. 이미 예약된 시간, 지난 시간, 이용 불가 시간만 막습니다."
 };
 function whoInfo(u,D){
   const ps=prodsOf(u);
   if(u.status==="blacklisted")return '<b style="color:var(--danger)">블랙리스트</b> · 일반예약 불가(슈퍼패스만 가능)';
   return '<b style="color:var('+(u.type==="ext"?'--ext-text':'--stu-text')+')">'+tgtLabel(u.type)+'</b> '+
     (ps.length?ps.map(p=>'<i class="badge '+p.kind+'" style="margin-left:0">'+PROD[p.kind]+'</i> '+prodLeftText(p)).join(' · ')
-      :'일반 · '+(u.type==="stu"?'하루 1회'+(u.day_taken?' (이 날 예약 있음)':''):'횟수 제한 없음'));
+      :'일반 · '+(u.type==="stu"?'하루 1시간'+(u.day_taken?' (이 날 예약 있음)':''):'시간 제한 없음'));
 }
 function openAdminSheet(h){const D=curDateA;
   $("#sheet").classList.toggle("tmr",D===allowedDates()[1]);$("#sheet").classList.add("daycol");
@@ -907,9 +912,9 @@ function openAdminSheet(h){const D=curDateA;
       us.map(u=>radio(u.id,whoInfo(u,D)+(found.rosterLinked&&found.rosterLinked.has(u.id)?' '+rtag:'')+(u.phone4?' · 전화 뒤 '+esc(u.phone4):'')+(u.part?' · '+esc(u.part):''))).join("")+
       rnos.map(no=>radio('r:'+no,rLine(no))).join("")+radio(0,'목록에 없는 사람 (미등록)'):'';
     // 명부 학생을 고르면 명부의 뒤 4자리가 예약에 붙어 그 학생의 '내 예약'에 보임(v0.38.4, 서버 031)
-    if(selR)html+='<p class="hint">이용자 등록이 안 된 재원생: 일반예약은 하루 1회'+(found.day_taken?' (이 날 예약 있음)':'')+'. 학생 본인이 이름과 비밀번호(전화번호 뒤 4자리)로 ‘내 예약’에서 볼 수 있습니다.</p>';
+    if(selR)html+='<p class="hint">이용자 등록이 안 된 재원생: 일반예약은 하루 1시간'+(found.day_taken?' (이 날 예약 있음)':'')+'. 학생 본인이 이름과 비밀번호(전화번호 뒤 4자리)로 ‘내 예약’에서 볼 수 있습니다.</p>';
     if(!sel&&!selR&&(pick===0||!us.length&&!rnos.length))html+='<div style="display:flex;gap:18px;margin-top:10px"><label class="check" style="margin:0"><input type="checkbox" id="rT1"'+(uExt?'':' checked')+'><span style="font-size:15px;font-weight:700">재원생</span></label><label class="check" style="margin:0"><input type="checkbox" id="rT2"'+(uExt?' checked':'')+'><span style="font-size:15px;font-weight:700">일반회원</span></label></div>'+
-      '<p class="hint">'+(uExt?'등록되지 않은 일반회원은 슈퍼패스로만 예약할 수 있습니다.':'등록되지 않은 재원생: 일반예약은 하루 1회'+(found.day_taken?' (이 날 예약 있음)':'')+'.')+' 비밀번호가 없어 ‘내 예약’에서는 보이지 않습니다.</p>';
+      '<p class="hint">'+(uExt?'등록되지 않은 일반회원은 슈퍼패스로만 예약할 수 있습니다.':'등록되지 않은 재원생: 일반예약은 하루 1시간'+(found.day_taken?' (이 날 예약 있음)':'')+'.')+' 비밀번호가 없어 ‘내 예약’에서는 보이지 않습니다.</p>';
     $("#rWho").innerHTML=html;
     document.querySelectorAll('#rWho input[name="who"]').forEach(x=>x.onchange=()=>{pick=x.value.startsWith('r:')?x.value:+x.value;if(typeof pick==="string")uExt=false;$("#rMsg").innerHTML="";renderWho();placeSheet()});
     if($("#rT1")){$("#rT1").onchange=()=>{uExt=!$("#rT1").checked;renderWho()};$("#rT2").onchange=()=>{uExt=$("#rT2").checked;renderWho()}}
@@ -948,7 +953,7 @@ function openAdminSheet(h){const D=curDateA;
     }
     const kind=doneKind(r.ext);
     $("#sheet").innerHTML=doneHtml("예약이 확정되었습니다",r.name,r.prod,r.date,r.hour,
-      (r.note?'<div class="msg warn" style="text-align:left">ℹ '+esc(r.note)+'</div>':'')+(r.super?'<p style="text-align:center;margin:12px 0 0"><span class="badge super" style="font-size:14px;padding:2px 10px">슈퍼패스 · 횟수 차감 없음</span></p>':'')+
+      (r.note?'<div class="msg warn" style="text-align:left">ℹ '+esc(r.note)+'</div>':'')+(r.super?'<p style="text-align:center;margin:12px 0 0"><span class="badge super" style="font-size:14px;padding:2px 10px">슈퍼패스 · 이용권 차감 없음</span></p>':'')+
       '<p class="hint">'+(typeof pick==="string"?'학생 본인이 ‘내 예약’에서 이름과 비밀번호(전화번호 뒤 4자리)로 확인·취소할 수 있습니다.':pick>0?'예약자는 ‘내 예약’에서 등록된 이름과 비밀번호로 확인·취소할 수 있습니다.':'등록되지 않은 이름이라 ‘내 예약’에서는 보이지 않습니다. 취소는 관리자 예약 목록에서 하십시오.')+'</p>');
     burst(kind);$("#ok").onclick=closeSheet;
     reloadAdmin();
@@ -994,7 +999,7 @@ function histHtml(resList,oldProds){
   const st=x=>x.status==="cancelled"?'<span class="status-cancel">취소</span>'+(x.reason?' · '+esc(x.reason):''):(x.ended?'이용 시간 지남':'예약 확정');
   const rItems=rs.map(x=>'<div class="item"><b>'+dateLabel(x.date)+' '+hourLabel(x.hour)+'</b>'+(x.prod==="count"?'<span class="badge count">'+PROD.count+'</span>':'')+'<div class="hint">'+st(x)+'</div></div>').join("");
   const ps=[...oldProds].sort((a,b)=>b.end.localeCompare(a.end));
-  const pItems=ps.map(q=>'<div class="item"><span class="badge '+q.kind+'" style="margin-left:0">'+PROD[q.kind]+'</span> <b>'+q.start+' ~ '+q.end+'</b><div class="hint">총 '+q.total+'회 중 '+q.used+'회 사용 · 만료</div></div>').join("");
+  const pItems=ps.map(q=>'<div class="item"><span class="badge '+q.kind+'" style="margin-left:0">'+PROD[q.kind]+'</span> <b>'+q.start+' ~ '+q.end+'</b><div class="hint">총 '+q.total+'시간 중 '+q.used+'시간 사용 · 만료</div></div>').join("");
   return '<p class="hint" style="margin-top:14px">예약 기록과 만료된 이용권은 '+KEEP_DAYS+'일 동안 보관된 뒤 삭제됩니다.</p>'+
     '<details class="hist"><summary>예약 기록 <small>'+rs.length+'건</small></summary><p class="hint" style="margin:8px 0 4px">최근 '+KEEP_DAYS+'일 안의 예약만 볼 수 있습니다.</p>'+(rItems||'<p class="hint">예약 기록이 없습니다.</p>')+'</details>'+
     '<details class="hist"><summary>만료된 이용권 <small>'+ps.length+'건</small></summary>'+(pItems||'<p class="hint">만료된 이용권이 없습니다.</p>')+'</details>';
@@ -1117,7 +1122,7 @@ $("#mFind").onclick=async()=>{
   myProds.forEach(P=>{
     const col=P.target==="ext"?"--ext-text":"--stu-text";
     ph+='<div class="kslot '+P.kind+'"><span class="badge '+P.kind+'" style="margin-left:0">'+PROD[P.kind]+'</span>'+
-      '<div style="margin-top:8px;font-weight:700;color:var('+col+')">남은 횟수: '+prodLeftText(P)+'</div>'+
+      '<div style="margin-top:8px;font-weight:700;color:var('+col+')">남은 시간: '+prodLeftText(P)+'</div>'+
       '<div class="hint">이용 기간: '+P.start+" ~ "+P.end+' · '+leftText(P)+'</div>'+soonHtml(P)+'</div>';
   });
   // 예약 현황에는 아직 끝나지 않은 확정 예약만. 취소된 예약·시간이 지난 예약은 오늘 것이라도 바로 아래 '예약 기록'으로(v0.25.3)
@@ -1130,7 +1135,7 @@ $("#mFind").onclick=async()=>{
     '<div class="mt">'+hourLabel(x.hour)+(x.prod==="count"?' <span class="badge count">'+PROD.count+'</span>':'')+'</div></div>'+
     (!x.started?'<div class="mb"><button class="btn ghost small" data-m="'+x.id+'">예약 변경</button><button class="btn danger small" data-c="'+x.id+'">취소</button></div>':'<div class="note">이용 중인 예약입니다. 변경·취소는 관리자에게 문의하십시오. ('+ASK_WHERE+')</div>')+'</div>'}).join("");
   const hasUp=now.some(x=>x.status==="confirmed");
-  // 일반회원의 상품 없는(일반) 확정 예약이 끝나기 전까지 입금 계좌·1회 이용료(출입 비밀번호처럼, v0.25.0)
+  // 일반회원의 상품 없는(일반) 확정 예약이 끝나기 전까지 입금 계좌·1시간 이용료(출입 비밀번호처럼, v0.25.0)
   const hasPay=now.some(x=>x.status==="confirmed"&&x.ext&&!x.prod);
   // 구분: 등록 이용자면 서버가 준 구분(012), 아니면 상품 대상 → 가장 최근 예약의 구분
   const last=r.list[r.list.length-1],ut=r.user_type||(r.product&&r.product.target)||(last?(last.ext?"ext":"stu"):null);
@@ -1155,7 +1160,7 @@ $("#mFind").onclick=async()=>{
     $("#mFind").click();refreshBook();
   });
 };
-/* 홈 화면 [이용료 보기](v0.27.0): 1회 이용료·이용권 가격 표(설정 > 이용료 변경)와 입금 계좌를 창으로 보여 줍니다.
+/* 홈 화면 [이용료 보기](v0.27.0): 1시간 이용료·이용권 가격 표(설정 > 이용료 변경)와 입금 계좌를 창으로 보여 줍니다.
    열 때마다 서버(price_info·pay_info)에서 새로 받아 오므로 관리자가 바꾸면 바로 반영됩니다. 비어 있는 종류는 숨깁니다. */
 async function openPriceSheet(){
   $("#sheet").className="sheet";
@@ -1165,15 +1170,15 @@ async function openPriceSheet(){
   if(!$("#plBody"))return;
   if(!P||!P.ok){$("#plBody").innerHTML='<div class="msg err">'+esc(NET_MSG)+'</div>';return}
   const won=v=>Number(v).toLocaleString("ko-KR")+'원';
-  const rows=(l,word)=>l.map(x=>'<div class="plrow"><span>'+word+' <b style="font-size:inherit">'+x.n+'회</b> · 30일</span><b>'+won(x.price)+'</b></div>').join("");
+  const rows=(l,word)=>l.map(x=>'<div class="plrow"><span>'+word+' <b style="font-size:inherit">'+x.n+'시간</b> · 30일</span><b>'+won(x.price)+'</b></div>').join("");
   const box=(title,col,inner)=>'<div class="card" style="margin:12px 0 0"><div class="part" style="margin-top:0;color:var('+col+')">'+title+'</div>'+inner+'</div>';
   // 가격 상자에는 배지 + 가격 줄만, 설명은 아래 "이용권 안내" 상자에 따로(v0.38.2)
   const sub=(name,cls,l,word)=>l.length?'<div style="margin-top:10px"><span class="badge big '+cls+'" style="margin-left:0">'+name+'</span><div style="margin-top:4px">'+rows(l,word)+'</div></div>':'';
   const ec=P.ext_count||[],sc=P.stu_count||[]; // v0.53.0: 정액권 없어짐
-  let h=(priceDate(P.updated_at)?'<p style="text-align:center;font-size:13px;color:var(--sub);margin:8px 0 0">🗓 <b style="color:var(--ink)">'+priceDate(P.updated_at)+'</b> 기준 최신 이용료입니다.</p>':'')+'<div class="onehr"><b>1회 = 1시간 예약</b><span>이용료와 이용권의 횟수는 모두 1시간 예약 1번을 1회로 셉니다.</span></div>';
-  // 일반회원: 큰 상자 하나 안에 1회 이용료·이용권 상자(v0.28.0, 비어 있는 상자는 숨김)
+  let h=(priceDate(P.updated_at)?'<p style="text-align:center;font-size:13px;color:var(--sub);margin:8px 0 0">🗓 <b style="color:var(--ink)">'+priceDate(P.updated_at)+'</b> 기준 최신 이용료입니다.</p>':'')+'<div class="onehr"><b>예약은 1시간 단위입니다</b><span>이용료와 이용권은 모두 1시간 단위로 셉니다.</span></div>';
+  // 일반회원: 큰 상자 하나 안에 1시간 이용료·이용권 상자(v0.28.0, 비어 있는 상자는 숨김)
   const inner=x=>x?'<div class="card" style="margin:10px 0">'+x.replace('<div style="margin-top:10px">','<div>')+'</div>':'';
-  const ext=inner(P.fee?'<b>1회 이용료</b><div class="plrow" style="border-top:0;padding-bottom:0"><span>1회(1시간)</span><b>'+won(P.fee)+'</b></div>':'')+inner(sub("이용권","count",ec,"총"));
+  const ext=inner(P.fee?'<b>1시간 이용료</b><div class="plrow" style="border-top:0;padding-bottom:0"><span>1시간</span><b>'+won(P.fee)+'</b></div>':'')+inner(sub("이용권","count",ec,"총"));
   const group=(title,col,x,mt)=>'<div class="cardgroup" style="margin-top:'+(mt||12)+'px"><div class="part" style="margin:12px 4px 2px;color:var('+col+');font-size:20px;font-weight:800">'+title+'</div>'+x+'</div>'; // 제목 15px → 20px(v0.35.1)
   // 이용권 설명은 따로 된 큰 상자 하나에, 가격보다 위(v0.38.2·v0.38.3)
   const hasC=ec.length||sc.length;let hasExp=false;
@@ -1187,7 +1192,7 @@ async function openPriceSheet(){
   if(ext)h+=group("일반회원","--ext-text",ext,hasExp?36:12);
   // 재원생도 같은 모양(v0.28.1), 일반회원과 간격을 더 두고 재원생 전용 강조(v0.34.1)
   // 재원생 이용권(v0.38.0): 재원생 전용 안내는 큰 상자 제목 바로 아래 한 번
-  const sx=P.stu_extra?'<b>추가 이용료</b><p class="pexp" style="margin:4px 0 0">재원생은 <b>하루 1시간 무료</b>입니다. 더 이용하시려면 1시간마다 아래 금액을 내십시오(이용권과 별개).</p><div class="plrow"><span>추가 1회(1시간)</span><b>'+won(P.stu_extra)+'</b></div>':''; // v0.51.0
+  const sx=P.stu_extra?'<b>추가 이용료</b><p class="pexp" style="margin:4px 0 0">재원생은 <b>하루 1시간 무료</b>입니다. 더 이용하시려면 1시간마다 아래 금액을 내십시오(이용권과 별개).</p><div class="plrow"><span>추가 1시간</span><b>'+won(P.stu_extra)+'</b></div>':''; // v0.51.0
   if(sc.length||sx)h+=group("재원생","--stu-text",'<div class="stuonly" style="margin:6px 0 0">🎓 아래 내용은 <u>현실용음악학원 재원생</u>만 해당합니다.</div>'+inner(sx)+inner(sub("이용권","count",sc,"총")),ext||hasExp?36:12);
   if(!ext&&!sc.length&&!sx)h+='<p class="hint">이용료가 아직 등록되지 않았습니다. 관리자에게 문의하십시오. ('+ASK_WHERE+')</p>';
   if(pi&&pi.ok&&pi.number)h+=box("입금 계좌","--ink",payBoxHtml(Object.assign({},pi,{fee:""})));
@@ -1248,7 +1253,7 @@ const INFO_DEFAULT={
   {t:"비밀번호는",b:"**재원생**: 본인 휴대전화 번호 뒤 4자리(본인 휴대전화가 없으면 보호자 번호 뒤 4자리)입니다.\n**일반회원**: 관리자에게 등록할 때 연락하신 전화번호 뒤 4자리입니다."},
   {t:"처음 이용하시는 일반회원은",b:"먼저 홈 화면 맨 아래 **[관리자 문의]**에서 문의 가능 시간을 확인하신 뒤 관리자에게 전화해 이름과 전화번호를 등록하십시오. 등록된 분만 일반회원 예약을 할 수 있습니다."},
   {t:"예약 확인·변경·취소",b:"오른쪽 위 [내 예약]에서 이름과 비밀번호로 확인하십시오.\n변경·취소는 **예약 시작 전까지**만 직접 할 수 있습니다.\n출입 비밀번호도 [내 예약]에서 다시 볼 수 있습니다."},
-  {t:"이용료",b:"예약 화면 아래 [이용료 보기]에서 1회 이용료와 이용권 가격, 입금 계좌를 확인하십시오."},
+  {t:"이용료",b:"예약 화면 아래 [이용료 보기]에서 1시간 이용료와 이용권 가격, 입금 계좌를 확인하십시오."},
   {t:"그 밖의 안내",b:"입력 예정\n"}]},
  way:{addr:true,call:true,sections:[
   {t:"대중교통",b:"입력 예정\n"},
@@ -1261,16 +1266,16 @@ const INFO_DEFAULT={
   {t:"편의 시설",b:"화장실: 출입 비밀번호는 예약 확정 화면과 [내 예약]에서 확인하십시오.\n입력 예정"}]},
  stu:{sections:[
   {t:"예약",b:"**재원생 예약하기**에서 본인 이름(본명)과 비밀번호로 예약하십시오.\n비밀번호는 **본인 휴대전화 번호 뒤 4자리**입니다(없으면 보호자 휴대전화 번호 뒤 4자리).\n학원 재원생 명부와 이름·비밀번호가 맞아야 예약됩니다. 맞지 않으면 학원에 문의하십시오."},
-  {t:"이용 횟수",b:"이용권이 없으면 **하루 1시간 무료**입니다(하루 1회 예약).\n더 이용하시려면 **1시간마다 추가 이용료({추가 이용료})**를 내십시오(이용권과 별개). 추가 시간 예약은 관리자에게 문의하십시오.\n**이용권**이 있으면 기간 안에 정해진 총 횟수만큼 예약할 수 있습니다(하루 제한 없음).\n이용권 가격은 [이용료 보기]에서 확인하십시오."},
-  {t:"변경·취소",b:"[내 예약]에서 **예약 시작 전까지** 직접 변경·취소할 수 있습니다.\n이용권 예약을 취소하면 이용권 1회를 돌려받습니다."},
+  {t:"이용 시간",b:"이용권이 없으면 **하루 1시간 무료**입니다.\n더 이용하시려면 **1시간마다 추가 이용료({추가 이용료})**를 내십시오(이용권과 별개). 추가 시간 예약은 관리자에게 문의하십시오.\n**이용권**이 있으면 기간 안에 정해진 총 시간만큼 예약할 수 있습니다(하루 제한 없음).\n이용권 가격은 [이용료 보기]에서 확인하십시오."},
+  {t:"변경·취소",b:"[내 예약]에서 **예약 시작 전까지** 직접 변경·취소할 수 있습니다.\n이용권 예약을 취소하면 이용권 1시간을 돌려받습니다."},
   {t:"주의사항",b:"**본인 이름으로만** 예약하십시오. 다른 사람 이름으로 한 예약은 관리자가 취소할 수 있습니다.\n예약한 시간에만 이용하십시오.\n입력 예정"}]},
  // [이용료 보기] 창의 "이용권 안내" 상자(v0.43.2, 서버 037). 제목이 "이용권"인 칸은 배지로 보이고, 이용권을 팔 때(이용료 표에 있을 때)만 보임
  price:{sections:[
-  {t:"이용권",b:"**시작일부터 30일 안에, 정해진 총 횟수만큼** 예약할 수 있는 상품입니다.\n- 원하는 날에 몰아서 쓸 수 있습니다(**하루 제한 없음**).\n- 예약할 때마다 1회씩 줄어들고, 취소하면 돌려받습니다.\n- **30일이 지나면 남은 횟수는 쓸 수 없습니다.**\n- 예: 10회 이용권 → 30일 안에 원하는 날 10시간 이용"}]},
+  {t:"이용권",b:"**시작일부터 30일 안에, 정해진 총 시간만큼** 예약할 수 있는 상품입니다.\n- 원하는 날에 몰아서 쓸 수 있습니다(**하루 제한 없음**).\n- 예약한 시간만큼 줄어들고, 취소하면 돌려받습니다.\n- **30일이 지나면 남은 시간은 쓸 수 없습니다.**\n- 예: 10시간 이용권 → 30일 안에 원하는 날 10시간 이용"}]},
  ext:{call:true,sections:[
   {t:"등록",b:"일반회원은 **관리자에게 등록한 분만** 예약할 수 있습니다.\n처음이시면 홈 화면 맨 아래 **[관리자 문의]**에서 문의 가능 시간을 확인하신 뒤 관리자에게 전화해 이름과 전화번호를 알려 주십시오.\n비밀번호는 **연락하신 전화번호 뒤 4자리**입니다."},
-  {t:"예약·이용료",b:"**일반회원 예약하기**에서 등록한 이름과 비밀번호로 예약하십시오.\n이용권 없이 예약하면 **1회 이용료를 입금**하신 뒤 이용하십시오. 입금 계좌는 예약 확정 화면과 [내 예약]에 나옵니다.\n**이용권**(기간 안에 총 정해진 횟수)도 있습니다. 가격은 [이용료 보기]에서 확인하십시오."},
-  {t:"변경·취소",b:"[내 예약]에서 **예약 시작 전까지** 직접 변경·취소할 수 있습니다.\n이용권 예약을 취소하면 그 횟수를 돌려받습니다."},
+  {t:"예약·이용료",b:"**일반회원 예약하기**에서 등록한 이름과 비밀번호로 예약하십시오.\n이용권 없이 예약하면 **1시간 이용료를 입금**하신 뒤 이용하십시오. 입금 계좌는 예약 확정 화면과 [내 예약]에 나옵니다.\n**이용권**(기간 안에 정해진 총 시간)도 있습니다. 가격은 [이용료 보기]에서 확인하십시오."},
+  {t:"변경·취소",b:"[내 예약]에서 **예약 시작 전까지** 직접 변경·취소할 수 있습니다.\n이용권 예약을 취소하면 그 시간을 돌려받습니다."},
   {t:"주의사항",b:"예약한 시간에만 이용하십시오.\n입력 예정"}]}
 };
 let infoSaved=null; // 서버에 저장된 안내 글(info_pages, 035). null = 아직 못 받음
@@ -1518,12 +1523,12 @@ async function openPriceRef(p,type){
   if(!P||!P.ok){$("#prBody").innerHTML='<div class="msg err">'+esc(P&&P.msg||NET_MSG)+'</div>';return}
   const won=v=>Number(v).toLocaleString("ko-KR")+'원',ko=$("#"+p+"Kind"),cur=ko?null:slotKind(p);
   const rows=(l,word,kind)=>l.length?l.map(x=>{const ok=true;
-      return '<button type="button" class="plrow pick"'+(ok?' data-pick="'+kind+':'+x.n+'"':' disabled')+'><span>'+word+' <b style="font-size:inherit">'+x.n+'회</b> · 30일</span><b>'+won(x.price)+(ok?' <span class="pickgo">›</span>':'')+'</b></button>'}).join("")
+      return '<button type="button" class="plrow pick"'+(ok?' data-pick="'+kind+':'+x.n+'"':' disabled')+'><span>'+word+' <b style="font-size:inherit">'+x.n+'시간</b> · 30일</span><b>'+won(x.price)+(ok?' <span class="pickgo">›</span>':'')+'</b></button>'}).join("")
     :'<p class="hint" style="margin:4px 0">등록된 상품이 없습니다.</p>';
   const card=(t,x)=>'<div class="card" style="margin:10px 0"><div style="font-weight:700;margin-bottom:2px">'+t+'</div>'+x+'</div>';
   const g=card('<span class="badge count" style="margin-left:0">이용권</span>',rows(type==="ext"?(P.ext_count||[]):(P.stu_count||[]),"총","count"));
   $("#prBody").innerHTML=(priceDate(P.updated_at)?'<p style="font-size:13px;color:var(--sub);margin:8px 0 0">🗓 <b style="color:var(--ink)">'+priceDate(P.updated_at)+'</b> 기준 최신 이용료입니다.</p>':'')+
-    '<p class="hint" style="margin:6px 0 0">'+(cur?'사용 중인 '+PROD[cur]+'의 횟수만 바꿀 수 있습니다. 누르면 횟수 칸에 들어갑니다(기간은 그대로).':'상품을 누르면 횟수 칸에 자동으로 들어갑니다(기간 30일).')+'</p>'+
+    '<p class="hint" style="margin:6px 0 0">'+(cur?'사용 중인 '+PROD[cur]+'의 시간만 바꿀 수 있습니다. 누르면 시간 칸에 들어갑니다(기간은 그대로).':'상품을 누르면 시간 칸에 자동으로 들어갑니다(기간 30일).')+'</p>'+
     '<div class="cardgroup" style="margin-top:8px"><div class="part" style="margin:12px 4px 2px;color:var('+(type==="ext"?'--ext-text':'--stu-text')+')">'+(type==="ext"?'일반회원':'재원생')+'</div>'+g+'</div>'+
     '<p class="hint" style="text-align:center">가격은 설정 &gt; 이용료 변경에서 바꿀 수 있습니다. 저장은 [이용자 등록]/[저장]을 눌러야 됩니다.</p>';
   document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{const [k,n]=b.dataset.pick.split(":");closeSheet();pickPrice(p,k,n)});
@@ -1591,17 +1596,17 @@ function bindRoster(p,u){
 }
 function daysVal(id){const v=$("#"+id).value.trim();return /^\d{1,3}$/.test(v)&&+v>=1?+v:0} // 1~999일, 잘못된 값은 0
 function numInput(id,label,v,max){return '<label for="'+id+'">'+label+'</label><input type="text" id="'+id+'" inputmode="numeric" maxlength="'+String(max).length+'" autocomplete="off" placeholder="숫자" value="'+(v||"")+'">'}
-function totCtl(p,total){return numInput(p+"Tot","총 이용 횟수",total,999)}
-function qtyCtl(p,kind,v){return totCtl(p,v)} // 이용권 총 이용 횟수(새로 입력할 때는 빈칸)
+function totCtl(p,total){return numInput(p+"Tot","총 이용 시간",total,999)}
+function qtyCtl(p,kind,v){return totCtl(p,v)} // 이용권 총 이용 시간(새로 입력할 때는 빈칸)
 function readNum(id,max,label){
   const v=$("#"+id).value.trim();
   if(!/^\d+$/.test(v)||+v<1||+v>max)return {ok:false,msg:label+"를 1~"+max+" 사이의 숫자로 입력하십시오."};
   return {ok:true,n:+v};
 }
-function totRead(p){const r=readNum(p+"Tot",999,"총 이용 횟수");return r.ok?{ok:true,total:r.n}:r}
+function totRead(p){const r=readNum(p+"Tot",999,"총 이용 시간");return r.ok?{ok:true,total:r.n}:r}
 /* 이용권 입력 칸은 이 함수들 하나로 그립니다. 이용자 등록, 이용자 수정(새로 추가·기존 상품 수정)이 모두 같은 칸을 쓰므로
    여기만 고치면 세 곳이 함께 바뀝니다(사용자 요청: 등록 폼이 바뀌면 수정 폼도 똑같이).
-   prodPeriodFields: 시작일 | 기간 (일) | 총 이용 횟수 + "종료일: … (N일)" 표시 */
+   prodPeriodFields: 시작일 | 기간 (일) | 총 이용 시간 + "종료일: … (N일)" 표시 */
 function prodPeriodFields(p,start,days,qty,side){ // side: 종료일 줄 오른쪽 끝에 둘 것
   return '<div class="cols c3"><div><label for="'+p+'Start">시작일</label><input type="date" id="'+p+'Start" value="'+start+'"></div><div><label for="'+p+'Days">기간 (일)</label><input type="text" id="'+p+'Days" inputmode="numeric" maxlength="3" autocomplete="off" value="'+days+'"></div><div id="'+p+'Qty">'+(qty||"")+'</div></div><div class="endrow"><p class="endtxt" id="'+p+'End"></p>'+(side||"")+'</div><p class="pcalc" id="'+p+'Price" aria-live="polite"></p>';
 }
@@ -1616,7 +1621,7 @@ function priceCalcHtml(p){
   const q=$("#"+p+"Tot"),n=q&&/^\d+$/.test(q.value.trim())?+q.value.trim():0,days=daysVal(p+"Days");
   if(!n||!days)return "";
   const hit=(priceCache[prodTypeOf(p)+"_"+kind]||[]).find(x=>+x.n===n);
-  if(!hit)return '<span class="pc-no">가격표에 없는 횟수입니다 · 금액은 직접 확인하십시오</span>';
+  if(!hit)return '<span class="pc-no">가격표에 없는 시간입니다 · 금액은 직접 확인하십시오</span>';
   if(days%30)return '<span class="pc-no">기간이 30일 단위가 아니어서 금액을 계산하지 않습니다</span>';
   const k=days/30,won=v=>Number(v).toLocaleString("ko-KR")+"원";
   return '<span class="pc-l">가격표 기준</span> <b>'+won(+hit.price*k)+'</b>'+(k>1?' <span class="pc-no">('+won(hit.price)+' × '+k+')</span>':'');
@@ -1626,7 +1631,7 @@ function updPrices(){document.querySelectorAll(".pcalc").forEach(el=>{const p=el
 ["input","change"].forEach(t=>document.addEventListener(t,e=>{if(e.target.closest&&e.target.closest("#adminPane"))setTimeout(updPrices,0)},true));
 /* 전화번호 칸(.phone)은 숫자만 입력(하이픈 등은 바로 지움, 11자리까지)(v0.38.11). maxlength를 두지 않아 "010-1234-5678"을 붙여 넣어도 잘리지 않고 숫자 11자리가 남음(v0.38.12). 보여 줄 때는 010-0000-0000(서버 저장 값·fmtPhone) */
 document.addEventListener("input",e=>{const el=e.target;if(!el.classList||!el.classList.contains("phone"))return;let d=el.value.replace(/\D/g,"");if(/^821/.test(d))d="0"+d.slice(2);d=d.slice(0,11);if(d!==el.value)el.value=d},true); // +82 10-… 붙여넣기 → 010…
-/* 금액 칸(.pp: 1회 이용료·이용료 표 가격)은 입력하는 동안 1,000 단위 쉼표를 붙임(v0.38.10). 숫자만 남기고 커서는 같은 숫자 뒤에 둠.
+/* 금액 칸(.pp: 1시간 이용료·이용료 표 가격)은 입력하는 동안 1,000 단위 쉼표를 붙임(v0.38.10). 숫자만 남기고 커서는 같은 숫자 뒤에 둠.
    서버는 쉼표·"원"을 빼고 저장하므로 저장 값은 그대로 숫자. */
 document.addEventListener("input",e=>{
   const el=e.target;if(!el.classList||!el.classList.contains("pp"))return;
@@ -1666,11 +1671,11 @@ function kindSlotHtml(p,kind,cur,last){
   if(cur){
     body=(cur.start>seoulDate()?'<p class="hint" style="margin:0">시작 예정</p>':'')+
       prodPeriodFields(pp,cur.start,spanDays(cur.start,cur.end),qtyCtl(pp,"count",cur.total))+
-      '<p class="hint">지금까지 '+cur.used+'회 사용했습니다(취소된 예약 제외).</p>'+
+      '<p class="hint">지금까지 '+cur.used+'시간 사용했습니다(취소된 예약 제외).</p>'+
       '<div style="border-top:1px dashed var(--line);margin-top:14px;padding-top:4px"><button class="btn danger" id="'+pp+'Stop">'+P+' 종료</button><p class="hint">종료하면 오늘부터 이 '+P+'으로 예약할 수 없고, 이용자 현황의 '+P+' 칸에서 빠집니다. 이미 확정된 예약은 그대로 유지됩니다.</p></div>';
   }else{
     body=(last?'<p class="hint" style="margin:0 0 8px">만료된 '+P+': '+last.start+' ~ '+last.end+'</p>':'')+
-      '<select id="'+pp+'Kind" style="width:100%" aria-label="'+P+' 등록"><option value="none">등록하지 않음</option><option value="count">'+P+' 등록 (기간 동안 총 N회)</option></select>'+
+      '<select id="'+pp+'Kind" style="width:100%" aria-label="'+P+' 등록"><option value="none">등록하지 않음</option><option value="count">'+P+' 등록 (기간 동안 총 N시간)</option></select>'+
       '<div id="'+pp+'Prod" class="hidden">'+prodPeriodFields(pp,seoulDate(),PERIOD_DAYS)+'</div>';
   }
   return '<div class="kslot count"><div class="kshead"><i class="badge big count" style="margin-left:0">'+P+'</i>'+(cur?'<small class="hint" style="margin:0 0 0 6px">사용 중</small>':'')+priceRefBtn(pp)+'</div>'+body+'</div>';
@@ -1787,7 +1792,7 @@ function bindDormant(){
 let blQ="";
 const dOnly=t=>(t||"").slice(0,10);
 // 복귀한 이용자의 블랙리스트 이력 한 줄(관리자 화면에만, v0.21.2)
-const blackHist=u=>u.status!=="blacklisted"&&u.black_count>0?'블랙리스트 이력 '+u.black_count+'회 · 마지막 '+dOnly(u.black_at)+(u.black_restored_at?' ~ '+dOnly(u.black_restored_at)+' 복귀':'')+(u.black_reason?' · 사유: '+esc(u.black_reason):''):'';
+const blackHist=u=>u.status!=="blacklisted"&&u.black_count>0?'블랙리스트 이력 '+u.black_count+'번 · 마지막 '+dOnly(u.black_at)+(u.black_restored_at?' ~ '+dOnly(u.black_restored_at)+' 복귀':'')+(u.black_reason?' · 사유: '+esc(u.black_reason):''):'';
 function blackUsers(){return A.users.filter(u=>u.status==="blacklisted").sort((a,b)=>(b.status_at||"").localeCompare(a.status_at||"")||b.id-a.id)}
 function blackHtml(){
   const us=blackUsers();
@@ -1853,7 +1858,7 @@ function userViewHtml(){
     prod=cs.map(c=>'<div class="kslot"><div style="margin-bottom:6px"><span class="badge '+c.kind+'" style="margin-left:0">'+PROD[c.kind]+'</span></div><div>'+
       kv("기간",c.start+" ~ "+c.end)+
       kv("남은 기간",leftText(c))+
-      kv("총 이용 횟수",c.total+"회")+kv("사용한 횟수",c.used+"회")+kv("남은 횟수",c.left.total+"회")+'</div></div>').join("");
+      kv("총 이용 시간",c.total+"시간")+kv("사용한 시간",c.used+"시간")+kv("남은 시간",c.left.total+"시간")+'</div></div>').join("");
   }else{
     prod='<p class="hint" style="margin:0">사용 중인 이용권이 없습니다.</p>'+(q?'<p class="hint">만료된 '+PROD[q.kind]+': '+q.start+' ~ '+q.end+'</p>':'');
   }
@@ -1986,7 +1991,7 @@ function payHtml(){
     // 작게(v0.29.1): 상자 없이 작은 회색 글씨
     '<div style="font-size:11.5px;color:var(--sub);line-height:1.6;margin:10px 4px 0"><b style="font-weight:700">계좌번호가 보이는 곳</b> (저장하면 바로 바뀝니다)<ol style="margin:2px 0 0;padding-left:16px">'+PAY_PLACES.map(x=>'<li>'+x.replace(/<\/?b>/g,"")+'</li>').join("")+'</ol></div>';
 }
-/* 설정 > 이용료 변경(v0.26.0, 서버 022): 1회 이용료 + 이용권 가격 표(일반회원·재원생, 모두 30일 기준). v0.53.0: 정액권 칸 없어짐.
+/* 설정 > 이용료 변경(v0.26.0, 서버 022): 1시간 이용료 + 이용권 가격 표(일반회원·재원생, 모두 30일 기준). v0.53.0: 정액권 칸 없어짐.
    종류마다 줄을 더하거나(최대 10개) 지울 수 있고, [저장]을 눌러야 서버에 반영됩니다. 처음(저장한 상품이 없으면)엔 빈 줄 3개. */
 const PRICE_KINDS=[["ext_count","이용권","총",999],["stu_count","이용권","총",999]];
 function priceDraft(){
@@ -2000,7 +2005,7 @@ function readPriceDraft(){ // 화면에 입력된 값을 임시 표에 옮김(�
 }
 function priceRowsHtml(k,word,max){
   const l=priceDraft()[k];
-  return (l.length?l.map((x,i)=>'<div class="prow"><span>'+word+'</span><input type="text" class="pn" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="N" aria-label="'+word+' 횟수" value="'+esc(x.n)+'"><span>회 ·</span><input type="text" class="pp" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="가격" aria-label="가격" value="'+esc(x.price)+'"><span>원</span><button type="button" class="btn ghost small pdel" data-pdel="'+k+':'+i+'" aria-label="이 상품 삭제">✕</button></div>').join("")
+  return (l.length?l.map((x,i)=>'<div class="prow"><span>'+word+'</span><input type="text" class="pn" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="N" aria-label="'+word+' 시간" value="'+esc(x.n)+'"><span>시간 ·</span><input type="text" class="pp" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="가격" aria-label="가격" value="'+esc(x.price)+'"><span>원</span><button type="button" class="btn ghost small pdel" data-pdel="'+k+':'+i+'" aria-label="이 상품 삭제">✕</button></div>').join("")
     :'<p class="hint">등록된 상품이 없습니다.</p>')+
     (l.length<10?'<button type="button" class="btn ghost small" data-padd="'+k+'" style="width:100%;margin-top:4px">+ 상품 추가</button>':'<p class="hint">10개까지 만들 수 있습니다.</p>');
 }
@@ -2012,22 +2017,22 @@ function feeHtml(){
   // 관리자 화면은 짧게, 자세한 설명은 손님이 보는 [이용료 보기] 창에(v0.27.1)
   // 큰 상자 제목 20px 굵게, 일반회원·재원생 사이 간격 36px(v0.38.7, 손님 이용료 안내 창과 같게)
   const group=(title,col,x,mt)=>'<div class="cardgroup"'+(mt?' style="margin-top:'+mt+'px"':'')+'><div class="part" style="margin:12px 4px 2px;color:var('+col+');font-size:20px;font-weight:800">'+title+'</div>'+x+'</div>';
-  const CNT='30일 안에 <b>총 정해진 횟수</b>만큼 예약할 수 있습니다(하루 제한 없음).';
+  const CNT='30일 안에 <b>정해진 총 시간</b>만큼 예약할 수 있습니다(하루 제한 없음).';
   const upd=priceDate(A.prices.updated_at);
   // 재원생 추가 이용료(v0.51.0, 서버 047): 하루 1시간 무료 이후 1시간마다. 이용권과 다른 것
   const sx0=A.prices.stu_extra||"",sx=A.sxDraft!=null?A.sxDraft:(sx0?Number(sx0).toLocaleString("ko-KR"):"");
   return (A.prices.ok?'':'<div class="msg err">이용료 표를 불러오지 못했습니다. Supabase에 022를 실행했는지 확인하십시오.</div>')+
     (upd?'<p style="font-size:13px;color:var(--sub);margin:2px 4px 10px">🗓 <b style="color:var(--ink)">'+upd+'</b> 기준 최신 이용료입니다.</p>':'')+ // 손님 창과 같은 문구(v0.30.1)
-    // 손님용 이용료 안내 창과 같은 모양: 큰 상자 "일반회원"(1회 이용료·이용권) / "재원생"(추가 이용료·이용권)(v0.28.2)
+    // 손님용 이용료 안내 창과 같은 모양: 큰 상자 "일반회원"(1시간 이용료·이용권) / "재원생"(추가 이용료·이용권)(v0.28.2)
     group("일반회원","--ext-text",
-      '<div class="card"><div class="part" style="margin-top:0">1회 이용료<span class="hr1">1시간</span></div>'+
+      '<div class="card"><div class="part" style="margin-top:0">1시간 이용료<span class="hr1">1시간</span></div>'+
       '<div class="prow"><input type="text" id="fe_fee" class="pp" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="예: 7,000" value="'+esc(fee)+'"><span>원</span></div></div>'+
       box("ext_count","이용권",CNT))+
     group("재원생","--stu-text",
       '<div class="card"><div class="part" style="margin-top:0">추가 이용료<span class="hr1">1시간</span></div><p class="pexp">재원생은 <b>하루 1시간 무료</b>입니다. 더 이용하려면 <b>1시간마다</b> 이 금액을 냅니다(이용권과 별개).</p>'+
-      '<div class="prow"><span>추가 1회</span><input type="text" id="fe_sx" class="pp" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="예: 3,000" value="'+esc(sx)+'"><span>원</span></div></div>'+
+      '<div class="prow"><span>추가 1시간</span><input type="text" id="fe_sx" class="pp" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="예: 3,000" value="'+esc(sx)+'"><span>원</span></div></div>'+
       box("stu_count","이용권",CNT),36)+
-    '<div class="card"><p class="hint" style="margin-top:0">상품 추가·삭제와 가격 변경은 [저장]을 눌러야 반영됩니다. 횟수와 가격이 모두 빈 줄은 저장하지 않습니다.</p><div id="feMsg"></div><button class="btn" id="feGo">저장</button></div>'+
+    '<div class="card"><p class="hint" style="margin-top:0">상품 추가·삭제와 가격 변경은 [저장]을 눌러야 반영됩니다. 시간과 가격이 모두 빈 줄은 저장하지 않습니다.</p><div id="feMsg"></div><button class="btn" id="feGo">저장</button></div>'+
     '<div class="card"><div class="part" style="margin-top:0">가격표</div><p class="hint" style="margin-top:0">저장된 이용료로 A4 한 장 가격표를 만듭니다. 가격을 바꿨다면 먼저 [저장]하십시오.</p>'+ // v0.50.3: 이미지 저장·주소 복사를 이 상자로
       '<button class="btn ghost" id="feA4">🖨 A4 가격표 만들기·인쇄</button>'+
       (((A.prices.stu_count||[]).length||A.prices.stu_extra)?'<label style="display:flex;align-items:center;gap:6px;font-size:15px;min-height:36px;margin-top:8px"><input type="checkbox" id="feImgStu" checked> 이미지에 재원생 가격 넣기</label>':'')+ // v0.50.4
@@ -2042,22 +2047,22 @@ const QR_ROOM='<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 33 33" sha
 const A4_PX=[794,1123]; // 96dpi에서 A4 크기
 function a4Html(P,pay,o){
   const won=v=>Number(v).toLocaleString("ko-KR")+'원';
-  const rows=(l,word)=>l.map(x=>'<div class="ar"><span>'+word+' <b style="font-size:inherit;font-weight:700">'+x.n+'회</b> · 30일</span><b>'+won(x.price)+'</b></div>').join("");
+  const rows=(l,word)=>l.map(x=>'<div class="ar"><span>'+word+' <b style="font-size:inherit;font-weight:700">'+x.n+'시간</b> · 30일</span><b>'+won(x.price)+'</b></div>').join("");
   const kind=(k,l,word,exp)=>l&&l.length?'<div class="ak"><div class="akt"><span class="abd '+k+'">'+PROD[k]+'</span><i>'+exp+'</i></div>'+rows(l,word)+'</div>':'';
-  const CT='30일 · 총 정해진 횟수';
-  const ext=(P.fee?'<div class="ak"><div class="akt"><span class="abd one">1회 이용료</span><i>1시간 1번</i></div><div class="ar big"><span>1회 (1시간)</span><b>'+won(P.fee)+'</b></div></div>':'')+
+  const CT='30일 · 정해진 총 시간';
+  const ext=(P.fee?'<div class="ak"><div class="akt"><span class="abd one">1시간 이용료</span><i>예약 1시간</i></div><div class="ar big"><span>1시간</span><b>'+won(P.fee)+'</b></div></div>':'')+
     kind("count",P.ext_count,"총",CT);
-  const stu=o.stu?(P.stu_extra?'<div class="ak"><div class="akt"><span class="abd one">추가 이용료</span><i>하루 1시간 무료 이후</i></div><div class="ar big"><span>추가 1회 (1시간)</span><b>'+won(P.stu_extra)+'</b></div></div>':'')+kind("count",P.stu_count,"총",CT):'';
+  const stu=o.stu?(P.stu_extra?'<div class="ak"><div class="akt"><span class="abd one">추가 이용료</span><i>하루 1시간 무료 이후</i></div><div class="ar big"><span>추가 1시간</span><b>'+won(P.stu_extra)+'</b></div></div>':'')+kind("count",P.stu_count,"총",CT):'';
   const col=(t,sm,c,x,note)=>'<div class="acol" style="--c:'+c+'"><h2>'+t+(sm?'<small>'+sm+'</small>':'')+'</h2><div class="ab">'+(note||'')+x+'</div></div>';
   const hasC=(P.ext_count||[]).length||(o.stu&&(P.stu_count||[]).length);
   return '<div class="a4">'+
     '<div class="ah"><img src="'+LOGO_SRC+'" alt=""><div><div class="an">현실용음악학원</div><h1>B1 음악 연습실 이용료 안내</h1></div></div>'+
-    '<div class="asub"><span class="k">1회 = 1시간 예약</span><span>24시간 운영</span><span>오늘·내일 예약</span><span>홈페이지에서 바로 예약·확정</span></div>'+
+    '<div class="asub"><span class="k">예약은 1시간 단위입니다</span><span>24시간 운영</span><span>오늘·내일 예약</span><span>홈페이지에서 바로 예약·확정</span></div>'+
     (ext||stu?'<div class="acols">'+(ext?col("일반회원","","#9C5238",ext):'')+(stu?col("재원생","현실용음악학원 재원생 전용","#0e9194",stu):'')+'</div>'
       :'<p>등록된 이용료가 없습니다.</p>')+
     (hasC?'<div class="aexp">'+
-      '<p><span class="abd count">이용권</span> 시작일부터 30일 안에 <b>총 정해진 횟수</b>만큼 원하는 날에 예약할 수 있습니다(하루 제한 없음). 30일이 지나면 남은 횟수는 쓸 수 없습니다.</p>'+
-      '<p>예약을 취소하면 쓴 횟수를 돌려받습니다. 이용권 구매는 관리자에게 문의하십시오.</p></div>':'')+
+      '<p><span class="abd count">이용권</span> 시작일부터 30일 안에 <b>정해진 총 시간</b>만큼 원하는 날에 예약할 수 있습니다(하루 제한 없음). 30일이 지나면 남은 시간은 쓸 수 없습니다.</p>'+
+      '<p>예약을 취소하면 쓴 시간을 돌려받습니다. 이용권 구매는 관리자에게 문의하십시오.</p></div>':'')+
     (priceDate(P.updated_at)?'<div class="adate">'+priceDate(P.updated_at)+' 기준 이용료입니다.</div>':'')+ // 기준 날짜(v0.47.4)
   '</div>';
 }
@@ -2352,7 +2357,7 @@ function bindBlock2(){
 const LOBBY=/[?&]academy(=|&|$)/.test(location.search);
 const LOBBY_STYLES=[["list","목록 (·)"],["alert","가운데 빨강"],["plain","일반"],["center","가운데"]];
 const LOBBY_DEFAULT=[ // 일반회원 내용은 뺌(v0.47.1, 로비는 재원생용)
-  {id:"usage",type:"text",title:"이용안내",style:"list",scale:100,hidden:false,body:"오늘과 내일 예약이 가능합니다.\n\n재원생은 하루 1회 예약할 수 있습니다.\n(이용권 이용자는 이용권 횟수만큼)"},
+  {id:"usage",type:"text",title:"이용안내",style:"list",scale:100,hidden:false,body:"오늘과 내일 예약이 가능합니다.\n\n재원생은 하루 1시간 예약할 수 있습니다.\n(이용권 이용자는 이용권 시간만큼)"},
   {id:"howto",type:"text",title:"예약방법",style:"plain",scale:100,hidden:false,body:"① 왼쪽 시간표에서 원하는 시간 칸을 누릅니다.\n\n② **[재원생 예약하기]**를 고릅니다.\n\n③ 이름과 비밀번호(본인 휴대전화 번호 뒤 4자리, 없으면 보호자 번호)를 넣고 동의에 체크한 뒤 [예약하기]를 누르면 바로 확정됩니다.\n\n④ 예약 확인·변경·취소는 오른쪽 위 **[내 예약]**에서 합니다(이용 시작 전까지)."},
   {id:"caution",type:"text",title:"유의사항",style:"alert",scale:100,hidden:false,body:"연습실내 물 이외 음식물 반입금지\n(드럼 카페트 오염시 변상)\n\n방음문 살살 닫기\n(문 고장시 수리비 청구)"},
   {id:"qr",type:"qr",title:"",style:"center",scale:100,hidden:false,body:"**{주소}**\n\n휴대폰으로도 예약·확인·취소할 수 있습니다.\n\n학원 오시기 전 연습실 예약 현황을 확인해 보세요!"}

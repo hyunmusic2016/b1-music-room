@@ -15,13 +15,13 @@ echo "  A: $(tr -d '\n' < /tmp/drum_a.txt)   B: $B"
 N=$($P -c "select count(*) from public.reservations where date = '2026-10-28' and hour = 9 and status = 'confirmed'")
 [ "$N" = "1" ] && [[ "$B" == 다른\ 분이\ 방금* ]] && echo "  통과: 한 명만 예약됨" || { echo "  실패: 확정 예약 $N건"; exit 1; }
 
-echo "[2] 같은 재원생이 서로 다른 시간을 동시에 예약(하루 1회 제한)"
+echo "[2] 같은 재원생이 서로 다른 시간을 동시에 예약(하루 1시간 제한)"
 $P -c "$NOW begin; select public.reserve('2026-10-28', 10, '정하루', '1111', true, 'stu')->>'ok'; select pg_sleep(2); commit;" > /tmp/drum_a.txt &
 sleep 0.5
 B=$($P -c "$NOW select public.reserve('2026-10-28', 11, '정하루', '1111', true, 'stu')->>'msg';")
 wait
 echo "  A: $(tr -d '\n' < /tmp/drum_a.txt)   B: $B"
 N=$($P -c "select count(*) from public.reservations where date = '2026-10-28' and name = '정하루' and status = 'confirmed'")
-[ "$N" = "1" ] && [[ "$B" == 하루에\ 한\ 번만* ]] && echo "  통과: 하루 1건만 예약됨" || { echo "  실패: 정하루 확정 예약 $N건"; exit 1; }
+[ "$N" = "1" ] && [[ "$B" == 하루\ 1시간만* ]] && echo "  통과: 하루 1건만 예약됨" || { echo "  실패: 정하루 확정 예약 $N건"; exit 1; }
 rm -f /tmp/drum_a.txt
 echo "동시 예약 시험 통과"

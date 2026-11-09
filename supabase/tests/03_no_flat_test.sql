@@ -42,8 +42,19 @@ reset role; reset request.jwt.claims;
 -- 4. 예약 문구가 "이용권"
 set role anon;
 select test.ok((public.reserve('2028-03-02', 11, '이용권회원', '4813', true, 'ext'))->>'ok' = 'true', '이용권 예약 성공');
-select test.ok((public.reserve('2028-03-02', 12, '이용권회원', '4813', true, 'ext'))->>'msg' like '이용권 1회를 모두 사용했습니다.%', '다 쓰면 "이용권 1회를 모두 사용했습니다."');
+select test.ok((public.reserve('2028-03-02', 12, '이용권회원', '4813', true, 'ext'))->>'msg' like '이용권 1시간을 모두 사용했습니다.%', '다 쓰면 "이용권 1시간을 모두 사용했습니다."(049)');
 select test.ok((public.product_info('ext', '이용권회원', '4813'))->'products'->0->>'kind' = 'count', '예약 창 상품 조회 그대로(익명 호출 가능, 이용권 보임)');
 reset role; reset app.fake_now;
 
-select '모든 시험 통과(048)' as 결과;
+-- 049: "회·횟수" → "시간" 문구
+select test.ok((select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'public' and regexp_replace(p.prosrc, '--[^\n]*', '', 'g') like '%횟수%') = 0, '서버 문구에 "횟수"가 남지 않음(049)');
+set app.fake_now = '2028-03-02 10:00'; set role anon;
+select test.ok((public.reserve('2028-03-02', 13, '시간학생', '4901', true, 'stu'))->>'ok' = 'true', '재원생 예약');
+select test.ok((public.reserve('2028-03-02', 15, '시간학생', '4901', true, 'stu'))->>'msg' like '하루 1시간만 예약할 수 있습니다.%', '재원생 두 번째는 "하루 1시간만 예약할 수 있습니다."(049)');
+reset role;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((public.admin_set_prices('{"fee":"7000","ext_count":[{"n":"10시간","price":"60000"}]}'))->'ext_count'->0->>'n' = '10', '이용료 표에 "10시간"이라고 써도 숫자 10으로 저장(049)');
+select test.ok((public.admin_set_prices('{"ext_count":[{"n":"abc","price":"5000"}]}'))->>'msg' like '%번째 줄: 시간을 1~999%', '이용료 표 오류 문구 "시간을"(049)');
+reset role; reset request.jwt.claims; reset app.fake_now;
+select '모든 시험 통과(048·049)' as 결과;
