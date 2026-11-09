@@ -40,6 +40,7 @@ h2{font-size:18px;font-weight:700;margin:20px 0 8px}
 .tabs{display:flex;gap:8px;margin:12px 0}
 .tab{flex:1;min-height:52px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;font:inherit;font-weight:700;cursor:pointer}
 .tab small{display:block;font-weight:400;color:var(--sub);font-size:12px}
+.tab.dtab{font-weight:800}.tab.dtab small{font-weight:600;letter-spacing:-.04em} /* 오늘·내일 탭: 한 단계 굵게, 날짜 자간 좁게(v0.60.4) */
 .tab[aria-selected="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
 .tab[aria-selected="true"] small{color:inherit;opacity:.8}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
@@ -539,7 +540,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.60.3";
+const APP_VERSION="v0.60.4";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -748,7 +749,7 @@ function slotCell(s,nameText){
 function renderBook(){
   const dates=allowedDates();
   if(!dates.includes(curDate))curDate=dates[0];
-  $("#dayTabs").innerHTML=dates.map((d,i)=>'<button class="tab'+(i?' tmr':'')+'" role="tab" data-d="'+d+'" aria-selected="'+(d===curDate)+'">'+(i?"내일":"오늘")+'<small>'+dateLabel(d)+'</small></button>').join("");
+  $("#dayTabs").innerHTML=dates.map((d,i)=>'<button class="tab dtab'+(i?' tmr':'')+'" role="tab" data-d="'+d+'" aria-selected="'+(d===curDate)+'">'+(i?"내일":"오늘")+'<small>'+dateLabel(d)+'</small></button>').join("");
   $("#v-book").classList.toggle("tmr",curDate===dates[1]); // 내일을 보는 동안 시간표를 내일 색으로
   document.querySelectorAll("#dayTabs .tab").forEach(t=>t.onclick=()=>{curDate=t.dataset.d;renderBook()});
   if(!board){$("#grid").innerHTML='<p class="hint">예약 현황을 불러오는 중입니다…</p>';$("#grid2").innerHTML="";return}
@@ -1451,7 +1452,7 @@ async function openMoveSheet(id){
     $("#sheet").classList.toggle("tmr",md===dates[1]);
     $("#sheet").innerHTML='<div class="row"><h2 style="margin:0">예약 변경</h2><button class="btn ghost small" id="mx">닫기</button></div>'+
       '<p class="hint">현재 예약: '+dateLabel(r.date)+' '+hourLabel(r.hour)+'<br>새 시간을 선택하면 기존 예약이 새 시간으로 이동됩니다.</p>'+
-      '<div class="tabs">'+dates.map((d,i)=>'<button class="tab'+(i?' tmr':'')+'" data-md="'+d+'" aria-selected="'+(d===md)+'">'+(i?"내일":"오늘")+'<small>'+dateLabel(d)+'</small></button>').join("")+'</div>'+
+      '<div class="tabs">'+dates.map((d,i)=>'<button class="tab dtab'+(i?' tmr':'')+'" data-md="'+d+'" aria-selected="'+(d===md)+'">'+(i?"내일":"오늘")+'<small>'+dateLabel(d)+'</small></button>').join("")+'</div>'+
       '<div id="mMsg">'+msg+'</div><div class="grid">'+(board?slotsFor(md).map(s=>{
         if(r.date===md&&r.hour===s.hour)return '<button class="slot taken" data-mh="'+s.hour+'" disabled><b>'+hourLabel(s.hour)+'</b><span>현재 예약</span></button>';
         return slotCell(s,s.masked).replace('data-h=','data-mh=');
@@ -2788,7 +2789,7 @@ function renderProxy(){
   const dates=allowedDates();
   if(!dates.includes(curDateA))curDateA=dates[0];
   $("#pBox").classList.toggle("tmr",curDateA===dates[1]);
-  $("#pTabs").innerHTML=dates.map((d,i)=>'<button class="tab'+(i?' tmr':'')+'" role="tab" data-pdt="'+d+'" aria-selected="'+(d===curDateA)+'">'+(i?"내일":"오늘")+'<small>'+dateLabel(d)+'</small></button>').join("");
+  $("#pTabs").innerHTML=dates.map((d,i)=>'<button class="tab dtab'+(i?' tmr':'')+'" role="tab" data-pdt="'+d+'" aria-selected="'+(d===curDateA)+'">'+(i?"내일":"오늘")+'<small>'+dateLabel(d)+'</small></button>').join("");
   document.querySelectorAll("[data-pdt]").forEach(t=>t.onclick=()=>{curDateA=t.dataset.pdt;renderProxy()});
   if(!board){$("#pGrid").innerHTML='<p class="hint">'+NET_MSG+'</p>';$("#pGrid2").innerHTML="";return}
   const cells=slotsFor(curDateA).map(s=>{
