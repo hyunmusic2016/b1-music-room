@@ -76,4 +76,14 @@ select test.ok((public.price_info())->>'pass_days' = '45', '공개 조회에 이
 reset role;
 select test.ok(not has_function_privilege('anon', 'public.admin_set_prices(jsonb)', 'execute'), '익명은 저장 함수를 못 부름(051)');
 reset role;
-select '모든 시험 통과(048~051)' as 결과;
+
+-- 052: 명부 목록
+create temp table t052 as select count(*) n from public.roster; grant select on t052 to authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((public.admin_roster_list())->>'ok' = 'true', '관리자는 명부 목록을 봄(052)');
+select test.ok(jsonb_array_length((public.admin_roster_list())->'rows') = (select n from t052) and (select n from t052) > 0, '명부 인원만큼 줄(052)');
+select test.ok(not ((public.admin_roster_list())::text like '%pw_hash%' or (public.admin_roster_list())::text like '%$2a$%'), '뒤 4자리(암호화 값)는 주지 않음(052)');
+select test.ok(exists (select 1 from jsonb_array_elements((public.admin_roster_list())->'rows') e where e->>'user_id' is not null), '연결된 이용자 번호가 옴(052)');
+reset role; reset request.jwt.claims;
+select test.ok(not has_function_privilege('anon', 'public.admin_roster_list()', 'execute'), '익명은 명부 목록 함수를 못 부름(052)');
+select '모든 시험 통과(048~052)' as 결과;
