@@ -534,7 +534,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.59.1";
+const APP_VERSION="v0.59.2";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1728,9 +1728,9 @@ function readKindSlot(p,kind,cur){ // null(없음) 또는 {err} 또는 서버에
 
 /* 이용자 등록 탭 */
 function userHtml(){
-  return '<div class="card"><b>이용자 등록</b>'+(uFlash?'<div class="msg ok">'+esc(uFlash)+'</div>':'')+
+  return '<div class="card"><b>이용자 등록</b><span class="badge" style="color:var(--ext-text);border-color:currentColor;background:transparent">일반회원</span>'+(uFlash?'<div class="msg ok">'+esc(uFlash)+'</div>':'')+
     '<div hidden>'+typeChecks("u","ext")+'</div>'+ // v0.59.0: 재원생 체크박스 없앰(이용자 등록은 일반회원만, 재원생은 구글 시트 명부에서)
-    '<p class="hint" style="margin:8px 0 0">일반회원을 등록합니다. 재원생은 구글 시트 명부에서 자동으로 들어오며, 재원생 이용권은 설정 &gt; 이용자 현황 &gt; 재원생에서 학생을 눌러 [수정]하십시오.</p>'+userFields("u")+
+    userFields("u")+
     '<div class="part" style="margin-top:22px">이용권</div>'+kindSlotHtml("u","count")+
     '<div id="uMsg"></div><button class="btn" id="uGo">이용자 등록</button></div>'; // 등록 안내 문자 칸은 v0.38.8에서 삭제
 }
