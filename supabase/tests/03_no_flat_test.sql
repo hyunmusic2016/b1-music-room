@@ -59,4 +59,21 @@ set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set r
 select test.ok((public.admin_set_prices('{"fee":"7000","ext_count":[{"n":"10시간","price":"60000"}]}'))->'ext_count'->0->>'n' = '10', '이용료 표에 "10시간"이라고 써도 숫자 10으로 저장(049)');
 select test.ok((public.admin_set_prices('{"ext_count":[{"n":"abc","price":"5000"}]}'))->>'msg' like '%번째 줄: 시간을 1~999%', '이용료 표 오류 문구 "시간을"(049)');
 reset role; reset request.jwt.claims; reset app.fake_now;
-select '모든 시험 통과(048~050)' as 결과;
+
+-- 051: 이용권 기간(pass_days)
+select test.ok((public.price_info())->>'pass_days' = '30', '이용권 기간 처음 값 30(051)');
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((public.admin_set_prices('{"fee":"7000","ext_count":[{"n":"10","price":"60000"}],"pass_days":"60일"}'))->>'pass_days' = '60', '이용권 기간 60일 저장("일"을 붙여도 숫자로)(051)');
+select test.ok((public.admin_set_prices('{"fee":"7000","ext_count":[{"n":"10","price":"60000"}]}'))->>'pass_days' = '60', '기간을 보내지 않으면 그대로(051)');
+select test.ok((public.admin_set_prices('{"fee":"7000","pass_days":"0"}'))->>'msg' like '이용권 기간은 1~999%', '0일은 막음(051)');
+select test.ok((public.admin_set_prices('{"fee":"7000","pass_days":"abc"}'))->>'msg' like '이용권 기간은 1~999%', '숫자 아닌 값은 막음(051)');
+reset role; update public.settings set value = jsonb_set(value, '{updated_at}', '"2000-01-01"') where key = 'price_list'; set role authenticated;
+select test.ok((public.admin_set_prices('{"fee":"7000","ext_count":[{"n":"10","price":"60000"}],"pass_days":"60"}'))->>'updated_at' = '2000-01-01', '기간이 같으면 수정 날짜 그대로(051)');
+select test.ok((public.admin_set_prices('{"fee":"7000","ext_count":[{"n":"10","price":"60000"}],"pass_days":"45"}'))->>'updated_at' <> '2000-01-01', '기간을 바꾸면 수정 날짜 오늘(051)');
+reset role; reset request.jwt.claims;
+set role anon;
+select test.ok((public.price_info())->>'pass_days' = '45', '공개 조회에 이용권 기간(051)');
+reset role;
+select test.ok(not has_function_privilege('anon', 'public.admin_set_prices(jsonb)', 'execute'), '익명은 저장 함수를 못 부름(051)');
+reset role;
+select '모든 시험 통과(048~051)' as 결과;
