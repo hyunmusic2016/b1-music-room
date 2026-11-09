@@ -537,7 +537,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.59.11";
+const APP_VERSION="v0.59.12";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1941,7 +1941,7 @@ function bindStatus(){
   document.querySelectorAll("[data-rreg]").forEach(el=>{const go=()=>{viewRoster={no:el.dataset.rreg,name:el.dataset.rname};uFlash="";renderAdmin();window.scrollTo(0,0)};
     el.onclick=go;el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}}});
   $("#qUser").oninput=()=>{stQ=$("#qUser").value;applyStatusQ()};
-  document.querySelectorAll("[data-stv]").forEach(b=>b.onclick=()=>{stPassOnly=b.dataset.stv==="pass";document.querySelectorAll("[data-stv]").forEach(x=>{const on=(x.dataset.stv==="pass")===stPassOnly;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});applyStatusQ()});
+  document.querySelectorAll("[data-stv]").forEach(b=>b.onclick=()=>{stPassOnly=b.dataset.stv==="pass";document.querySelectorAll("[data-stv]").forEach(x=>{const on=(x.dataset.stv==="pass")===stPassOnly;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});if(stPassOnly)["ext","stu"].forEach(k=>stOpen.add(k));applyStatusQ()}); // 이용권 이용자만 보기 → 두 칸 모두 펼침(v0.59.12)
   document.querySelectorAll("#sec-block .sgrp").forEach(g=>{
     // 제목을 누르는 순간 펼침 여부를 기억(검색 중에는 기억하지 않음)
     g.querySelector("summary").addEventListener("click",()=>{if(!stQ.trim()){if(g.open)stOpen.delete(g.dataset.k);else stOpen.add(g.dataset.k)}});
