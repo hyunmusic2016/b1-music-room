@@ -115,7 +115,7 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
 :root[data-theme="dark"] .btn.danger{color:#3b0d0a}
 .btn.violet{background:#6b3fa0;color:#fff} /* 블랙리스트 등록(v0.21.0) */
 .badge.black{background:transparent;color:#6b3fa0;border-color:#6b3fa0}
-.badge.rst{background:transparent;color:var(--stu-text);border-color:currentColor}.badge.rst.off{color:var(--sub)}
+.stseg{display:flex;gap:6px;margin:0 0 8px}.stseg .btn{flex:1;margin:0;min-height:40px}.stseg .btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent-strong)}
 .badge.black.hist{border-style:dashed}
 textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니지만 전에 블랙리스트였던 이용자(관리자 화면에만) */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .badge.black{color:#c9a8f0;border-color:#c9a8f0}}
@@ -534,7 +534,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.58.2";
+const APP_VERSION="v0.59.0";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1729,7 +1729,8 @@ function readKindSlot(p,kind,cur){ // null(없음) 또는 {err} 또는 서버에
 /* 이용자 등록 탭 */
 function userHtml(){
   return '<div class="card"><b>이용자 등록</b>'+(uFlash?'<div class="msg ok">'+esc(uFlash)+'</div>':'')+
-    typeChecks("u","ext")+userFields("u")+
+    '<div hidden>'+typeChecks("u","ext")+'</div>'+ // v0.59.0: 재원생 체크박스 없앰(이용자 등록은 일반회원만, 재원생은 구글 시트 명부에서)
+    '<p class="hint" style="margin:8px 0 0">일반회원을 등록합니다. 재원생은 구글 시트 명부에서 자동으로 들어오며, 재원생 이용권은 설정 &gt; 이용자 현황 &gt; 재원생에서 학생을 눌러 [수정]하십시오.</p>'+userFields("u")+
     '<div class="part" style="margin-top:22px">이용권</div>'+kindSlotHtml("u","count")+
     '<div id="uMsg"></div><button class="btn" id="uGo">이용자 등록</button></div>'; // 등록 안내 문자 칸은 v0.38.8에서 삭제
 }
@@ -1755,58 +1756,58 @@ function bindUser(){
 /* ===== 설정 > 이용자 현황: 이용권 / 일반회원(상품 없음) =====
    종료일이 지나지 않은 상품(시작 전 포함)이 있으면 그 상품 칸, 없으면 일반 칸. 기간이 끝나면 자동으로 일반으로 내려옵니다.
    상품 칸은 상품 등록 순, 일반 칸은 이용자 등록 순으로 최근이 위. 사용만료·블랙리스트 이용자는 여기 보이지 않습니다. */
+/* v0.59.0 이용자 현황: 칸은 "일반회원" | "재원생" 두 개(이용권 칸 없음). 각 칸 안에서 이용권 사용자를 맨 위(가나다), 그 아래 나머지(가나다).
+   재원생 칸 = 구글 시트 명부 학생 전체(서버 052) + 명부와 연결 안 된 등록 재원생. 맨 위 [전체 보기] | [이용권 이용자만 보기] 토글.
+   이용권 사용자만 이름 오른쪽에 이용권 배지. 재원생 줄에는 [통화] 버튼 없음. */
 function statusGroups(){
-  // v0.58.0: 이용권 없는 사람은 일반회원(ext) / 명부에 있는 재원생은 "재원생 명부" 칸(아래 rosterRows) / 명부 밖 재원생은 "이용권 없는 재원생"
-  const g={count:[],none:[],stu0:[]},inList=new Set(A.rlist?(A.rlist.rows||[]).filter(r=>r.user_id).map(r=>+r.user_id):[]);
-  A.users.filter(u=>u.status==="active"&&!u.dormant).forEach(u=>{const ps=prodsOf(u);
-    if(!ps.length){if(u.type==="ext")g.none.push(u);else if(!inList.has(u.id))g.stu0.push(u)}
-    ps.forEach(q=>{if(!g[q.kind].includes(u))g[q.kind].push(u)})});
-  g.count.sort((a,b)=>curOf(b,"count").id-curOf(a,"count").id);g.none.sort((a,b)=>b.id-a.id);g.stu0.sort((a,b)=>b.id-a.id);
-  return g;
+  const ko=(a,b)=>a.name.localeCompare(b.name,"ko")||(a.key<b.key?-1:1),srt=l=>l.sort((a,b)=>(b.pass-a.pass)||ko(a,b));
+  const act=A.users.filter(u=>u.status==="active"&&!u.dormant);
+  const ext=act.filter(u=>u.type==="ext").map(u=>({key:"u"+u.id,name:u.name,pass:prodsOf(u).length?1:0,html:statusItem(u,prodsOf(u).length?"count":"none")}));
+  const rows=A.rlist?(A.rlist.rows||[]):[],inList=new Set(rows.filter(r=>r.user_id).map(r=>+r.user_id));
+  const stu=rows.map(r=>{const u=r.user_id?A.users.find(x=>x.id===+r.user_id):null;return {key:"r"+r.no,name:r.name,pass:u&&prodsOf(u).length?1:0,html:rosterItem(r,u)}})
+    .concat(act.filter(u=>u.type==="stu"&&!inList.has(u.id)).map(u=>({key:"u"+u.id,name:u.name,pass:prodsOf(u).length?1:0,html:statusItem(u,prodsOf(u).length?"count":"none")})));
+  return {ext:srt(ext),stu:srt(stu)};
 }
-/* 재원생 명부(구글 시트) 칸(v0.58.0, 서버 052): 명부 학생 전체. 연결된 이용자는 이용권 상태와 함께, 누르면 이용자 정보.
-   등록 안 된 학생은 누르면 이용자 등록 화면(재원생·이름·명부 연결이 채워짐). 구글 시트에서 반영될 때마다 바뀌고 화면은 열 때마다 새로 받아 옴 */
-function rosterItem(r){
-  const u=r.user_id?A.users.find(x=>x.id===+r.user_id):null,ps=u?prodsOf(u):[];
-  const st=u?(ps.length?ps.map(x=>'<span class="badge '+x.kind+'">'+PROD[x.kind]+'</span>').join(''):'<span class="badge rst">이용권 없음</span>'):'<span class="badge rst">이용권 없음</span>';
-  const line=u?(ps.length?'<div class="hint">'+prodLine(ps[0])+'</div>':(u.last?'<div class="hint">만료된 '+PROD[u.last.kind]+': '+u.last.end+' 종료</div>':'')):'';
-  return '<div class="item uitem" '+(u?'data-sv="'+u.id+'"':'data-rreg="'+esc(r.no)+'" data-rname="'+esc(r.name)+'"')+' data-n="'+esc(normName(r.name))+'" role="button" tabindex="0" aria-label="'+esc(r.name)+(u?' 정보 보기':' 이용자 등록')+'">'+
+function rosterItem(r,u){
+  const ps=u?prodsOf(u):[];
+  const st=ps.map(x=>'<span class="badge '+x.kind+'">'+PROD[x.kind]+'</span>').join('');
+  const line=u?(u.phone||u.part?'<div class="hint">'+esc(fmtPhone(u.phone)||u.phone||"전화번호 없음")+(u.part?' · '+esc(u.part):'')+'</div>':'')+(u.memo?'<div class="hint">'+esc(u.memo)+'</div>':'')+
+    (ps.length?'<div class="hint">'+prodLine(ps[0])+'</div>':(u.last?'<div class="hint">만료된 '+PROD[u.last.kind]+': '+u.last.end+' 종료</div>':'')):'';
+  return '<div class="item uitem" '+(u?'data-sv="'+u.id+'"':'data-rreg="'+esc(r.no)+'" data-rname="'+esc(r.name)+'"')+(ps.length?' data-pass="1"':'')+' data-n="'+esc(normName(r.name))+'" role="button" tabindex="0" aria-label="'+esc(r.name)+' 정보 보기">'+
     '<div class="row" style="align-items:center"><div style="flex:1;min-width:0"><b style="color:var(--stu-text)">'+esc(r.name)+'</b><span class="hint" style="margin:0 0 0 6px;display:inline">등록번호 '+esc(r.no)+'</span>'+st+line+'</div>'+
-    '<div style="display:flex;gap:6px;flex:none;align-items:center">'+(u?'<button class="btn small" style="background:#1e8e4e;color:#fff" data-sc="'+u.id+'"'+(u.phone?'':' disabled')+'>통화</button>':'')+'<span class="chev" aria-hidden="true">›</span></div></div></div>';
+    '<div style="display:flex;gap:6px;flex:none;align-items:center"><span class="chev" aria-hidden="true">›</span></div></div></div>';
 }
 function curOf(u,kind){return prodsOf(u).find(q=>q.kind===kind)||null}
 function statusItem(u,kind,extra,btn){
   const col=u.type==="ext"?'--ext-text':'--stu-text',q=kind==="none"?u.last:(curOf(u,kind)||u.current);
   const line=kind==="none"?(q?'<div class="hint">만료된 '+PROD[q.kind]+': '+q.end+' 종료</div>':''):'<div class="hint">'+prodLine(q)+'</div>';
-  return '<div class="item uitem" data-sv="'+u.id+'" data-n="'+esc(normName(u.name))+'" role="button" tabindex="0" aria-label="'+esc(u.name)+' 정보 보기"><div class="row" style="align-items:center"><div style="flex:1;min-width:0"><b style="color:var('+col+')">'+esc(u.name)+'</b><span class="badge" style="color:var('+col+');border-color:currentColor;background:transparent">'+tgtLabel(u.type)+'</span>'+(kind!=="none"?prodsOf(u).map(x=>'<span class="badge '+x.kind+'">'+PROD[x.kind]+'</span>').join(''):'')+(u.status==="blacklisted"?'<span class="badge black">블랙리스트</span>':u.black_count>0?'<span class="badge black hist">블랙리스트 이력</span>':'')+
+  // 재원생은 [통화] 버튼 없음(v0.59.0)
+  const call=u.type==="ext"?'<button class="btn small" style="background:#1e8e4e;color:#fff" data-sc="'+u.id+'"'+(u.phone?'':' disabled')+'>통화</button>':'';
+  return '<div class="item uitem" data-sv="'+u.id+'"'+(kind!=="none"?' data-pass="1"':'')+' data-n="'+esc(normName(u.name))+'" role="button" tabindex="0" aria-label="'+esc(u.name)+' 정보 보기"><div class="row" style="align-items:center"><div style="flex:1;min-width:0"><b style="color:var('+col+')">'+esc(u.name)+'</b>'+(u.type==="stu"&&u.roster_no?'<span class="hint" style="margin:0 0 0 6px;display:inline">등록번호 '+esc(u.roster_no)+'</span>':'')+(kind!=="none"?prodsOf(u).map(x=>'<span class="badge '+x.kind+'">'+PROD[x.kind]+'</span>').join(''):'')+(u.status==="blacklisted"?'<span class="badge black">블랙리스트</span>':u.black_count>0?'<span class="badge black hist">블랙리스트 이력</span>':'')+
     '<div class="hint">'+esc(fmtPhone(u.phone)||u.phone||"전화번호 없음")+(u.part?' · '+esc(u.part):'')+'</div>'+(u.memo?'<div class="hint">'+esc(u.memo)+'</div>':'')+line+(extra||'')+'</div>'+
-    '<div style="display:flex;gap:6px;flex:none;align-items:center">'+(btn||'')+'<button class="btn small" style="background:#1e8e4e;color:#fff" data-sc="'+u.id+'"'+(u.phone?'':' disabled')+'>통화</button><span class="chev" aria-hidden="true">›</span></div></div></div>';
+    '<div style="display:flex;gap:6px;flex:none;align-items:center">'+(btn||'')+call+'<span class="chev" aria-hidden="true">›</span></div></div></div>';
 }
-/* 이용자 현황(v0.19.3): 이용권·일반회원을 각각 접기·펼치기(처음엔 접힘), 맨 위 이름 검색 + [전부 펼치기]/[전부 접기].
-   예약 목록의 지난 예약과 같은 방식. 펼친 칸·검색어는 다시 그려도 유지되고, 검색 중에는 찾은 칸을 자동으로 펼칩니다. */
-const stOpen=new Set();let stQ="";
+/* 이용자 현황(v0.19.3): 칸마다 접기·펼치기(처음엔 접힘), 맨 위 이름 검색 + [전부 펼치기]/[전부 접기]. 펼친 칸·검색어·토글은 다시 그려도 유지 */
+const stOpen=new Set();let stQ="",stPassOnly=false;
 function statusHtml(){
   const g=statusGroups(),wasOpen=k=>stOpen.has(k)?" open":"";
-  const sec=(k,title)=>'<details class="hist sgrp" data-k="'+k+'"'+wasOpen(k)+'><summary>'+title+' <small class="cnt">'+g[k].length+'명</small></summary>'+
-    (g[k].length?g[k].map(x=>statusItem(x,k==="stu0"?"none":k)).join(""):'<p class="hint">해당하는 이용자가 없습니다.</p>')+'</details>';
+  const sec=(k,title,head)=>'<details class="hist sgrp" data-k="'+k+'"'+wasOpen(k)+'><summary>'+title+' <small class="cnt">'+g[k].length+'명</small></summary>'+(head||'')+
+    (g[k].length?g[k].map(x=>x.html).join(""):'')+'<p class="hint sempty'+(g[k].length?' hidden':'')+'">해당하는 이용자가 없습니다.</p></details>';
+  const L=A.rlist,rhead=L?'<p class="hint" style="margin:6px 0 4px">구글 시트 마지막 반영: <b>'+(L.synced_at?esc(rosterTime(L.synced_at)):'아직 없음')+'</b> · 시트에서 [지금 반영]하거나 1시간마다 자동으로 바뀝니다.</p>'
+    :'<p class="hint">재원생 명부를 불러오지 못했습니다. Supabase에 052를 실행했는지 확인하십시오.</p>';
   return (uFlash?'<div class="msg ok">'+esc(uFlash)+'</div>':'')+
+    '<div class="stseg" role="group" aria-label="보기"><button type="button" class="btn ghost small'+(stPassOnly?'':' on')+'" data-stv="all" aria-pressed="'+!stPassOnly+'">전체 보기</button><button type="button" class="btn ghost small'+(stPassOnly?' on':'')+'" data-stv="pass" aria-pressed="'+stPassOnly+'">이용권 이용자만 보기</button></div>'+
     '<div class="hrow"><input type="search" class="hsearch" id="qUser" placeholder="이름으로 찾기" autocomplete="off" aria-label="이름으로 찾기" value="'+esc(stQ)+'">'+
     '<button type="button" class="btn ghost small" id="qUserAll">전부 펼치기</button></div>'+
     '<p class="hint hidden" id="qUserNone">찾는 이름의 이용자가 없습니다.</p>'+
-    sec("count","이용권")+sec("none","일반회원")+rosterSec()+(g.stu0.length?sec("stu0","이용권 없는 재원생 (명부 밖)"):"");
-  function rosterSec(){
-    const L=A.rlist,rows=L?(L.rows||[]):[];
-    const head=L?'<p class="hint" style="margin:6px 0 4px">구글 시트 마지막 반영: <b>'+(L.synced_at?esc(rosterTime(L.synced_at)):'아직 없음')+'</b> · 시트에서 [지금 반영]하거나 1시간마다 자동으로 바뀝니다.</p>'
-      :'<p class="hint">명부를 불러오지 못했습니다. Supabase에 052를 실행했는지 확인하십시오.</p>';
-    return '<details class="hist sgrp" data-k="roster"'+wasOpen("roster")+'><summary>재원생 명부 (구글 시트) <small class="cnt">'+rows.length+'명</small></summary>'+head+
-      (rows.length?rows.map(rosterItem).join(""):(L?'<p class="hint">명부가 비어 있습니다.</p>':''))+'</details>';
-  }
+    sec("ext","일반회원")+sec("stu","재원생",rhead);
 }
 function applyStatusQ(){
   const q=normName(stQ);let any=false;
   document.querySelectorAll("#sec-block .sgrp").forEach(g=>{
-    let n=0;g.querySelectorAll(".uitem").forEach(r=>{const hit=!q||r.dataset.n.includes(q);r.classList.toggle("hidden",!hit);if(hit)n++});
+    let n=0;g.querySelectorAll(".uitem").forEach(r=>{const hit=(!q||r.dataset.n.includes(q))&&(!stPassOnly||r.dataset.pass==="1");r.classList.toggle("hidden",!hit);if(hit)n++});
     g.querySelector(".cnt").textContent=n+"명";g.classList.toggle("hidden",!!q&&!n);if(n)any=true;
+    const e=g.querySelector(".sempty");if(e)e.classList.toggle("hidden",n>0);
     g.open=q?n>0:stOpen.has(g.dataset.k);
   });
   $("#qUserNone").classList.toggle("hidden",!q||any);
@@ -1932,6 +1933,7 @@ function bindStatus(){
   document.querySelectorAll("[data-rreg]").forEach(el=>{const go=()=>{viewRoster={no:el.dataset.rreg,name:el.dataset.rname};uFlash="";renderAdmin();window.scrollTo(0,0)};
     el.onclick=go;el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}}});
   $("#qUser").oninput=()=>{stQ=$("#qUser").value;applyStatusQ()};
+  document.querySelectorAll("[data-stv]").forEach(b=>b.onclick=()=>{stPassOnly=b.dataset.stv==="pass";document.querySelectorAll("[data-stv]").forEach(x=>{const on=(x.dataset.stv==="pass")===stPassOnly;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});applyStatusQ()});
   document.querySelectorAll("#sec-block .sgrp").forEach(g=>{
     // 제목을 누르는 순간 펼침 여부를 기억(검색 중에는 기억하지 않음)
     g.querySelector("summary").addEventListener("click",()=>{if(!stQ.trim()){if(g.open)stOpen.delete(g.dataset.k);else stOpen.add(g.dataset.k)}});
