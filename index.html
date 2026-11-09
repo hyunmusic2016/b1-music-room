@@ -11,17 +11,17 @@
 <style>
 :root{
   --bg:#f6f4ef;--surface:#fff;--ink:#1d1b2e;--sub:#6b6880;--line:#dcd8cf;
-  --accent:#A0C6E9;--accent-strong:#5b95cc;--accent-text:#2d6596;--accent-ink:#14304d;--ext-text:#9C5238;--ext-btn:#9C5238;--ext-line:#9C5238;--ext-ink:#fff;--stu-text:#0a6f72;--stu-btn:#0e9194;--brass:#a9741a;--brass-bg:#f6e9cf;--cnt:#6e3f6b;--cnt-bg:#f1e6f0;--flat:#85590f;
+  --accent:#A0C6E9;--accent-strong:#5b95cc;--accent-text:#2d6596;--accent-ink:#14304d;--ext-text:#9C5238;--ext-btn:#9C5238;--ext-line:#9C5238;--ext-ink:#fff;--stu-text:#0a6f72;--stu-btn:#0e9194;--brass:#a9741a;--brass-bg:#f6e9cf;--cnt:#85590f;--cnt-bg:#f6e9cf;--flat:#85590f;
   --free:#fff;--taken:#e9e6df;--past:#efede8;--danger:#b3261e;--ok:#1f6b45;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#14131f;--surface:#1e1d2d;--ink:#f0eee8;--sub:#a29fb8;--line:#34324a;
-  --accent:#A0C6E9;--accent-strong:#A0C6E9;--accent-text:#A0C6E9;--accent-ink:#14304d;--stu-text:#5fd4d6;--ext-text:#e0a48c;--ext-line:#e0a48c;--brass:#e0a94d;--brass-bg:#3a2f18;--cnt:#e2b6df;--cnt-bg:#35213a;--flat:#e0a94d;
+  --accent:#A0C6E9;--accent-strong:#A0C6E9;--accent-text:#A0C6E9;--accent-ink:#14304d;--stu-text:#5fd4d6;--ext-text:#e0a48c;--ext-line:#e0a48c;--brass:#e0a94d;--brass-bg:#3a2f18;--cnt:#e0a94d;--cnt-bg:#3a2f18;--flat:#e0a94d;
   --free:#1e1d2d;--taken:#2a2940;--past:#191827;--danger:#ff8a80;--ok:#7fd6a4;}}
 :root[data-theme="dark"]{
   --bg:#14131f;--surface:#1e1d2d;--ink:#f0eee8;--sub:#a29fb8;--line:#34324a;
-  --accent:#A0C6E9;--accent-strong:#A0C6E9;--accent-text:#A0C6E9;--accent-ink:#14304d;--stu-text:#5fd4d6;--ext-text:#e0a48c;--ext-line:#e0a48c;--brass:#e0a94d;--brass-bg:#3a2f18;--cnt:#e2b6df;--cnt-bg:#35213a;--flat:#e0a94d;
+  --accent:#A0C6E9;--accent-strong:#A0C6E9;--accent-text:#A0C6E9;--accent-ink:#14304d;--stu-text:#5fd4d6;--ext-text:#e0a48c;--ext-line:#e0a48c;--brass:#e0a94d;--brass-bg:#3a2f18;--cnt:#e0a94d;--cnt-bg:#3a2f18;--flat:#e0a94d;
   --free:#1e1d2d;--taken:#2a2940;--past:#191827;--danger:#ff8a80;--ok:#7fd6a4;}
 /* "내일" 색(오늘은 브랜드 하늘색 그대로). .tmr 안에서는 강조색을 보라로 바꿉니다: 바탕 #CDBFF2, 그 위 글씨 #241a52, 테두리·밑줄 #7a6bd1, 글자 #5446ad */
 .tmr{--accent:#CDBFF2;--accent-strong:#7a6bd1;--accent-text:#5446ad;--accent-ink:#241a52}
@@ -441,7 +441,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 .a4 .ak:first-child{margin-top:0}
 .a4 .akt{display:flex;align-items:baseline;gap:2mm;margin-bottom:1mm}
 .a4 .abd{display:inline-block;border-radius:1.2mm;padding:.5mm 2.4mm;font-weight:800;font-size:1.08em}
-.a4 .abd.flat{background:#fbefd6;color:#85590f}.a4 .abd.count{background:#f1e6f0;color:#6e3f6b}.a4 .abd.one{background:#e6eef7;color:#14304d}
+.a4 .abd.flat{background:#fbefd6;color:#85590f}.a4 .abd.count{background:#fbefd6;color:#85590f}.a4 .abd.one{background:#e6eef7;color:#14304d}
 .a4 .akt i{font-style:normal;font-size:1em;color:#5a6474}
 .a4 .ar{display:flex;align-items:baseline;gap:2mm;padding:.4em 0;border-bottom:.25mm dotted #b9c1cc;font-size:1.22em}
 .a4 .ar:last-child{border-bottom:0}
@@ -531,7 +531,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.56.5";
+const APP_VERSION="v0.56.6";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
