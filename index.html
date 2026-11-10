@@ -189,17 +189,19 @@ textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니�
 /* 예약 방식 선택·입력 창: "오늘/내일" 글자와 창 테두리를 그날 색으로(오늘 하늘, 내일 보라 — .tmr이면 보라 변수) */
 .sheet.daycol{border:4px solid var(--accent-strong)}
 /* 예약 방식 선택(v0.65.0, 시안 A): 그날 색 머리띠 + 색 윗부분 카드 */
-.chband{--ic:#2d6596;--ic2:#5b95cc;margin-bottom:6px}
+.chband{--ic:#2d6596;--ic2:#5b95cc;margin-bottom:6px;position:relative;padding:12px 16px 10px!important}
+.chx{position:absolute;top:10px;right:12px}
 .tmr .chband{--ic:#5446ad;--ic2:#8a7be0}
 .chtop{display:flex;align-items:center;font-size:14px;opacity:.95}.chtop .btn{margin-left:auto}
-.chday{text-align:center;font-size:18px;font-weight:700;margin-top:6px}
+.chday{text-align:center;font-size:18px;font-weight:700;margin-top:2px}
 .chpill{background:rgba(255,255,255,.24);border-radius:999px;padding:3px 12px;font-size:14px}
-.chtime{text-align:center;font-size:34px;font-weight:800;line-height:1.25;white-space:nowrap}
+.chtime{text-align:center;font-size:34px;font-weight:800;line-height:1.15;white-space:nowrap}
 .chq{text-align:center;font-weight:700;margin:14px 0 12px}
 .chcards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.chcard{display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:10px 10px 14px;border-radius:16px;background:var(--surface);color:var(--ink);border:2px solid var(--line);box-shadow:0 4px 12px rgba(20,48,77,.08);font:inherit;cursor:pointer;text-align:center}
+.chcard{display:flex;flex-direction:column;align-items:stretch;gap:12px;padding:14px 10px 20px;border-radius:16px;background:var(--surface);color:var(--ink);border:2px solid var(--line);box-shadow:0 4px 12px rgba(20,48,77,.08);font:inherit;cursor:pointer;text-align:center}
 .chcard:active{transform:scale(.98)}
-.chimg{height:120px;border-radius:12px;display:grid;place-items:center}
+.chimg{height:140px;border-radius:12px;display:grid;place-items:center}
+.chman{width:76px;height:76px;border-radius:50%;background:color-mix(in srgb,#9C5238 42%,#fff);display:grid;place-items:center;font-size:42px;line-height:1}
 .chimg img{width:66px;height:auto}.chimg svg{width:84px;height:84px}
 .chcard.stu{border-color:#0e9194}.chcard.stu .chimg{background:color-mix(in srgb,#0e9194 9%,#fff);border:1px solid color-mix(in srgb,#0e9194 25%,#fff)}.chcard.stu b{color:var(--stu-text)}
 .chcard.ext{border-color:#9C5238}.chcard.ext .chimg{background:color-mix(in srgb,#9C5238 9%,#fff);border:1px solid color-mix(in srgb,#9C5238 25%,#fff);color:#9C5238}.chcard.ext b{color:var(--ext-text)}
@@ -580,7 +582,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.65.1";
+const APP_VERSION="v0.65.2";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -769,12 +771,12 @@ function openChooser(){
   if(selHour===null)return;
   // v0.65.0: 시안 A — 그날 색 머리띠에 날짜·시간, 색 윗부분 카드 두 장(설명 글 없음)
   const tmr=selDate===allowedDates()[1];
-  $("#sheet").innerHTML='<div class="iband chband"><div style="flex:1"><div class="chtop"><span>예약 방식 선택</span><button class="btn ghost small" id="cx">닫기</button></div>'+
+  $("#sheet").innerHTML='<div class="iband chband"><button class="btn ghost small chx" id="cx">닫기</button><div style="flex:1">'+
     '<div class="chday"><span class="chpill">'+(tmr?'내일':'오늘')+'</span> '+dateLabel(selDate)+'</div><div class="chtime">'+hourLabel(selHour)+'</div></div></div>'+
     '<p class="chq">어떤 분이신가요?</p>'+
     '<div class="chcards">'+
     '<button class="chcard stu" id="goStudent"><span class="chimg"><img src="'+LOGO_SRC+'" alt="현 music academy 로고"></span><b>현실용음악학원<br>재원생 예약하기</b></button>'+
-    '<button class="chcard ext" id="goExternal"><span class="chimg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg></span><b>일반회원 예약하기</b></button>'+
+    '<button class="chcard ext" id="goExternal"><span class="chimg"><span class="chman" aria-hidden="true">🙋</span></span><b>일반회원 예약하기</b></button>'+
     '</div><p class="hint" id="extMsg" role="status"></p>';
   $("#sheet").classList.toggle("tmr",selDate===allowedDates()[1]);$("#sheet").classList.add("daycol");
   $("#bg").classList.add("open");
