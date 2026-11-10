@@ -619,7 +619,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.68.4";
+const APP_VERSION="v0.68.5";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -2682,7 +2682,7 @@ function bindLobbyEdit(){
 function settingsHtml(){
   // 큰 제목과 [← 뒤로]를 한 줄에(v0.18.11, 뒤로 버튼은 오른쪽)
   const UP=setPage==="status"||setPage==="dormant"||setPage==="black",LN={dormant:"휴면 이용자",black:"블랙리스트"}[setPage]||"이용자 현황";
-  const title=UP?(editUser!==null||(viewRoster&&viewRoster.edit)?"이용자 수정":viewUser!==null||viewRoster?"이용자 정보":LN):{block:"이용 불가 시간 설정",pw:"관리자 비밀번호 변경",door:"출입 비밀번호 변경",contact:"문의 가능 시간",lobby:"로비 PC 안내",pay:"입금 계좌 변경",fee:"이용료 변경",roster:"재원생 명부 연동",info:A.infoKey?esc(infoListName(A.infoKey)):"안내 글 변경"}[setPage];
+  const title=UP?(editUser!==null||(viewRoster&&viewRoster.edit)?"이용자 수정":viewUser!==null||viewRoster?"이용자 정보":LN):{block:"이용 불가 시간 설정",pw:"관리자 비밀번호 변경",door:"출입 비밀번호 변경",contact:"문의 가능 시간",lobby:"학원 로비 PC 안내",pay:"입금 계좌 변경",fee:"이용료 변경",roster:"재원생 명부 연동",info:A.infoKey?esc(infoListName(A.infoKey)):"안내 글 변경"}[setPage];
   const back='<div class="titlerow"><h2>'+title+'</h2><button class="btn ghost small" id="setBack">'+(UP&&(editUser!==null||(viewRoster&&viewRoster.edit))?'← 이용자 정보':UP&&(viewUser!==null||viewRoster)?'← '+LN:(setPage==="info"&&A.infoKey)||setPage==="lobby"?'← 안내 글 변경':'← 설정')+'</button></div>';
   if(UP){
     if(viewUser!==null&&!A.detail)return back+'<p class="hint">불러오는 중입니다…</p>';
@@ -2715,7 +2715,7 @@ function infoEditHtml(){
       '<div class="card">'+
       INFO_KEYS.map(([kk],i)=>{const v=infoSaved&&infoSaved[kk];return '<div class="item"><button type="button" data-ik="'+kk+'" class="ilist"><span style="flex:1;min-width:0"><b>'+esc(infoListName(kk))+'</b><small class="hint" style="display:block;margin:2px 0 0">'+(v?'✎ '+esc(priceDate(v.updated_at)||v.updated_at)+' 저장한 글':'기본 글')+'</small></span><span class="chev" aria-hidden="true">›</span></button></div>'}).join("")+'</div>'+
       // v0.68.3: 로비 PC 안내는 설정 메뉴에서 빼서 안내 글 변경 안의 따로 된 상자로(사용자 요청)
-      '<div class="card"><div class="part" style="margin:0 0 2px">학원 로비 PC</div><div class="item"><button type="button" data-sp="lobby" class="ilist"><span style="flex:1;min-width:0"><b>로비 PC 안내</b><small class="hint" style="display:block;margin:2px 0 0">room.hyunmusic.com/academy/ 오른쪽 안내 상자</small></span><span class="chev" aria-hidden="true">›</span></button></div></div>';
+      '<div class="card"><div class="item"><button type="button" data-sp="lobby" class="ilist"><span style="flex:1;min-width:0"><b>학원 로비 PC 안내</b><small class="hint" style="display:block;margin:2px 0 0">room.hyunmusic.com/academy/ 오른쪽 안내 상자</small></span><span class="chev" aria-hidden="true">›</span></button></div></div>';
   }
   const k=A.infoKey,sv=infoSaved&&infoSaved[k];
   const secs=A.infoDraft||JSON.parse(JSON.stringify(infoSections(k)));A.infoDraft=secs;
