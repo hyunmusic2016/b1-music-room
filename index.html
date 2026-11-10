@@ -436,12 +436,16 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .fxdel{flex:none;width:32px;height:32px;margin-top:4px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--danger);font:inherit;font-size:13px;cursor:pointer}
 .fxadd{display:block;width:100%;border:0;border-top:1px solid var(--line);background:var(--bg);color:var(--accent-text);font:inherit;font-weight:700;font-size:14px;min-height:40px;cursor:pointer}
 .card.lbe.off{opacity:.62;border-style:dashed}
+.tc{color:var(--c1)}.tc-red{--c1:#c0392b;--c2:#ff8a7d}.tc-orange{--c1:#c25a00;--c2:#ffad5c}.tc-yellow{--c1:#9a6b00;--c2:#ffd54a}.tc-green{--c1:#1e7e34;--c2:#6fdc8c}.tc-blue{--c1:#1a5fd0;--c2:#8ab4ff}.tc-navy{--c1:#14304d;--c2:#a0c6e9}.tc-purple{--c1:#7b2fbf;--c2:#cfa3ff}.tc-gray{--c1:#6b7280;--c2:#b0b7c3}
+.fxcol{flex:none!important;max-width:120px}
 .txred{color:#c0392b;font-weight:700}.txhl{background:#ffe97a;color:inherit;padding:0 .15em;border-radius:3px}
 .txbig{font-size:1.25em;font-weight:800}.txsm{font-size:.85em;opacity:.85}
 .txhr{border:0;border-top:1px dashed var(--line);margin:.8em 0}
 .ibody a,.lbox a,.fxpv a{color:var(--accent-text);text-decoration:underline}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .txred{color:#ff8a7d}:root:not([data-theme="light"]) .txhl{background:#6b5a00;color:#fff}}
-:root[data-theme="dark"] .txred{color:#ff8a7d}:root[data-theme="dark"] .txhl{background:#6b5a00;color:#fff}
+:root[data-theme="dark"] .txred{color:#ff8a7d}:root[data-theme="dark"] .tc{color:var(--c2)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tc{color:var(--c2)}}
+.a4 .tc{color:var(--c1)!important}:root[data-theme="dark"] .txhl{background:#6b5a00;color:#fff}
 .card.ie textarea{width:100%;font:inherit;font-size:15px;line-height:1.5;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-sizing:border-box;resize:vertical}
 .info h3{font-size:16px;margin:0 0 6px}.info ol,.info ul{margin:4px 0 0;padding-left:20px}.info li{margin:4px 0;line-height:var(--lh,1.55)}
 /* 이용 안내 창(v0.61.0): 위 색 머리띠(B안) + 왼쪽 색 띠·아이콘·✓ 목록 카드(A안) */
@@ -644,7 +648,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.70.1";
+const APP_VERSION="v0.71.0";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1451,10 +1455,12 @@ function loadLivePrice(){return rpc("price_info").then(r=>{if(r&&r.ok)livePrice=
 function extraFeeText(){return livePrice&&livePrice.stu_extra?Number(livePrice.stu_extra).toLocaleString("ko-KR")+"원":"[이용료 보기] 참고"}
 /* 글 꾸미기 표시(v0.69.0, 안내 글·로비 안내 공용): **굵게** · !!빨간 글씨!! · ==색 강조== · ++크게++ · --작게-- · [글자](https://주소) 링크
    · 줄 맨 앞 ! = 그 줄 빨간 글씨 · {이용권 기간} {추가 이용료} {주소}. 글은 먼저 esc하므로 HTML은 실행되지 않음 */
+const TC=[["빨강","red"],["주황","orange"],["노랑","yellow"],["초록","green"],["파랑","blue"],["남색","navy"],["보라","purple"],["회색","gray"]],TC_RE=new RegExp("\\[("+TC.map(x=>x[0]).join("|")+")\\]([\\s\\S]+?)\\[\\/\\]","g");
 function fmtMarks(h){
   const L=[];h=h.replace(/\[([^\]]+?)\]\((https?:\/\/[^\s)]+)\)/g,(m,t,u)=>{L.push('<a href="'+u+'" target="_blank" rel="noopener">'+t+'</a>');return "\u0000"+(L.length-1)+"\u0000"});
   h=h.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/!!(.+?)!!/g,'<span class="txred">$1</span>').replace(/==(.+?)==/g,'<mark class="txhl">$1</mark>')
     .replace(/\+\+(.+?)\+\+/g,'<span class="txbig">$1</span>').replace(/--(?=\S)(.+?)--/g,'<span class="txsm">$1</span>');
+  for(let k=0;k<3;k++)h=h.replace(TC_RE,(m,c,t)=>'<span class="tc tc-'+TC.find(x=>x[0]===c)[1]+'">'+t+'</span>'); // [파랑]글자[/] = 글자 색(v0.71.0)
   return h.replace(/\u0000(\d+)\u0000/g,(m,i)=>L[+i]);
 }
 function fmtLine(t,ask){
@@ -1467,7 +1473,7 @@ function infoInline(t){return fmtLine(t,true)} // 안내 글 한 줄(관리자 �
 function fxBarHtml(kind){
   const B=(fx,l,t)=>'<button type="button" class="fxb" data-fx="'+fx+'" title="'+t+'" aria-label="'+t+'">'+l+'</button>';
   return '<div class="fxbar" role="toolbar" aria-label="글 편집">'+
-    B("b","<b>B</b>","굵게 (Ctrl+B)")+B("red",'<span class="txred">가</span>',"빨간 글씨")+B("hl",'<mark class="txhl">가</mark>',"색 강조")+B("big",'<span style="font-size:16px;font-weight:800">가</span>',"크게")+B("sm",'<span style="font-size:11px">가</span>',"작게")+
+    B("b","<b>B</b>","굵게 (Ctrl+B)")+B("red",'<span class="txred">가</span>',"빨간 글씨")+B("hl",'<mark class="txhl">가</mark>',"색 강조")+'<select class="fxcol" aria-label="글자 색"><option value="">🎨 글자 색</option>'+TC.map(([n,c])=>'<option value="'+n+'" class="tc tc-'+c+'">● '+n+'</option>').join("")+'<option value="-">색 빼기</option></select>'+B("big",'<span style="font-size:16px;font-weight:800">가</span>',"크게")+B("sm",'<span style="font-size:11px">가</span>',"작게")+
     '<i class="fxsep" aria-hidden="true"></i>'+(kind==="info"?B("ul","• 목록","점 목록")+B("ol","1. 목록","번호 목록"):'')+
     B("gap",kind==="info"?"↵ 빈 줄":"↵ 항목 나누기",kind==="info"?"빈 줄 넣기(칸 띄우기)":"빈 줄 넣기(항목 나누기)")+B("hr","― 구분선","구분선")+
     '<i class="fxsep" aria-hidden="true"></i>'+B("link","🔗 링크","링크 넣기")+
@@ -1515,6 +1521,11 @@ function fxApply(ta,fx,val){
   const v=ta.value,s=ta.selectionStart,e=ta.selectionEnd,sel=v.slice(s,e);
   const put=(rs,re,rep,ns,ne)=>{ta.focus();ta.setSelectionRange(rs,re);let ok=false;try{ok=document.execCommand("insertText",false,rep)}catch(x){}
     if(!ok||ta.value.slice(rs,rs+rep.length)!==rep){ta.value=v.slice(0,rs)+rep+v.slice(re);ta.dispatchEvent(new Event("input",{bubbles:true}))}ta.setSelectionRange(ns,ne)};
+  if(fx==="color"){const names=TC.map(x=>x[0]).join("|"),m=sel.match(new RegExp("^\\[("+names+")\\]([\\s\\S]*)\\[\\/\\]$"));
+    if(m){const t=val==="-"?m[2]:"["+val+"]"+m[2]+"[/]";return put(s,e,t,s,s+t.length)} // 이미 색이 있으면 바꾸거나 뺌
+    const pre=v.slice(0,s).match(new RegExp("\\[("+names+")\\]$"));
+    if(pre&&v.slice(e,e+3)==="[/]"){const a=s-pre[0].length;const t=val==="-"?sel:"["+val+"]"+sel+"[/]";return put(a,e+3,t,a,a+t.length)}
+    if(val==="-")return;const o="["+val+"]",t=sel||"글자";return put(s,e,o+t+"[/]",s+o.length,s+o.length+t.length)}
   const W={b:"**",red:"!!",hl:"==",big:"++",sm:"--"}[fx];
   if(W){const n=W.length;
     if(sel.length>=2*n&&sel.startsWith(W)&&sel.endsWith(W)){const t=sel.slice(n,-n);return put(s,e,t,s,s+t.length)} // 다시 누르면 뗌
@@ -1534,12 +1545,13 @@ function fxApply(ta,fx,val){
 }
 document.addEventListener("mousedown",e=>{if(e.target.closest&&e.target.closest(".fxb"))e.preventDefault()}); // 누를 때 글 칸의 고른 글자가 풀리지 않게
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-fx]");if(!b)return;const w=b.closest(".fxwrap");if(!w)return;if(w.querySelector(".fxitems"))return fxItemCmd(w,b.dataset.fx);const ta=w.querySelector("textarea");if(ta)fxApply(ta,b.dataset.fx)});
+document.addEventListener("change",e=>{const x=e.target.closest&&e.target.closest(".fxcol");if(!x||!x.value)return;const val=x.value;x.value="";const w=x.closest(".fxwrap");if(w.querySelector(".fxitems"))return fxItemCmd(w,"color",val);const ta=w.querySelector("textarea");if(ta)fxApply(ta,"color",val)});
 document.addEventListener("change",e=>{const x=e.target.closest&&e.target.closest(".fxins");if(!x||!x.value)return;const val=x.value;x.value="";const w=x.closest(".fxwrap");if(w.querySelector(".fxitems"))return fxItemCmd(w,"ins",val);const ta=w.querySelector("textarea");if(ta)fxApply(ta,"ins",val)});
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey&&e.key.toLowerCase()==="b"&&e.target.matches&&e.target.matches(".fxwrap textarea")){e.preventDefault();fxApply(e.target,"b")}});
-document.addEventListener("mousedown",e=>{if(e.target.closest&&e.target.closest(".fxins")){const w=e.target.closest(".fxwrap"),a=document.activeElement;if(a&&a.classList&&a.classList.contains("fxi")&&w.contains(a))w._last=a}});
+document.addEventListener("mousedown",e=>{if(e.target.closest&&e.target.closest(".fxins,.fxcol")){const w=e.target.closest(".fxwrap"),a=document.activeElement;if(a&&a.classList&&a.classList.contains("fxi")&&w.contains(a))w._last=a}});
 // 글 쓰는 법(안내 글·로비 공용 부분)
 function fxHelpLis(){return '<li>내용은 <b>줄(항목)마다 따로 된 상자</b>에 씁니다. [+ 줄 상자 추가]로 늘리고 상자 오른쪽 [✕]로 지웁니다. 상자 안에서 Enter를 누르면 <b>그 상자 안에서 줄이 바뀝니다</b>(항목은 그대로 하나). 빈 상자에서 ← 지우기를 누르면 그 상자가 지워집니다. 비워 둔 상자는 칸 띄우기(빈 줄)입니다.</li><li>내용 칸 위 <b>도구 막대</b>: 글자를 고르고 <b>B</b>(굵게, Ctrl+B)·<span class="txred">가</span>(빨간 글씨)·<mark class="txhl">가</mark>(색 강조)·크게·작게를 누르면 표시가 붙고, 다시 누르면 떨어집니다. [↵ 빈 줄]·[― 구분선]은 고른 상자 아래에 상자를 하나 더 만듭니다.</li>'+
-  '<li>표시를 직접 써도 됩니다: **굵게** · !!빨간 글씨!! · ==색 강조== · ++크게++ · --작게-- · 줄 맨 앞 ! = 그 줄 전체 빨간 글씨 · "---"만 있는 줄 = 구분선 · [보일 글자](https://주소) = 링크</li>'+
+  '<li><b>🎨 글자 색</b>: 글자를 고르고 색을 누르면 그 글자에만 색이 들어갑니다(빨강·주황·노랑·초록·파랑·남색·보라·회색). 색이 든 글자를 고르고 다른 색을 누르면 바뀌고, [색 빼기]로 뺍니다. 직접 쓸 때는 [파랑]글자[/] 처럼 씁니다.</li><li>표시를 직접 써도 됩니다: **굵게** · !!빨간 글씨!! · ==색 강조== · ++크게++ · --작게-- · 줄 맨 앞 ! = 그 줄 전체 빨간 글씨 · "---"만 있는 줄 = 구분선 · [보일 글자](https://주소) = 링크</li>'+
   '<li>[＋ 넣기]: {이용권 기간}·{추가 이용료}는 이용료 변경에 저장된 값으로, {주소}는 room.hyunmusic.com 으로 바뀌어 보입니다.</li>'}
 const EXTREG_MARK=/^\{\s*일반회원\s*등록하기\s*\}$/; // 이 줄만 있으면 [일반회원 등록하기] 버튼(v0.51.5)
 const EXTREG_BTN='<button type="button" class="btn first" data-extreg>일반회원 등록하기 ›</button>';
