@@ -380,6 +380,14 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .ctstat{border-radius:12px;padding:12px 14px;margin:12px 0 0;font-weight:700;line-height:1.5}
 .ctstat.on{background:#e3f4ea;color:#14663a;border:1.5px solid #1e8e4e}.ctstat.off{background:color-mix(in srgb,var(--danger) 12%,transparent);color:var(--danger);border:1.5px solid var(--danger)}
 .ctstat small{display:block;font-weight:500;font-size:13px;margin-top:2px}
+.ctbig{text-align:center;margin:16px 0 4px}.ctbig b{display:block;font-size:19px;margin-top:12px}.ctbig small{display:block;font-size:13px;color:var(--sub);margin-top:3px}
+.ctcirc{width:104px;height:104px;border-radius:50%;margin:0 auto;display:grid;place-items:center;position:relative}
+.ctcirc span{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:30px;position:relative;z-index:1}
+.ctbig.on .ctcirc{background:#d6f5e3;box-shadow:0 0 0 9px #effbf4}.ctbig.on .ctcirc span{background:#2ecc71}.ctbig.on b{color:#1f8a4c}
+.ctbig.on .ctcirc::after{content:"";position:absolute;inset:0;border-radius:50%;background:#2ecc71;opacity:.35;animation:ctpulse 1.8s ease-out infinite}
+@keyframes ctpulse{from{transform:scale(.62);opacity:.45}to{transform:scale(1.25);opacity:0}}
+.ctbig.off .ctcirc{background:color-mix(in srgb,var(--danger) 14%,transparent);box-shadow:0 0 0 9px color-mix(in srgb,var(--danger) 6%,transparent)}.ctbig.off .ctcirc span{background:color-mix(in srgb,var(--danger) 30%,var(--surface))}.ctbig.off b{color:var(--danger)}
+@media (prefers-reduced-motion:reduce){.ctbig.on .ctcirc::after{animation:none;display:none}}
 .cthours{margin-top:6px}.cthours div{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line)}.cthours div:first-child{border-top:0}
 .cthours span{color:var(--sub);flex:none}.cthours b{text-align:right}
 .ctoff{margin-top:10px;padding:10px 12px;border-radius:10px;border:1.5px dashed var(--danger);font-size:14px;line-height:1.6}.ctoff b{display:block;color:var(--danger);margin-bottom:2px}.ctoff span{color:var(--sub)}
@@ -388,6 +396,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .chrow{display:flex;align-items:center;gap:6px;padding:6px 0;border-top:1px solid var(--line)}.chrow:first-of-type{border-top:0}
 .chrow label{display:flex;align-items:center;gap:6px;margin:0;min-width:46px;font-weight:700}.chrow select{min-height:44px;flex:1;min-width:0;padding:0 6px}.chrow .off{flex:1;color:var(--sub)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ctstat.on{background:#123524;color:#8fe0b0}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ctbig.on .ctcirc{background:#123524;box-shadow:0 0 0 9px #0c2418}:root:not([data-theme="light"]) .ctbig.on b{color:#8fe0b0}}
 /* 학원 로비 PC 화면(v0.47.0): room.hyunmusic.com/academy/ → /?academy. 왼쪽 예약 화면 + 오른쪽 안내 상자(info-panel-kit 참고) */
 .lclock{display:none}
 body.lobby .lclock{display:inline-flex;align-items:center;gap:10px;margin-left:12px;font-size:18px;font-weight:600;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -553,7 +562,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.62.0";
+const APP_VERSION="v0.63.0";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1274,11 +1283,13 @@ function hoursHtml(H){
 async function openAskSheet(back){ // back: 다른 창에서 열었을 때 [← 뒤로]로 돌아갈 곳(v0.51.4)
   if(typeof back!=="function")back=null;
   if(!back)$("#sheet").className="sheet";
-  $("#sheet").innerHTML='<div class="row"><h2 style="margin:0">관리자 문의</h2><button class="btn ghost small" id="cx">'+(back?'← 뒤로':'닫기')+'</button></div><div id="askBody"><p class="hint">불러오는 중입니다…</p></div>';
+  // v0.63.0: 맨 위 초록 머리띠(B안) + 큰 상태 동그라미(A안)
+  $("#sheet").innerHTML='<div class="iband" style="--ic:#1f8a4c;--ic2:#3fb67a"><div><h2>📞 관리자 문의</h2><p>문의 가능 시간을 확인하신 뒤 연락하십시오</p></div><button class="btn ghost small" id="cx">'+(back?'← 뒤로':'닫기')+'</button></div><div id="askBody"><p class="hint">불러오는 중입니다…</p></div>';
   $("#bg").classList.add("open");$("#cx").onclick=back||closeSheet;$("#sheet").scrollTop=0;
   const c=await rpc("contact_info");const b=$("#askBody");if(!b)return;
   const ok=!!(c&&c.ok),open=ok&&c.open===true;
-  b.innerHTML=(ok?(open?'<div class="ctstat on">● 지금은 문의 가능한 시간입니다.</div>':c.off_now?'<div class="ctstat off">지금은 문의를 받지 않는 기간입니다.<small>'+offWhen(c.off_now.to,true)+'까지'+(c.off_now.reason?' · '+esc(c.off_now.reason):'')+'</small></div>':'<div class="ctstat off">지금은 문의 가능 시간이 아닙니다.<small>아래 문의 가능 시간에 연락하십시오.</small></div>'):'<div class="msg warn" style="margin-top:12px">문의 가능 시간을 불러오지 못했습니다. 잠시 후 다시 열어 보십시오.</div>')+
+  const big=(cls,ic,t,sub)=>'<div class="ctbig '+cls+'"><div class="ctcirc" aria-hidden="true"><span>'+ic+'</span></div><b>'+t+'</b>'+(sub?'<small>'+sub+'</small>':'')+'</div>';
+  b.innerHTML=(ok?(open?big("on","📞","지금 문의 가능합니다",""):c.off_now?big("off","⏸","지금은 문의를 받지 않는 기간입니다",offWhen(c.off_now.to,true)+'까지'+(c.off_now.reason?' · '+esc(c.off_now.reason):'')):big("off","🌙","지금은 문의 가능 시간이 아닙니다","아래 문의 가능 시간에 연락하십시오.")):'<div class="msg warn" style="margin-top:12px">문의 가능 시간을 불러오지 못했습니다. 잠시 후 다시 열어 보십시오.</div>')+
     '<div class="card" style="margin:12px 0 0"><b>문의 가능 시간</b>'+(ok?hoursHtml(c.hours):'<p class="hint">-</p>')+'</div>'+
     '<div class="card" style="margin:12px 0 0"><b>전화번호</b><p class="ctphone">'+PHONE+'</p><p class="ctphone2">학원 전화 '+PHONE2+'</p>'+
     '<div class="btn2" style="margin-top:12px"><a class="btn call" id="askCall" href="tel:'+PHONE.replace(/\D/g,"")+'" style="display:flex;align-items:center;justify-content:center;text-decoration:none">전화 걸기</a>'+
