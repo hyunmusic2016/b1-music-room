@@ -619,7 +619,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.68.2";
+const APP_VERSION="v0.68.3";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -2683,7 +2683,7 @@ function settingsHtml(){
   // 큰 제목과 [← 뒤로]를 한 줄에(v0.18.11, 뒤로 버튼은 오른쪽)
   const UP=setPage==="status"||setPage==="dormant"||setPage==="black",LN={dormant:"휴면 이용자",black:"블랙리스트"}[setPage]||"이용자 현황";
   const title=UP?(editUser!==null||(viewRoster&&viewRoster.edit)?"이용자 수정":viewUser!==null||viewRoster?"이용자 정보":LN):{block:"이용 불가 시간 설정",pw:"관리자 비밀번호 변경",door:"출입 비밀번호 변경",contact:"문의 가능 시간",lobby:"로비 PC 안내",pay:"입금 계좌 변경",fee:"이용료 변경",roster:"재원생 명부 연동",info:A.infoKey?esc(infoListName(A.infoKey)):"안내 글 변경"}[setPage];
-  const back='<div class="titlerow"><h2>'+title+'</h2><button class="btn ghost small" id="setBack">'+(UP&&(editUser!==null||(viewRoster&&viewRoster.edit))?'← 이용자 정보':UP&&(viewUser!==null||viewRoster)?'← '+LN:setPage==="info"&&A.infoKey?'← 안내 글 변경':'← 설정')+'</button></div>';
+  const back='<div class="titlerow"><h2>'+title+'</h2><button class="btn ghost small" id="setBack">'+(UP&&(editUser!==null||(viewRoster&&viewRoster.edit))?'← 이용자 정보':UP&&(viewUser!==null||viewRoster)?'← '+LN:(setPage==="info"&&A.infoKey)||setPage==="lobby"?'← 안내 글 변경':'← 설정')+'</button></div>';
   if(UP){
     if(viewUser!==null&&!A.detail)return back+'<p class="hint">불러오는 중입니다…</p>';
     return back+(editUser!==null?'<div class="adnarrow">'+userEditHtml()+'</div>':viewUser!==null?'<div class="adnarrow">'+userViewHtml()+'</div>':viewRoster?'<div class="adnarrow">'+rosterViewHtml()+'</div>':setPage==="dormant"?'<div class="adnarrow">'+dormantHtml()+'</div>':setPage==="black"?'<div class="adnarrow">'+blackHtml()+'</div>':statusHtml());
@@ -2703,7 +2703,6 @@ function settingsHtml(){
   return '<div class="setcats">'+cat("이용자 관리",mi("status","이용자 현황")+mi("dormant","휴면 이용자 (90일 이상)")+mi("black","블랙리스트")+mi("roster","재원생 명부 연동"))+
     cat("이용료·출입 정보",mi("fee","이용료 변경")+mi("pay","입금 계좌 변경")+mi("door","출입 비밀번호 변경"))+
     cat("홈 화면 안내",mi("info","안내 글 변경")+mi("contact","문의 가능 시간"))+
-    cat("학원 로비 PC",mi("lobby","로비 PC 안내"))+ // v0.68.2: 로비 PC 안내를 따로 된 상자로(사용자 요청)
     cat("운영·보안",mi("block","이용 불가 시간 설정")+mi("pw","관리자 비밀번호 변경"))+'</div>';
 }
 
@@ -2714,7 +2713,9 @@ function infoEditHtml(){
   if(!A.infoKey){ // 목록(v0.43.3): 홈 화면 위에서 아래 순서, 누르면 그 글만 고치는 화면
     return (infoSaved===null?'<div class="msg err">서버에서 안내 글을 불러오지 못했습니다. Supabase에 035를 실행했는지 확인하십시오.</div>':'')+
       '<div class="card">'+
-      INFO_KEYS.map(([kk],i)=>{const v=infoSaved&&infoSaved[kk];return '<div class="item"><button type="button" data-ik="'+kk+'" class="ilist"><span style="flex:1;min-width:0"><b>'+esc(infoListName(kk))+'</b><small class="hint" style="display:block;margin:2px 0 0">'+(v?'✎ '+esc(priceDate(v.updated_at)||v.updated_at)+' 저장한 글':'기본 글')+'</small></span><span class="chev" aria-hidden="true">›</span></button></div>'}).join("")+'</div>';
+      INFO_KEYS.map(([kk],i)=>{const v=infoSaved&&infoSaved[kk];return '<div class="item"><button type="button" data-ik="'+kk+'" class="ilist"><span style="flex:1;min-width:0"><b>'+esc(infoListName(kk))+'</b><small class="hint" style="display:block;margin:2px 0 0">'+(v?'✎ '+esc(priceDate(v.updated_at)||v.updated_at)+' 저장한 글':'기본 글')+'</small></span><span class="chev" aria-hidden="true">›</span></button></div>'}).join("")+'</div>'+
+      // v0.68.3: 로비 PC 안내는 설정 메뉴에서 빼서 안내 글 변경 안의 따로 된 상자로(사용자 요청)
+      '<div class="card"><div class="part" style="margin:0 0 2px">학원 로비 PC</div><div class="item"><button type="button" data-sp="lobby" class="ilist"><span style="flex:1;min-width:0"><b>로비 PC 안내</b><small class="hint" style="display:block;margin:2px 0 0">room.hyunmusic.com/academy/ 오른쪽 안내 상자</small></span><span class="chev" aria-hidden="true">›</span></button></div></div>';
   }
   const k=A.infoKey,sv=infoSaved&&infoSaved[k];
   const secs=A.infoDraft||JSON.parse(JSON.stringify(infoSections(k)));A.infoDraft=secs;
@@ -2883,7 +2884,7 @@ function bindInfoEdit(){
 }
 function bindSettings(){
   document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{setPage=b.dataset.sp;renderAdmin();if(setPage==="status"||setPage==="block"||setPage==="door"||setPage==="contact"||setPage==="lobby"||setPage==="pay"||setPage==="fee"||setPage==="roster"||setPage==="info"){if(setPage==="info"){A.infoKey=null;A.infoDraft=null;A.infoMsg="";A.infoSel={}}reloadAdmin()}});
-  const back=$("#setBack");if(back)back.onclick=()=>{if(setPage==="lobby"&&lobbyDirty()&&!confirm("저장하지 않은 내용이 있습니다. 나가시겠습니까?"))return;if(setPage==="lobby")A.lobbyDraft=null;if(setPage==="info"&&A.infoKey){if(window.infoLeave&&!window.infoLeave())return;A.infoKey=null;A.infoDraft=null;A.infoMsg="";renderAdmin();window.scrollTo(0,0);return}if(editUser!==null){editUser=null}else if(viewUser!==null){viewUser=null;A.detail=null}else if(viewRoster){if(viewRoster.edit)viewRoster.edit=false;else viewRoster=null}else{setPage=null}uFlash="";renderAdmin()};
+  const back=$("#setBack");if(back)back.onclick=()=>{if(setPage==="lobby"&&lobbyDirty()&&!confirm("저장하지 않은 내용이 있습니다. 나가시겠습니까?"))return;if(setPage==="lobby"){A.lobbyDraft=null;setPage="info";A.infoKey=null;A.infoDraft=null;A.infoMsg="";renderAdmin();reloadAdmin();window.scrollTo(0,0);return}if(setPage==="info"&&A.infoKey){if(window.infoLeave&&!window.infoLeave())return;A.infoKey=null;A.infoDraft=null;A.infoMsg="";renderAdmin();window.scrollTo(0,0);return}if(editUser!==null){editUser=null}else if(viewUser!==null){viewUser=null;A.detail=null}else if(viewRoster){if(viewRoster.edit)viewRoster.edit=false;else viewRoster=null}else{setPage=null}uFlash="";renderAdmin()};
   if(setPage==="status"||setPage==="dormant"||setPage==="black"){if(editUser!==null&&A.detail)bindUserEdit();else if(viewUser!==null&&A.detail)bindUserView();else if(viewRoster)bindRosterView();else if(viewUser===null)(setPage==="dormant"?bindDormant():setPage==="black"?bindBlack():bindStatus())}
   if(setPage==="block")bindBlock2();
   if(setPage==="pw")bindSet();
