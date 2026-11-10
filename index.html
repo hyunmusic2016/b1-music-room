@@ -197,15 +197,13 @@ textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니�
 .chtime{text-align:center;font-size:34px;font-weight:800;line-height:1.25;white-space:nowrap}
 .chq{text-align:center;font-weight:700;margin:14px 0 12px}
 .chcards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.chcard{display:flex;flex-direction:column;align-items:stretch;padding:0;border-radius:18px;overflow:hidden;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 4px 14px rgba(20,48,77,.12);font:inherit;cursor:pointer;text-align:center}
+.chcard{display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:10px 10px 14px;border-radius:16px;background:var(--surface);color:var(--ink);border:2px solid var(--line);box-shadow:0 4px 12px rgba(20,48,77,.08);font:inherit;cursor:pointer;text-align:center}
 .chcard:active{transform:scale(.98)}
-.chimg{height:96px;display:grid;place-items:center}
-.chcard.stu .chimg{background:linear-gradient(135deg,#0e9194,#3fb6a8)}.chcard.ext .chimg{background:linear-gradient(135deg,#9C5238,#c97a5a)}
-.chlogo{width:62px;height:62px;border-radius:16px;background:#fff;display:grid;place-items:center}.chlogo img{width:46px}
-.chman{width:62px;height:62px;border-radius:50%;background:rgba(255,255,255,.25);display:grid;place-items:center;font-size:34px}
-.chcard b{display:block;font-size:16px;line-height:1.35;padding:12px 8px 0;flex:1}
-.chgo{margin:10px 10px 12px;border-radius:999px;padding:8px;font-weight:700;font-size:14px;color:#fff}
-.chcard.stu .chgo{background:#0e9194}.chcard.ext .chgo{background:#9C5238}
+.chimg{height:120px;border-radius:12px;display:grid;place-items:center}
+.chimg img{width:66px;height:auto}.chimg svg{width:84px;height:84px}
+.chcard.stu{border-color:#0e9194}.chcard.stu .chimg{background:color-mix(in srgb,#0e9194 9%,#fff);border:1px solid color-mix(in srgb,#0e9194 25%,#fff)}.chcard.stu b{color:var(--stu-text)}
+.chcard.ext{border-color:#9C5238}.chcard.ext .chimg{background:color-mix(in srgb,#9C5238 9%,#fff);border:1px solid color-mix(in srgb,#9C5238 25%,#fff);color:#9C5238}.chcard.ext b{color:var(--ext-text)}
+.chcard b{display:block;font-size:15.5px;line-height:1.35;flex:1;display:flex;align-items:center;justify-content:center}
 .dayw{color:var(--accent-text)}
 /* 관리자 예약 화면 맨 위 경고 띠(빨강) */
 .admin-warn{display:flex;gap:10px;align-items:center;justify-content:center;text-align:center;border:2px solid var(--danger);background:var(--surface);background:color-mix(in srgb,var(--danger) 12%,var(--surface));color:var(--danger);border-radius:12px;padding:12px 14px;margin:0 0 12px}
@@ -582,7 +580,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.65.0";
+const APP_VERSION="v0.65.1";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -775,8 +773,8 @@ function openChooser(){
     '<div class="chday"><span class="chpill">'+(tmr?'내일':'오늘')+'</span> '+dateLabel(selDate)+'</div><div class="chtime">'+hourLabel(selHour)+'</div></div></div>'+
     '<p class="chq">어떤 분이신가요?</p>'+
     '<div class="chcards">'+
-    '<button class="chcard stu" id="goStudent"><span class="chimg"><span class="chlogo"><img src="'+LOGO_SRC+'" alt="현 music academy 로고"></span></span><b>현실용음악학원<br>재원생</b><span class="chgo">예약하기 ›</span></button>'+
-    '<button class="chcard ext" id="goExternal"><span class="chimg"><span class="chman" aria-hidden="true">🙋</span></span><b>일반회원</b><span class="chgo">예약하기 ›</span></button>'+
+    '<button class="chcard stu" id="goStudent"><span class="chimg"><img src="'+LOGO_SRC+'" alt="현 music academy 로고"></span><b>현실용음악학원<br>재원생 예약하기</b></button>'+
+    '<button class="chcard ext" id="goExternal"><span class="chimg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg></span><b>일반회원 예약하기</b></button>'+
     '</div><p class="hint" id="extMsg" role="status"></p>';
   $("#sheet").classList.toggle("tmr",selDate===allowedDates()[1]);$("#sheet").classList.add("daycol");
   $("#bg").classList.add("open");
