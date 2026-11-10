@@ -135,7 +135,7 @@ textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니�
 .prow .pn{width:58px;flex:none;text-align:center}
 .prow .pp{flex:1;min-width:0;text-align:right}
 .prow .pdel{flex:none;width:44px;min-height:44px;margin:0;padding:0}
-.pexp{font-size:13.5px;color:var(--sub);margin:0 0 6px;line-height:1.6}
+.pexp{font-size:calc(13.5px * var(--pf,1) * var(--sf,1));color:var(--sub);margin:0 0 6px;line-height:var(--lh,1.6)}
 /* "예약은 1시간 단위" 강조(v0.26.1) */
 .onehr{border:1.5px solid var(--accent-strong);background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:7px 10px;margin:8px 0;text-align:center}
 .onehr b{display:block;font-size:15px;font-weight:800}
@@ -423,6 +423,10 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .fxins{flex:none!important;max-width:170px;width:auto!important;min-height:34px!important;margin:0!important;padding:0 8px!important;font-size:13px!important;border-radius:8px!important}
 .fxwrap textarea.fxsrc{display:none!important}
 .fxitems{display:flex;flex-direction:column}
+.strow{display:flex;align-items:center;gap:8px;margin:4px 0;min-height:40px}.strow label{margin:0;flex:0 0 78px;font-size:13.5px}
+.strow input[type=range]{flex:1;min-width:0;accent-color:var(--accent-strong);height:28px}.strow output{flex:0 0 74px;font-size:12.5px;color:var(--sub);text-align:right;white-space:nowrap}
+.strow .stdef{flex:none;min-height:34px;padding:4px 9px;font-size:12.5px}
+.iest{margin:10px 0 0;padding:4px 10px;border:1px dashed var(--line);border-radius:10px}
 .fxit{display:flex;align-items:flex-start;gap:6px;padding:4px 6px 4px 8px;border-top:1px dashed var(--line)}.fxit:first-child{border-top:0}
 .fxmk{flex:none;width:16px;padding-top:11px;font-weight:900;color:var(--accent-text);text-align:center;font-size:13px}
 .fxit.blank .fxmk{opacity:.25}.fxit.hr .fxmk{color:var(--sub)}
@@ -439,19 +443,19 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .txred{color:#ff8a7d}:root:not([data-theme="light"]) .txhl{background:#6b5a00;color:#fff}}
 :root[data-theme="dark"] .txred{color:#ff8a7d}:root[data-theme="dark"] .txhl{background:#6b5a00;color:#fff}
 .card.ie textarea{width:100%;font:inherit;font-size:15px;line-height:1.5;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-sizing:border-box;resize:vertical}
-.info h3{font-size:16px;margin:0 0 6px}.info ol,.info ul{margin:4px 0 0;padding-left:20px}.info li{margin:4px 0;line-height:1.55}
+.info h3{font-size:16px;margin:0 0 6px}.info ol,.info ul{margin:4px 0 0;padding-left:20px}.info li{margin:4px 0;line-height:var(--lh,1.55)}
 /* 이용 안내 창(v0.61.0): 위 색 머리띠(B안) + 왼쪽 색 띠·아이콘·✓ 목록 카드(A안) */
 .iband{margin:-18px -16px 4px;padding:20px 16px 16px 18px;border-radius:18px 18px 0 0;background:linear-gradient(135deg,var(--ic),var(--ic2));color:#fff;display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
 .iband h2{margin:0;font-size:21px;color:#fff;line-height:1.3}.iband h2 small{font-size:12px;font-weight:400;opacity:.85}.iband p{margin:4px 0 0;font-size:13px;opacity:.92}
 .iband .btn{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.55);flex:none}
-.ibody .icard{position:relative;margin:12px 0 0;padding:14px 14px 12px 18px;border-radius:14px;box-shadow:0 2px 6px rgba(20,48,77,.06)}
+.ibody .icard{font-size:calc(16px * var(--pf,1) * var(--sf,1));position:relative;margin:12px 0 0;padding:14px 14px 12px 18px;border-radius:14px;box-shadow:0 2px 6px rgba(20,48,77,.06)}
 .ibody .icard:before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:5px;border-radius:0 4px 4px 0;background:var(--ic)}
-.ibody .ich{display:flex;align-items:center;gap:10px;margin-bottom:6px}.ibody .ich h3{margin:0;font-size:16.5px}
+.ibody .ich{display:flex;align-items:center;gap:10px;margin-bottom:6px}.ibody .ich h3{margin:0;font-size:calc(16.5px * var(--pf,1) * var(--tf,1))}
 .ibody .ici{flex:none;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--ic) 14%,transparent);display:flex;align-items:center;justify-content:center;font-size:17px}
 .ibody .icard ul{list-style:none;margin:0;padding:0}.ibody .icard ul li{position:relative;margin:0;padding:6px 0 6px 24px;border-top:1px dashed var(--line)}.ibody .icard ul li:first-child{border-top:0}
 .ibody .icard ul li:before{content:"✓";position:absolute;left:2px;top:6px;color:var(--ic);font-weight:900}
 .ibody .icard ol{padding-left:22px}.ibody .icard ol li::marker{color:var(--ic);font-weight:800}
-.ibody .icard ol.fgsteps{margin:0}.ibody .icard ol.fgsteps li{padding:7px 0 7px 2px;border-top:1px dashed var(--line);line-height:1.55}.ibody .icard ol.fgsteps li:first-child{border-top:0}
+.ibody .icard ol.fgsteps{margin:0}.ibody .icard ol.fgsteps li{padding:7px 0 7px 2px;border-top:1px dashed var(--line);line-height:var(--lh,1.55)}.ibody .icard ol.fgsteps li:first-child{border-top:0}
 .info .todo{display:inline-block;color:var(--sub);border:1px dashed var(--sub);border-radius:6px;padding:0 6px;font-size:13px}
 .info .maps{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.info .maps .btn{flex:1;margin:0;min-height:44px;display:flex;align-items:center;justify-content:center;text-decoration:none}
 .addr{margin:0;font-size:11.5px;line-height:1.5;color:var(--sub);word-break:keep-all;min-width:0}
@@ -504,8 +508,8 @@ body.lobby .slot{min-height:48px;padding:5px 7px;border-radius:8px}
 body.lobby .slot b{font-size:13px;letter-spacing:-.02em}
 body.lobby .slot span{font-size:11.5px}
 @media (max-width:760px){body.lobby h1{font-size:18px}body.lobby .lclock{font-size:12.5px}body.lobby .lclock i{display:none}body.lobby .mustread{font-size:14px}body.lobby .slot{padding:5px}body.lobby .slot b{font-size:12px;white-space:nowrap;letter-spacing:-.03em}}
-.lbox{--fs:calc(var(--lfs) * var(--bs,1));background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:calc(var(--lfs)*.8) 13px;font-size:var(--fs);line-height:1.55;flex:none}
-.lbox h2{margin:0 0 calc(var(--lfs)*.6);font-size:calc(var(--fs) + 3px);font-weight:800;text-align:center;padding-bottom:calc(var(--lfs)*.6);border-bottom:1px solid var(--line)}
+.lbox{--fs:calc(var(--lfs) * var(--bs,1) * var(--gfs,1));background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:calc(var(--lfs)*.8) 13px;font-size:var(--fs);line-height:1.55;flex:none}
+.lbox h2{margin:0 0 calc(var(--lfs)*.6);font-size:calc((var(--fs) + 3px) * var(--gtf,1));font-weight:800;text-align:center;padding-bottom:calc(var(--lfs)*.6);border-bottom:1px solid var(--line)}
 .lbox ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:calc(var(--fs)*.5)}
 .lbox.st-list li{padding-left:12px;position:relative}.lbox.st-list li::before{content:"·";position:absolute;left:0}
 .lbox .warn{color:var(--danger);font-weight:700}
@@ -640,7 +644,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.69.1";
+const APP_VERSION="v0.70.0";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -740,7 +744,7 @@ async function rpc(fn,args){
     if(error){
       console.error(fn,error);
       if(error.code==="42501"||/jwt/i.test(error.message||""))return {ok:false,msg:"권한이 없습니다. 관리자라면 다시 로그인하십시오.",auth:true};
-      return {ok:false,msg:NET_MSG};
+      return {ok:false,msg:NET_MSG,code:error.code};
     }
     if(data&&data.ok===false&&data.msg==="관리자 로그인이 필요합니다.")data.auth=true;
     noFlat(data);
@@ -1331,7 +1335,7 @@ async function openPriceSheet(){
   const isPass=t=>t==="이용권"||t==="횟수권";
   const expSecs=infoSections("price").filter(x=>!x.hide&&x.t!=="정액권"&&(!isPass(x.t)||hasC));
   const expHtml=expSecs.map(x=>{const b=infoBodyHtml(x.b)+photosHtml(x),hd=isPass(x.t)?'':x.t?'<b>'+infoInline(x.t)+'</b>':'';
-    return inner(hd+'<div class="pexp info" style="margin:'+(hd?6:0)+'px 0 0">'+b+'</div>')}).join("");
+    return inner('<div style="'+pageStyleCss(infoPageStyle("price")).replace(/^;/,"")+'">'+hd+'<div class="pexp info" style="'+secStyleCss(x)+'margin:'+(hd?6:0)+'px 0 0">'+b+'</div></div>')}).join("");
   const add=(t,ic,x)=>{if(!x)return;h+=group(t,ic,x)};
   add("1시간 이용료","⏱",feeHtml);
   // v0.56.3: 이용권 가격과 이용권 안내(설명)를 한 상자에. 가격이 없으면 설명만 따로
@@ -1455,7 +1459,7 @@ function fmtMarks(h){
 }
 function fmtLine(t,ask){
   t=String(t);const w=/^!(?!!)/.test(t);if(w)t=t.slice(1).replace(/^\s+/,"");
-  const h=fmtMarks(esc(ask?withAsk(t):t)).replace(/\{추가 ?이용료\}/g,extraFeeText).replace(/\{이용권 ?기간\}/g,()=>PERIOD_DAYS+"일").replace(/\{주소\}/g,"room.hyunmusic.com").replace(/입력 예정/g,TODO);
+  const h=fmtMarks(esc(ask?withAsk(t):t).replace(/\u2028/g,"<br>")).replace(/\{추가 ?이용료\}/g,extraFeeText).replace(/\{이용권 ?기간\}/g,()=>PERIOD_DAYS+"일").replace(/\{주소\}/g,"room.hyunmusic.com").replace(/입력 예정/g,TODO);
   return w?'<span class="txred warn">'+h+'</span>':h;
 }
 function infoInline(t){return fmtLine(t,true)} // 안내 글 한 줄(관리자 문의 안내 자동으로 붙임)
@@ -1472,16 +1476,16 @@ function fxBarHtml(kind){
 /* 내용을 줄(항목)마다 따로 된 상자로 편집(v0.69.1). 저장되는 글은 그대로: 안내 글은 줄을 "\n"으로, 로비는 항목을 빈 줄 "\n\n"으로 이어 숨긴 원본 칸(.fxsrc)에 넣음 */
 function fxSplit(kind,b){b=String(b||"").replace(/\r/g,"");
   if(kind==="lobby"){const a=b.split(/\n\s*\n/).map(x=>x.replace(/^\n+|\n+$/g,"")).filter(x=>x.trim());return a.length?a:[""]}
-  const a=b.split("\n");while(a.length>1&&!a[a.length-1].trim())a.pop();return a.length?a:[""]}
+  const a=b.split("\n").map(x=>x.replace(/\u2028/g,"\n"));while(a.length>1&&!a[a.length-1].trim())a.pop();return a.length?a:[""]}
 function fxRowHtml(kind,v){const blank=kind==="info"&&!v.trim(),hr=v.trim()==="---";
   return '<div class="fxit'+(blank?' blank':'')+(hr?' hr':'')+'"><span class="fxmk" aria-hidden="true">'+(hr?'―':kind==="info"?'✓':'•')+'</span>'+
-    '<textarea class="fxi" rows="1" placeholder="'+(kind==="info"?'빈 줄 (칸 띄우기) · 글을 쓰면 항목이 됩니다':'항목 내용')+'" aria-label="'+(kind==="info"?'한 줄':'항목')+'">'+esc(v)+'</textarea>'+
+    '<textarea class="fxi" rows="1" placeholder="'+(kind==="info"?'빈 줄 (칸 띄우기) · 글을 쓰면 항목이 됩니다 · Enter = 상자 안 줄바꿈':'항목 내용')+'" aria-label="'+(kind==="info"?'한 줄':'항목')+'">'+esc(v)+'</textarea>'+
     '<button type="button" class="fxdel" aria-label="이 상자 삭제" title="이 상자 삭제">✕</button></div>'}
 function fxItemsHtml(kind,b){return '<div class="fxitems" data-kind="'+kind+'">'+fxSplit(kind,b).map(v=>fxRowHtml(kind,v)).join("")+'</div><button type="button" class="fxadd">+ '+(kind==="info"?'줄':'항목')+' 상자 추가</button>'}
 function fxAuto(t){t.style.height="auto";t.style.height=(t.scrollHeight+2)+"px"}
 function fxAutoAll(){requestAnimationFrame(()=>document.querySelectorAll(".fxi").forEach(fxAuto))}
 function fxSync(w){const box=w.querySelector(".fxitems"),src=w.querySelector(".fxsrc");if(!box||!src)return;const kind=box.dataset.kind;
-  const vals=[...box.querySelectorAll(".fxi")].map(t=>kind==="lobby"?t.value.replace(/\n\s*\n/g,"\n"):t.value);
+  const vals=[...box.querySelectorAll(".fxi")].map(t=>kind==="lobby"?t.value.replace(/\n\s*\n/g,"\n"):t.value.replace(/\r/g,"").replace(/\n/g,"\u2028")); // 안내 글: 상자 안 줄바꿈은 \u2028로 저장(v0.70.0)
   let out=kind==="lobby"?vals.filter(v=>v.trim()).join("\n\n"):vals.join("\n").replace(/\n+$/,"");
   if(src.value!==out){src.value=out;src.dispatchEvent(new Event("input",{bubbles:true}))}
   box.querySelectorAll(".fxit").forEach(r=>{const v=r.querySelector(".fxi").value;r.classList.toggle("blank",kind==="info"&&!v.trim());r.classList.toggle("hr",v.trim()==="---");r.querySelector(".fxmk").textContent=v.trim()==="---"?"―":kind==="info"?"✓":"•"})}
@@ -1491,10 +1495,9 @@ function fxRows(w,vals,fi,caret){const box=w.querySelector(".fxitems"),kind=box.
 const fxVals=w=>[...w.querySelectorAll(".fxi")].map(t=>t.value),fxIdx=t=>[...t.closest(".fxitems").querySelectorAll(".fxi")].indexOf(t);
 document.addEventListener("focusin",e=>{const t=e.target;if(t.classList&&t.classList.contains("fxi"))t.closest(".fxwrap")._last=t});
 document.addEventListener("input",e=>{const t=e.target;if(!t.classList||!t.classList.contains("fxi"))return;const w=t.closest(".fxwrap"),kind=w.querySelector(".fxitems").dataset.kind;
-  if(kind==="info"&&t.value.includes("\n")){const i=fxIdx(t),v=fxVals(w),parts=t.value.split("\n");v.splice(i,1,...parts);fxRows(w,v,i+parts.length-1,parts[parts.length-1].length);return} // 붙여 넣은 여러 줄은 상자 여러 개로
   fxAuto(t);fxSync(w)});
 document.addEventListener("keydown",e=>{const t=e.target;if(!t.classList||!t.classList.contains("fxi")||e.isComposing)return;const w=t.closest(".fxwrap"),kind=w.querySelector(".fxitems").dataset.kind,i=fxIdx(t),v=fxVals(w);
-  if(e.key==="Enter"&&kind==="info"){e.preventDefault();const c=t.selectionStart;v.splice(i,1,t.value.slice(0,c),t.value.slice(t.selectionEnd));fxRows(w,v,i+1,0);return} // Enter = 아래에 새 상자
+  // v0.70.0: Enter는 상자 안에서 줄바꿈(새 상자를 만들지 않음, 사용자 요청)
   if(e.key==="Backspace"&&t.selectionStart===0&&t.selectionEnd===0&&!t.value&&v.length>1){e.preventDefault();v.splice(i,1);fxRows(w,v,i-1);return}}); // 빈 상자에서 지우기 = 상자 삭제
 document.addEventListener("click",e=>{const d=e.target.closest&&e.target.closest(".fxdel,.fxadd");if(!d)return;const w=d.closest(".fxwrap");
   if(d.classList.contains("fxdel")){const t=d.parentNode.querySelector(".fxi"),i=fxIdx(t),v=fxVals(w);if(t.value.trim()&&!confirm("이 상자를 지우시겠습니까?"))return;v.splice(i,1);fxRows(w,v,Math.max(0,i-1))}
@@ -1504,6 +1507,9 @@ function fxItemCmd(w,fx,val){ // 줄 상자 편집기에서 [빈 줄]·[구분�
   if(fx==="gap"){v.splice(at,0,"");return fxRows(w,v,at)}
   if(fx==="hr"){v.splice(at,0,"---");return fxRows(w,v,at)}
   if(fx==="ins"&&/^\{\s*일반회원/.test(val)){v.splice(at,0,val);return fxRows(w,v,at)}
+  if((fx==="ul"||fx==="ol")&&t){const re=fx==="ul"?/^-\s/:/^\d+[.)]\s/,num=/^\d+[.)]\s/; // 상자 하나 = 한 항목: 고른 상자 맨 앞 표시를 붙이고/뗌
+    if(re.test(v[i]))v[i]=v[i].replace(re,"");else{const bare=v[i].replace(/^(-|\d+[.)])\s*/,"");let n=1;if(fx==="ol")for(let j=i-1;j>=0&&num.test(v[j]);j--)n++;v[i]=(fx==="ul"?"- ":n+". ")+bare}
+    return fxRows(w,v,i)}
   return t?fxApply(t,fx,val):null}
 function fxApply(ta,fx,val){
   const v=ta.value,s=ta.selectionStart,e=ta.selectionEnd,sel=v.slice(s,e);
@@ -1532,7 +1538,7 @@ document.addEventListener("change",e=>{const x=e.target.closest&&e.target.closes
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey&&e.key.toLowerCase()==="b"&&e.target.matches&&e.target.matches(".fxwrap textarea")){e.preventDefault();fxApply(e.target,"b")}});
 document.addEventListener("mousedown",e=>{if(e.target.closest&&e.target.closest(".fxins")){const w=e.target.closest(".fxwrap"),a=document.activeElement;if(a&&a.classList&&a.classList.contains("fxi")&&w.contains(a))w._last=a}});
 // 글 쓰는 법(안내 글·로비 공용 부분)
-function fxHelpLis(){return '<li>내용은 <b>줄(항목)마다 따로 된 상자</b>에 씁니다. [+ 줄 상자 추가]로 늘리고 상자 오른쪽 [✕]로 지웁니다. 안내 글은 상자 안에서 Enter를 누르면 아래에 새 상자가 생기고, 빈 상자에서 ← 지우기를 누르면 그 상자가 지워집니다. 비워 둔 상자는 칸 띄우기(빈 줄)입니다.</li><li>내용 칸 위 <b>도구 막대</b>: 글자를 고르고 <b>B</b>(굵게, Ctrl+B)·<span class="txred">가</span>(빨간 글씨)·<mark class="txhl">가</mark>(색 강조)·크게·작게를 누르면 표시가 붙고, 다시 누르면 떨어집니다. [↵ 빈 줄]·[― 구분선]은 고른 상자 아래에 상자를 하나 더 만듭니다.</li>'+
+function fxHelpLis(){return '<li>내용은 <b>줄(항목)마다 따로 된 상자</b>에 씁니다. [+ 줄 상자 추가]로 늘리고 상자 오른쪽 [✕]로 지웁니다. 상자 안에서 Enter를 누르면 <b>그 상자 안에서 줄이 바뀝니다</b>(항목은 그대로 하나). 빈 상자에서 ← 지우기를 누르면 그 상자가 지워집니다. 비워 둔 상자는 칸 띄우기(빈 줄)입니다.</li><li>내용 칸 위 <b>도구 막대</b>: 글자를 고르고 <b>B</b>(굵게, Ctrl+B)·<span class="txred">가</span>(빨간 글씨)·<mark class="txhl">가</mark>(색 강조)·크게·작게를 누르면 표시가 붙고, 다시 누르면 떨어집니다. [↵ 빈 줄]·[― 구분선]은 고른 상자 아래에 상자를 하나 더 만듭니다.</li>'+
   '<li>표시를 직접 써도 됩니다: **굵게** · !!빨간 글씨!! · ==색 강조== · ++크게++ · --작게-- · 줄 맨 앞 ! = 그 줄 전체 빨간 글씨 · "---"만 있는 줄 = 구분선 · [보일 글자](https://주소) = 링크</li>'+
   '<li>[＋ 넣기]: {이용권 기간}·{추가 이용료}는 이용료 변경에 저장된 값으로, {주소}는 room.hyunmusic.com 으로 바뀌어 보입니다.</li>'}
 const EXTREG_MARK=/^\{\s*일반회원\s*등록하기\s*\}$/; // 이 줄만 있으면 [일반회원 등록하기] 버튼(v0.51.5)
@@ -1629,14 +1635,29 @@ const INFO_ICONS=[[/주의|금지|유의/,"⚠️"],[/비밀번호/,"🔑"],[/�
   [/시간|운영/,"⏱"],[/예약/,"📅"],[/등록|가입/,"📝"],[/장비|악기/,"🥁"],[/편의|화장실/,"🚻"],[/연습실|시설|방음/,"🎹"],[/문의|연락/,"📞"],[/소개|연습실은/,"🏠"]];
 function infoIcon(t){t=String(t||"");const m=INFO_ICONS.find(([r])=>r.test(t));return m?m[1]:"📌"}
 function infoThemeStyle(k){const c=INFO_THEME[k]||INFO_THEME.way;return '--ic:'+c[0]+';--ic2:'+c[1]}
+/* 글자 모양(v0.70.0, 서버 054): 창 전체 = 자간(ls, em)·전체 글씨(fs %)·칸 제목 글씨(tfs %), 칸마다 = 행간(lh)·칸 글씨(fs %). 기본값은 저장하지 않음 */
+const LH_DEF=1.55;
+function stFmt(inp){const v=+inp.value,d=+inp.dataset.def,u=inp.dataset.u;
+  return (u==="em"?(v>0?"+":"")+(+v.toFixed(3))+"em":u==="%"?v+"%":v.toFixed(2))+(Math.abs(v-d)<1e-9?" (기본)":"")}
+function stRow(l,cls,id,min,max,step,v,def,u){
+  return '<div class="strow"><label'+(id?' for="'+id+'"':'')+'>'+l+'</label><input type="range" class="strng '+cls+'"'+(id?' id="'+id+'"':'')+' min="'+min+'" max="'+max+'" step="'+step+'" value="'+v+'" data-def="'+def+'" data-u="'+u+'" aria-label="'+l+'">'+
+    '<output>'+stFmt({value:v,dataset:{def,u}})+'</output><button type="button" class="btn ghost small stdef">기본</button></div>'}
+document.addEventListener("input",e=>{const t=e.target;if(t.classList&&t.classList.contains("strng")){const o=t.parentNode.querySelector("output");if(o)o.textContent=stFmt(t)}});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest(".stdef");if(!b)return;const t=b.parentNode.querySelector(".strng");if(!t)return;t.value=t.dataset.def;t.dispatchEvent(new Event("input",{bubbles:true}))});
+function stNum(v,lo,hi){v=+v;return isFinite(v)&&v!==0?Math.max(lo,Math.min(hi,v)):null}
+function pageStyleCss(st){st=st||{};const ls=stNum(st.ls,-.1,.1),fs=stNum(st.fs,70,160),tf=stNum(st.tfs,70,160);
+  return (ls?';letter-spacing:'+ls+'em':'')+(fs&&fs!==100?';--pf:'+fs/100:'')+(tf&&tf!==100?';--tf:'+tf/100:'')}
+function secStyleCss(x,em){const lh=stNum(x&&x.lh,1,2.5),fs=stNum(x&&x.fs,70,160);
+  return (lh?'--lh:'+lh+';line-height:'+lh+';':'')+(fs&&fs!==100?(em?'font-size:'+fs/100+'em;':'--sf:'+fs/100+';'):'')}
+function infoPageStyle(k){const sv=infoSaved&&infoSaved[k];return (sv&&sv.style)||{}}
 function infoPageHtml(k,secs){
-  const d=INFO_DEFAULT[k],card=(t,b,raw)=>'<div class="card info icard">'+(t?'<div class="ich"><span class="ici" aria-hidden="true">'+infoIcon(raw||t)+'</span><h3>'+t+'</h3></div>':'')+b+'</div>';
+  const d=INFO_DEFAULT[k],card=(t,b,raw,cs)=>'<div class="card info icard"'+(cs?' style="'+cs+'"':'')+'>'+(t?'<div class="ich"><span class="ici" aria-hidden="true">'+infoIcon(raw||t)+'</span><h3>'+t+'</h3></div>':'')+b+'</div>';
   let h="";
   if(d.addr)h+=card("주소",'<p style="margin:0;font-size:16px;font-weight:700">'+esc(ADDRESS)+'</p><p class="hint" style="margin:4px 0 0">건물 <b>지하 1층</b>입니다.</p>'+
       '<div class="maps"><button type="button" class="btn ghost" id="infoAddrCopy">주소 복사</button>'+
       '<a class="btn ghost" target="_blank" rel="noopener" href="https://map.naver.com/p/search/'+encodeURIComponent(ADDRESS.split(",")[0])+'">네이버 지도</a>'+
       '<a class="btn ghost" target="_blank" rel="noopener" href="https://map.kakao.com/link/search/'+encodeURIComponent(ADDRESS.split(",")[0])+'">카카오맵</a></div>');
-  (secs||infoSections(k)).filter(x=>!x.hide).forEach(x=>{const b=infoBodyHtml(x.b),ph=photosHtml(x);if(x.t||b||ph)h+=card(x.t?infoInline(x.t):"",b+ph,x.t)});
+  (secs||infoSections(k)).filter(x=>!x.hide).forEach(x=>{const b=infoBodyHtml(x.b),ph=photosHtml(x);if(x.t||b||ph)h+=card(x.t?infoInline(x.t):"",b+ph,x.t,secStyleCss(x))});
   // v0.60.3: 안내 창 맨 아래 고정 상자("궁금하신 점은 … [관리자 문의] …")는 삭제(사용자 요청)
   return h;
 }
@@ -1645,7 +1666,7 @@ function openInfo(k,draft){
   $("#sheet").className="sheet";
   const paint=()=>{const t=esc(infoTitle(k));
     const th=INFO_THEME[k]||INFO_THEME.way;
-    $("#sheet").innerHTML='<div class="iband" style="'+infoThemeStyle(k)+'"><div><h2>'+t+(draft?' <small>(미리 보기)</small>':'')+'</h2><p>'+th[2]+'</p></div><button class="btn ghost small" id="cx">닫기</button></div><div id="infoBody" class="ibody" style="'+infoThemeStyle(k)+'" data-k="'+k+'">'+infoPageHtml(k,draft)+'</div>';
+    $("#sheet").innerHTML='<div class="iband" style="'+infoThemeStyle(k)+'"><div><h2>'+t+(draft?' <small>(미리 보기)</small>':'')+'</h2><p>'+th[2]+'</p></div><button class="btn ghost small" id="cx">닫기</button></div><div id="infoBody" class="ibody" style="'+infoThemeStyle(k)+pageStyleCss(draft?A.infoStyle:infoPageStyle(k))+'" data-k="'+k+'">'+infoPageHtml(k,draft)+'</div>';
     $("#cx").onclick=closeSheet;
     const ac=$("#infoAddrCopy");if(ac)ac.onclick=async()=>{const ok=await copyText(ADDRESS);ac.textContent=ok?"복사했습니다":"복사 실패";setTimeout(()=>{ac.textContent="주소 복사"},2000)};
   };
@@ -2370,9 +2391,11 @@ function feeHtml(){
 const QR_ROOM='<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 33 33" shape-rendering="crispEdges"><rect x="-2" y="-2" width="33" height="33" fill="#fff"/><path stroke="#000" d="M0 0.5h7m2 0h1m1 0h4m1 0h1m1 0h3m1 0h7m-29 1h1m5 0h1m1 0h1m2 0h1m1 0h2m1 0h2m1 0h1m2 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m3 0h5m5 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h1m4 0h1m1 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m3 0h3m2 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m2 0h2m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-21 1h2m2 0h1m1 0h2m2 0h1m-18 1h1m1 0h4m1 0h2m1 0h1m4 0h1m1 0h1m2 0h2m1 0h2m1 0h1m-27 1h2m1 0h1m2 0h3m2 0h1m1 0h7m3 0h2m1 0h1m-28 1h1m2 0h6m1 0h3m4 0h1m3 0h2m2 0h2m-27 1h1m3 0h2m1 0h2m1 0h1m1 0h2m3 0h1m2 0h1m2 0h3m2 0h1m-29 1h3m2 0h5m5 0h1m2 0h1m1 0h3m4 0h1m-28 1h2m2 0h2m4 0h1m2 0h2m2 0h2m3 0h1m1 0h1m1 0h1m1 0h1m-29 1h4m2 0h2m2 0h1m2 0h2m2 0h1m1 0h1m3 0h1m1 0h1m2 0h1m-27 1h2m3 0h1m1 0h3m1 0h1m2 0h5m3 0h3m-26 1h3m1 0h2m2 0h1m3 0h5m2 0h1m2 0h1m1 0h1m2 0h1m-29 1h2m1 0h3m2 0h1m3 0h1m3 0h1m1 0h3m3 0h2m-26 1h2m1 0h1m1 0h4m2 0h2m1 0h2m3 0h1m4 0h1m1 0h1m1 0h1m-29 1h3m1 0h2m2 0h2m1 0h1m1 0h1m4 0h1m2 0h2m3 0h3m-29 1h8m3 0h3m1 0h1m1 0h1m2 0h5m1 0h2m-20 1h1m1 0h2m1 0h3m2 0h3m3 0h3m-27 1h7m2 0h2m4 0h6m1 0h1m1 0h1m1 0h1m-27 1h1m5 0h1m1 0h1m3 0h1m1 0h1m1 0h2m1 0h2m3 0h2m1 0h2m-29 1h1m1 0h3m1 0h1m1 0h4m1 0h1m2 0h9m3 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m2 0h1m3 0h2m5 0h1m1 0h3m-28 1h1m1 0h3m1 0h1m2 0h3m1 0h2m1 0h1m1 0h1m1 0h2m1 0h2m1 0h3m-29 1h1m5 0h1m1 0h1m1 0h1m1 0h1m1 0h2m2 0h1m3 0h1m1 0h3m1 0h1m-29 1h7m3 0h1m1 0h2m2 0h1m2 0h2m1 0h3"/></svg>';
 const A4_PX=[794,1123]; // 96dpi에서 A4 크기
 /* A4 가격표·/price/ 페이지의 "이용권 안내"(v0.59.10): [이용료 보기]와 같은 글(안내 글 변경의 "이용권 안내", 기본 글 포함, {이용권 기간} 바뀜). 사진·버튼은 넣지 않음 */
+function a4SecCss(x){const st=infoPageStyle("price"),lh=stNum(x.lh,1,2.5),ls=stNum(st.ls,-.1,.1),f=(stNum(st.fs,70,160)||100)*(stNum(x.fs,70,160)||100)/10000;
+  return (lh?'line-height:'+lh+';--lh:'+lh+';':'')+(f!==1?'font-size:'+(1.05*f).toFixed(3)+'em;':'')+(ls?'letter-spacing:'+ls+'em;':'')}
 function a4ExpHtml(){
   const isPass=t=>t==="이용권"||t==="횟수권";
-  return infoSections("price").filter(x=>!x.hide&&x.t!=="정액권").map(x=>'<div class="aexp">'+(x.t&&!isPass(x.t)?'<b class="aexpt">'+infoInline(x.t)+'</b>':'')+infoBodyHtml(x.b).replace(EXTREG_BTN,"")+'</div>').join("");
+  return infoSections("price").filter(x=>!x.hide&&x.t!=="정액권").map(x=>'<div class="aexp" style="'+a4SecCss(x)+'">'+(x.t&&!isPass(x.t)?'<b class="aexpt">'+infoInline(x.t)+'</b>':'')+infoBodyHtml(x.b).replace(EXTREG_BTN,"")+'</div>').join("");
 }
 function a4Html(P,pay,o){
   const won=v=>Number(v).toLocaleString("ko-KR")+'원';
@@ -2690,12 +2713,13 @@ const LOBBY_DEFAULT=[ // 일반회원 내용은 뺌(v0.47.1, 로비는 재원생
   {id:"caution",type:"text",title:"유의사항",style:"alert",scale:100,hidden:false,body:"연습실내 물 이외 음식물 반입금지\n(드럼 카페트 오염시 변상)\n\n방음문 살살 닫기\n(문 고장시 수리비 청구)"},
   {id:"qr",type:"qr",title:"",style:"center",scale:100,hidden:false,body:"**{주소}**\n\n휴대폰으로도 예약·확인·취소할 수 있습니다.\n\n학원 오시기 전 연습실 예약 현황을 확인해 보세요!"}
 ];
-let lobbyBoxes=null,lobbyLs=0; // 손님 화면에 그리는 상자(저장된 것 또는 기본)
+let lobbyBoxes=null,lobbyLs=0,lobbyFs=100,lobbyTfs=100; // 손님 화면에 그리는 상자(저장된 것 또는 기본)
 function lobbyLine(t){return t.trim()==="---"?'<hr class="txhr">':fmtLine(t,false)} // v0.69.0: 안내 글과 같은 꾸미기 표시
 function lobbyBoxHtml(b){
   const sc=Math.max(70,Math.min(160,+b.scale||100))/100;
   const its=String(b.body||"").replace(/\r/g,"").split(/\n\s*\n/).map(x=>x.replace(/^\n+|\n+$/g,"")).filter(x=>x.trim());
-  return '<section class="lbox st-'+esc(b.style||"list")+'" style="--bs:'+sc+'">'+(b.title?'<h2>'+esc(b.title)+'</h2>':'')+
+  const lh=stNum(b.lh,1,2.5);
+  return '<section class="lbox st-'+esc(b.style||"list")+'" style="--bs:'+sc+(lh?';line-height:'+lh:'')+'">'+(b.title?'<h2>'+esc(b.title)+'</h2>':'')+
     (b.type==="qr"?'<div class="lqr" aria-label="예약 주소 QR 코드">'+QR_ROOM+'</div>':'')+
     (its.length?'<ul>'+its.map(it=>'<li>'+it.split("\n").map(lobbyLine).join("<br>")+'</li>').join("")+'</ul>':'')+'</section>';
 }
@@ -2706,8 +2730,9 @@ function lobbyFit(){ // 나란히 놓일 때: 안내 칸이 화면 높이를 넘
   if(getComputedStyle(a).position!=="sticky")return;
   while(f>10.5&&a.scrollHeight>a.clientHeight+1){f-=.5;a.style.setProperty("--lfs",f+"px")}
 }
-function lobbyPaint(){const a=$("#lobbyInfo");if(!a)return;a.style.setProperty("--lls",(+lobbyLs||0)+"em");a.innerHTML=lobbyRender(lobbyBoxes||LOBBY_DEFAULT);lobbyFit()}
-async function lobbyLoad(){const r=await rpc("lobby_info");if(r&&r.ok){lobbyBoxes=Array.isArray(r.boxes)?r.boxes:null;lobbyLs=r.ls||0}lobbyPaint()}
+function lobbyVars(el,ls,fs,tf){el.style.setProperty("--lls",(+ls||0)+"em");el.style.setProperty("--gfs",(stNum(fs,70,160)||100)/100);el.style.setProperty("--gtf",(stNum(tf,70,160)||100)/100)}
+function lobbyPaint(){const a=$("#lobbyInfo");if(!a)return;lobbyVars(a,lobbyLs,lobbyFs,lobbyTfs);a.innerHTML=lobbyRender(lobbyBoxes||LOBBY_DEFAULT);lobbyFit()}
+async function lobbyLoad(){const r=await rpc("lobby_info");if(r&&r.ok){lobbyBoxes=Array.isArray(r.boxes)?r.boxes:null;lobbyLs=r.ls||0;lobbyFs=r.fs||100;lobbyTfs=r.tfs||100}lobbyPaint()}
 function lobbyShow(v){const a=$("#lobbyInfo");if(a){a.classList.toggle("hide",v!=="book");lobbyFit()}}
 function lobbyInit(){
   document.body.classList.add("lobby");
@@ -2725,7 +2750,7 @@ function lobbyDirty(){return !!A.lobbyDraft&&JSON.stringify(A.lobbyDraft)!==JSON
 function lobbyEditHtml(){
   if(!A.lobby)return '<p class="hint">불러오는 중입니다…</p>';
   if(!A.lobby.ok)return '<div class="msg err">로비 안내를 불러오지 못했습니다. Supabase에 045를 실행했는지 확인하십시오.</div>';
-  if(!A.lobbyDraft){A.lobbySaved={boxes:clone(Array.isArray(A.lobby.boxes)?A.lobby.boxes:LOBBY_DEFAULT),ls:+A.lobby.ls||0};A.lobbyDraft=clone(A.lobbySaved)}
+  if(!A.lobbyDraft){A.lobbySaved={boxes:clone(Array.isArray(A.lobby.boxes)?A.lobby.boxes:LOBBY_DEFAULT),ls:+A.lobby.ls||0,fs:+A.lobby.fs||100,tfs:+A.lobby.tfs||100};A.lobbyDraft=clone(A.lobbySaved)}
   const D=A.lobbyDraft,n=D.boxes.length,saved=Array.isArray(A.lobby.boxes);
   // v0.69.0: 안내 글 변경의 칸과 같은 모양(상자 N · 숨기기 · ↑↓ · 삭제 / 제목 / 모양·글씨 / 도구 막대 + 내용 / 미리 보기)
   const box=(b,i)=>'<div class="card lbe'+(b.hidden?' off':'')+'" data-lb="'+i+'"><div class="row" style="align-items:center;gap:6px;flex-wrap:wrap"><b style="flex:1">상자 '+(i+1)+(b.type==="qr"?' <small class="hint">QR</small>':'')+(b.hidden?' <span class="iehidb">숨김 · 로비 화면에 안 보임</span>':'')+'</b>'+
@@ -2735,14 +2760,16 @@ function lobbyEditHtml(){
       '<button type="button" class="btn ghost small" data-lbd="'+i+'" style="color:var(--danger)">✕ 삭제</button></div>'+
     '<label>제목</label><input type="text" class="lbT" maxlength="60" placeholder="'+(b.type==="qr"?'없으면 비워 두십시오':'')+'" value="'+esc(b.title||"")+'">'+
     '<label>모양</label><div class="lbe-opt">'+(b.type==="qr"?'<b style="color:var(--ink)">QR 상자</b> (room.hyunmusic.com)':'<select class="lbS" aria-label="모양">'+LOBBY_STYLES.map(x=>'<option value="'+x[0]+'"'+(b.style===x[0]?' selected':'')+'>'+x[1]+'</option>').join("")+'</select>')+
-      '<label style="display:flex;align-items:center;gap:6px;margin:0;font-weight:400">글씨 <input type="range" class="lbR" min="70" max="160" step="5" value="'+(b.scale||100)+'"><span class="lbRv">'+(b.scale||100)+'%</span></label></div>'+
-    '<label>내용 <small class="hint">한 상자 = 한 항목</small></label><div class="fxwrap">'+fxBarHtml("lobby")+'<textarea class="lbB fxsrc" maxlength="2000">'+esc(b.body||"")+'</textarea>'+fxItemsHtml("lobby",b.body)+'</div></div>';
+      '</div>'+
+    '<label>내용 <small class="hint">한 상자 = 한 항목</small></label><div class="fxwrap">'+fxBarHtml("lobby")+'<textarea class="lbB fxsrc" maxlength="2000">'+esc(b.body||"")+'</textarea>'+fxItemsHtml("lobby",b.body)+'</div>'+
+    '<div class="iest">'+stRow("상자 글씨","lbR","",70,160,5,b.scale||100,100,"%")+stRow("행간","lbLh","",1,2.5,.05,stNum(b.lh,1,2.5)||LH_DEF,LH_DEF,"")+'</div></div>';
   return (A.lobbyMsg||'')+
     '<div class="card"><p class="hint" style="margin-top:0">학원 로비 PC에 켜 두는 화면 <b>room.hyunmusic.com/academy/</b> 의 오른쪽 안내 상자입니다. [저장]해야 로비 화면에 반영됩니다(로비 화면은 5분마다 새로 받아 옵니다).</p>'+
       '<a class="btn ghost" href="/academy/" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;text-decoration:none">로비 화면 새 탭으로 열기 ↗</a></div>'+
     '<div class="ielay lblay"><div class="iecol">'+D.boxes.map(box).join("")+
       '<div class="btn2"><button type="button" class="btn ghost" id="lbAddT">+ 글 상자 추가</button>'+(D.boxes.some(b=>b.type==="qr")?'':'<button type="button" class="btn ghost" id="lbAddQ">+ QR 상자 추가</button>')+'</div>'+
-      '<div class="card"><div class="lbe-opt"><label style="display:flex;align-items:center;gap:6px">전체 자간 <input type="range" id="lbLs" min="-0.1" max="0.05" step="0.005" value="'+D.ls+'"><span id="lbLsv"></span></label><button type="button" class="btn ghost" id="lbLs0" style="width:auto;margin:0;min-height:36px;padding:0 10px">기본</button></div>'+
+      '<div class="card"><div class="part" style="margin-top:0">글자 모양 <small class="hint">로비 안내 전체</small></div>'+stRow("자간","","lbLs",-.1,.05,.005,+D.ls||0,0,"em")+stRow("전체 글씨","","lbFs",70,160,5,+D.fs||100,100,"%")+stRow("제목 글씨","","lbTfs",70,160,5,+D.tfs||100,100,"%")+
+      '<p class="hint" style="margin:6px 0 0">상자 글씨·행간은 상자마다 내용 아래에서 정합니다.</p>'+
       '<details class="hist" style="margin-top:10px"><summary>글 쓰는 법</summary><ul class="hint" style="margin:6px 0 0;padding-left:18px"><li>로비 상자에서는 <b>빈 줄</b>(도구 막대 [↵ 항목 나누기])이 항목을 나눕니다. 모양: 목록(·) / 가운데 빨강(유의사항) / 일반 / 가운데.</li>'+fxHelpLis()+'<li>전화번호는 넣지 마십시오(문의는 [관리자 문의] 창 한 곳으로).</li></ul></details></div>'+
     // 데스크탑(v0.67.0): 왼쪽 쓰기 + 오른쪽 미리 보기(붙어 있음). 휴대폰은 위아래 그대로(미리 보기 → 저장 순)
     '<div class="card lbsave"><div id="lbMsg"></div><div class="btn2"><button class="btn" id="lbGo">저장</button><button class="btn ghost" id="lbUndo">변경 취소</button></div>'+
@@ -2754,13 +2781,13 @@ function bindLobbyEdit(){
   if(!$("#lbGo"))return;
   fxAutoAll();
   const D=A.lobbyDraft,redraw=()=>{const y=window.scrollY;A.lobbyMsg="";renderAdmin();window.scrollTo(0,y)};
-  const lsTxt=v=>{v=Math.round(v*1000)/10;return (v>0?"+":"")+v+"%"};
-  const prev=()=>{const p=$("#lbPrev");p.style.setProperty("--lls",(+D.ls||0)+"em");p.innerHTML=lobbyRender(D.boxes)||'<p class="hint">보이는 상자가 없습니다.</p>';$("#lbLsv").textContent=lsTxt(+D.ls||0);$("#lbGo").disabled=!lobbyDirty();$("#lbUndo").disabled=!lobbyDirty()};
+  const prev=()=>{const p=$("#lbPrev");lobbyVars(p,D.ls,D.fs,D.tfs);p.innerHTML=lobbyRender(D.boxes)||'<p class="hint">보이는 상자가 없습니다.</p>';$("#lbGo").disabled=!lobbyDirty();$("#lbUndo").disabled=!lobbyDirty()};
   document.querySelectorAll("[data-lb]").forEach(c=>{const b=D.boxes[+c.dataset.lb];
     c.querySelector(".lbT").oninput=e=>{b.title=e.target.value;prev()};
     c.querySelector(".lbB").oninput=e=>{b.body=e.target.value;prev()};
     const s=c.querySelector(".lbS");if(s)s.onchange=e=>{b.style=e.target.value;prev()};
-    c.querySelector(".lbR").oninput=e=>{b.scale=+e.target.value;c.querySelector(".lbRv").textContent=e.target.value+"%";prev()};
+    c.querySelector(".lbR").addEventListener("input",e=>{b.scale=+e.target.value;prev()});
+    c.querySelector(".lbLh").addEventListener("input",e=>{const v=+e.target.value;if(Math.abs(v-LH_DEF)<1e-9)delete b.lh;else b.lh=v;prev()});
   });
   document.querySelectorAll("[data-lbm]").forEach(x=>x.onclick=()=>{const [i,d]=x.dataset.lbm.split(":").map(Number),j=i+d;if(j<0||j>=D.boxes.length)return;[D.boxes[i],D.boxes[j]]=[D.boxes[j],D.boxes[i]];redraw()});
   document.querySelectorAll("[data-lbh]").forEach(x=>x.onclick=()=>{const b=D.boxes[+x.dataset.lbh];b.hidden=!b.hidden;redraw()});
@@ -2770,14 +2797,14 @@ function bindLobbyEdit(){
   const uid=()=>"b"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   $("#lbAddT").onclick=()=>{if(D.boxes.length>=20){alert("상자는 20개까지 넣을 수 있습니다.");return}D.boxes.push({id:uid(),type:"text",title:"새 안내",body:"",style:"list",scale:100,hidden:false});redraw()};
   if($("#lbAddQ"))$("#lbAddQ").onclick=()=>{D.boxes.push(Object.assign(clone(LOBBY_DEFAULT[3]),{id:uid()}));redraw()};
-  $("#lbLs").oninput=e=>{D.ls=+e.target.value;prev()};
-  $("#lbLs0").onclick=()=>{D.ls=0;$("#lbLs").value=0;prev()};
+  [["lbLs","ls"],["lbFs","fs"],["lbTfs","tfs"]].forEach(([id,f])=>$("#"+id).addEventListener("input",e=>{D[f]=+e.target.value;prev()}));
   $("#lbUndo").onclick=()=>{A.lobbyDraft=clone(A.lobbySaved);redraw()};
   $("#lbGo").onclick=async()=>{
-    $("#lbGo").disabled=true;const r=await rpc("admin_set_lobby_info",{p:{boxes:D.boxes,ls:D.ls}});
+    $("#lbGo").disabled=true;const r=await rpc("admin_set_lobby_info",{p:{boxes:D.boxes,ls:D.ls,fs:D.fs,tfs:D.tfs}});
     if(r.auth){adminExpired();return}
     if(!r.ok){$("#lbMsg").innerHTML='<div class="msg err">'+esc(r.msg)+'</div>';$("#lbGo").disabled=false;return}
-    A.lobby=r;A.lobbyDraft=null;redraw();A.lobbyMsg='<div class="msg ok">저장하였습니다. 로비 화면은 5분 안에 바뀝니다(바로 보려면 로비 PC에서 새로 고침).</div>';const y=window.scrollY;renderAdmin();window.scrollTo(0,y);A.lobbyMsg="";
+    const old=r.fs===undefined&&(D.fs!==100||D.tfs!==100||D.boxes.some(b=>b.lh)); // 054 실행 전 서버는 글씨·행간을 버림
+    A.lobby=r;A.lobbyDraft=null;redraw();A.lobbyMsg='<div class="msg ok">저장하였습니다. 로비 화면은 5분 안에 바뀝니다(바로 보려면 로비 PC에서 새로 고침).</div>'+(old?'<div class="msg err">전체 글씨·제목 글씨·행간은 저장되지 않았습니다. Supabase에 054를 실행하십시오.</div>':'');const y=window.scrollY;renderAdmin();window.scrollTo(0,y);A.lobbyMsg="";
   };
   if($("#lbReset"))$("#lbReset").onclick=async()=>{
     if(!confirm("저장한 로비 안내를 지우고 기본 글로 되돌리시겠습니까?"))return;
@@ -2856,6 +2883,7 @@ function infoEditHtml(){
       '<button type="button" class="btn ghost small" data-iu="'+i+'"'+(i?'':' disabled')+' aria-label="위로">↑</button><button type="button" class="btn ghost small" data-idn="'+i+'"'+(i<secs.length-1?'':' disabled')+' aria-label="아래로">↓</button><button type="button" class="btn ghost small" data-ix="'+i+'" style="color:var(--danger)">✕ 삭제</button></div>'+
       '<label>제목</label><input type="text" class="ie-t" maxlength="60" value="'+esc(x.t||"")+'">'+
       '<label>내용 <small class="hint">한 상자 = 한 줄(✓ 항목)</small></label><div class="fxwrap">'+fxBarHtml("info")+'<textarea class="ie-b fxsrc" maxlength="3000">'+esc(x.b||"")+'</textarea>'+fxItemsHtml("info",x.b)+'</div>'+
+      '<div class="iest">'+stRow("행간","ie-lh","",1,2.5,.05,stNum(x.lh,1,2.5)||LH_DEF,LH_DEF,"")+stRow("칸 글씨","ie-fs","",70,160,5,stNum(x.fs,70,160)||100,100,"%")+'</div>'+
       '<label>사진 <small class="hint">'+((x.imgs||[]).length)+'장</small></label>'+
       '<div class="iethumbs">'+(x.imgs||[]).filter(photoOk).map((im,j)=>{const L=photoLay(x,j),sel=((A.infoSel||{})[i]||[]).includes(j);
         return '<div class="iethumb'+(sel?' sel':'')+'" data-ti="'+i+'" data-tj="'+j+'" title="누르면 고르기 · 끌어서 순서 바꾸기"><img src="'+PHOTO_BASE+im+'" alt="" draggable="false"><span class="ino2">'+(j+1)+'</span><span class="ilay">'+LAY_NAME[L]+'</span>'+(sel?'<span class="isel" aria-hidden="true">✓</span>':'')+'<button type="button" class="ix" data-ipx="'+i+':'+j+'" aria-label="사진 빼기">✕</button></div>'}).join("")+
@@ -2870,7 +2898,12 @@ function infoEditHtml(){
     '<input type="text" id="ieTitle" maxlength="30" value="'+esc(own||"")+'" placeholder="'+esc(INFO_TITLE_DEF[k])+'" aria-label="안내 글 제목">'+
     '<p class="hint" style="margin:6px 0 0">'+(k==="price"?'[이용료 보기] 창 안 설명 상자의 제목입니다.':'홈 화면 버튼과 안내 창 맨 위에 보이는 제목입니다.')+' 비우고 저장하면 기본 제목(<b>'+esc(INFO_TITLE_DEF[k])+'</b>)으로 돌아갑니다. 30자까지.</p>'+
     '<div id="ieTMsg"></div><button type="button" class="btn ghost" id="ieTSave" style="margin-top:8px"'+(infoSaved===null?' disabled':'')+'>제목 저장</button></div>';
-  return '<div class="ielay"><div class="iecol">'+tcard+'<div class="card">'+tabs+st+help+'</div>'+rows+
+  if(!A.infoStyle)A.infoStyle=Object.assign({ls:0,fs:100,tfs:100},(sv&&sv.style)||{});
+  const S=A.infoStyle;
+  const scard='<div class="card"><div class="part" style="margin-top:0">글자 모양 <small class="hint">이 안내 창 전체</small></div>'+
+    stRow("자간","","isLs",-.1,.1,.005,+S.ls||0,0,"em")+stRow("전체 글씨","","isFs",70,160,5,+S.fs||100,100,"%")+stRow("칸 제목 글씨","","isTfs",70,160,5,+S.tfs||100,100,"%")+
+    '<p class="hint" style="margin:6px 0 0">행간과 칸 글씨는 칸마다 내용 아래에서 정합니다. [저장]을 눌러야 손님 화면에 반영됩니다.</p></div>';
+  return '<div class="ielay"><div class="iecol">'+tcard+scard+'<div class="card">'+tabs+st+help+'</div>'+rows+
     '<button type="button" class="btn ghost" id="ieAdd"'+(secs.length>=20?' disabled':'')+'>+ 칸 추가</button>'+
     '<div class="card"><div id="ieMsg">'+(A.infoMsg||'')+'</div><div class="btn2"><button class="btn" id="ieSave"'+(infoSaved===null?' disabled':'')+'>저장</button><button class="btn ghost" id="iePrev">미리 보기</button></div>'+
     (sv?'<button class="btn ghost small" id="ieReset" style="margin-top:12px;color:var(--danger)">기본 글로 되돌리기</button>':'')+'</div>'+
@@ -2882,20 +2915,22 @@ function infoLivePaint(){
   const el=$("#ieLive"),k=A.infoKey;if(!el||!k||getComputedStyle(el.parentNode).display==="none")return;
   const a=readInfoDraft().filter(x=>x.t.trim()||x.b.trim()||(x.imgs||[]).length),ti=$("#ieTitle"),th=INFO_THEME[k]||INFO_THEME.way;
   const t=esc((ti&&ti.value.trim())||INFO_TITLE_DEF[k]);
-  el.innerHTML='<div class="iband" style="'+infoThemeStyle(k)+'"><div><h2>'+t+'</h2><p>'+th[2]+'</p></div><span class="btn ghost small" aria-hidden="true">닫기</span></div><div class="ibody" style="'+infoThemeStyle(k)+'">'+infoPageHtml(k,a).replace(' id="infoAddrCopy"','')+'</div>';
+  el.innerHTML='<div class="iband" style="'+infoThemeStyle(k)+'"><div><h2>'+t+'</h2><p>'+th[2]+'</p></div><span class="btn ghost small" aria-hidden="true">닫기</span></div><div class="ibody" style="'+infoThemeStyle(k)+pageStyleCss(A.infoStyle)+'">'+infoPageHtml(k,a).replace(' id="infoAddrCopy"','')+'</div>';
 }
 const LAY_NAME={"1l":"1장","1m":"1장·보통","1s":"1장·작게","2":"2장","3":"3장"};
 // lay는 항상 사진 수와 같은 길이로 들고 다님(사진 빼기·순서 바꾸기·올리기 때 함께 움직임)
-function readInfoDraft(){const d=A.infoDraft||[];return [...document.querySelectorAll(".card.ie")].map((c,i)=>{const o={t:c.querySelector(".ie-t").value,b:c.querySelector(".ie-b").value};if(d[i]&&d[i].hide)o.hide=true;const im=(d[i]&&d[i].imgs)||[];if(im.length){o.imgs=im.slice();o.lay=layOf(d[i])}return o})}
+function readInfoDraft(){const d=A.infoDraft||[];return [...document.querySelectorAll(".card.ie")].map((c,i)=>{const o={t:c.querySelector(".ie-t").value,b:c.querySelector(".ie-b").value};if(d[i]&&d[i].hide)o.hide=true;
+  const lh=+c.querySelector(".ie-lh").value,fs=+c.querySelector(".ie-fs").value;if(Math.abs(lh-LH_DEF)>1e-9)o.lh=lh;if(fs!==100)o.fs=fs;const im=(d[i]&&d[i].imgs)||[];if(im.length){o.imgs=im.slice();o.lay=layOf(d[i])}return o})}
 function bindInfoEdit(){
   if(A.infoKey&&!$("#ieSave"))return;
-  if(!A.infoKey){window.infoLeave=null;document.querySelectorAll("[data-ik]").forEach(b=>b.onclick=()=>{A.infoKey=b.dataset.ik;A.infoDraft=null;A.infoMsg="";A.infoSel={};renderAdmin();window.scrollTo(0,0)});return}
+  if(!A.infoKey){window.infoLeave=null;document.querySelectorAll("[data-ik]").forEach(b=>b.onclick=()=>{A.infoKey=b.dataset.ik;A.infoDraft=null;A.infoStyle=null;A.infoMsg="";A.infoSel={};renderAdmin();window.scrollTo(0,0)});return}
   const k=A.infoKey,redraw=()=>{renderAdmin()};
-  const norm=a=>JSON.stringify(a.map(x=>({t:x.t||"",b:x.b||"",i:(x.imgs||[]).join(","),z:layOf(x).join(","),h:!!x.hide})));
+  const norm=a=>JSON.stringify(a.map(x=>({t:x.t||"",b:x.b||"",i:(x.imgs||[]).join(","),z:layOf(x).join(","),h:!!x.hide,l:stNum(x.lh,1,2.5)||"",f:stNum(x.fs,70,160)||""})));
+  const styN=st=>{st=st||{};return [stNum(st.ls,-.1,.1)||0,stNum(st.fs,70,160)||100,stNum(st.tfs,70,160)||100].join(",")},origS=styN(infoPageStyle(k));
   const orig=norm(infoSections(k));A.infoUp=A.infoUp||[]; // infoUp: 이번에 올렸지만 아직 저장 안 한 사진
   const dropUnsaved=()=>{const keep=new Set(savedPhotos(k));removePhotos(A.infoUp.filter(x=>!keep.has(x)));A.infoUp=[]};
   // [← 안내 글 변경]으로 목록에 돌아갈 때: 저장 안 한 내용이 있으면 확인, 이번에 올린 사진은 지움
-  window.infoLeave=()=>{if(norm(readInfoDraft())!==orig&&!confirm("저장하지 않은 내용은 사라집니다. 목록으로 돌아가시겠습니까?"))return false;dropUnsaved();return true};
+  window.infoLeave=()=>{if((norm(readInfoDraft())!==orig||styN(A.infoStyle)!==origS)&&!confirm("저장하지 않은 내용은 사라집니다. 목록으로 돌아가시겠습니까?"))return false;dropUnsaved();return true};
   const mv=(i,d)=>{A.infoSel={};const a=readInfoDraft(),j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];A.infoDraft=a;A.infoMsg="";redraw()};
   document.querySelectorAll("[data-iu]").forEach(b=>b.onclick=()=>mv(+b.dataset.iu,-1));
   document.querySelectorAll("[data-idn]").forEach(b=>b.onclick=()=>mv(+b.dataset.idn,1));
@@ -2961,17 +2996,20 @@ function bindInfoEdit(){
   if(!window.infoDropGuard){window.infoDropGuard=true;["dragover","drop"].forEach(t=>window.addEventListener(t,e=>{if(setPage==="info"&&e.dataTransfer&&[...e.dataTransfer.types].includes("Files")&&!(e.target.closest&&e.target.closest(".card.ie")))e.preventDefault()}))}
   $("#ieAdd").onclick=()=>{const a=readInfoDraft();a.push({t:"",b:""});A.infoDraft=a;A.infoMsg="";redraw();const ts=document.querySelectorAll(".ie-t");if(ts.length)ts[ts.length-1].focus()};
   {let tm=null;const live=()=>{clearTimeout(tm);tm=setTimeout(infoLivePaint,150)};
-   document.querySelectorAll(".card.ie .ie-t,.card.ie .ie-b,#ieTitle").forEach(x=>x.addEventListener("input",live));
+   document.querySelectorAll(".card.ie .ie-t,.card.ie .ie-b,.card.ie .strng,#ieTitle").forEach(x=>x.addEventListener("input",live));
+   [["isLs","ls"],["isFs","fs"],["isTfs","tfs"]].forEach(([id,f])=>{const x=$("#"+id);if(x)x.addEventListener("input",()=>{A.infoStyle[f]=+x.value;live()})});
    infoLivePaint();loadLivePrice().then(infoLivePaint)}
   fxAutoAll(); // 사진·순서·숨기기 등은 다시 그릴 때마다 여기서 새로 그림
   $("#iePrev").onclick=()=>{const a=readInfoDraft();A.infoDraft=a;openInfo(k,a.filter(x=>x.t.trim()||x.b.trim()||(x.imgs||[]).length))};
   $("#ieSave").onclick=async()=>{
     const a=readInfoDraft();A.infoDraft=a;$("#ieSave").disabled=true;
     const before=savedPhotos(k);
-    const r=await rpc("admin_set_info_page",{p_key:k,p_sections:a});
+    const S=A.infoStyle||{},ps={ls:+S.ls||0,fs:+S.fs||100,tfs:+S.tfs||100};
+    let r=await rpc("admin_set_info_page",{p_key:k,p_sections:a,p_style:ps}),old=false;
+    if(!r.ok&&r.code==="PGRST202"){old=true;r=await rpc("admin_set_info_page",{p_key:k,p_sections:a})} // 054 실행 전 서버
     if(r.auth){adminExpired();return}
     if(!r.ok){A.infoMsg='<div class="msg err">'+esc(r.msg)+'</div>';redraw();return}
-    infoSaved=r.pages||{};{const now=new Set(savedPhotos(k));removePhotos(before.filter(x=>!now.has(x)));A.infoUp=[]} /* 빠진 사진은 저장 공간에서도 지움 */A.infoDraft=null;A.infoMsg='<div class="msg ok">저장했습니다. 손님 화면에 바로 반영됩니다.</div>';redraw();
+    infoSaved=r.pages||{};{const now=new Set(savedPhotos(k));removePhotos(before.filter(x=>!now.has(x)));A.infoUp=[]} /* 빠진 사진은 저장 공간에서도 지움 */A.infoDraft=null;A.infoStyle=null;A.infoMsg='<div class="msg ok">저장했습니다. 손님 화면에 바로 반영됩니다.</div>'+(old?'<div class="msg err">글은 저장했지만 자간·행간·글씨 크기는 저장되지 않았습니다. Supabase에 054를 실행하십시오.</div>':'');redraw();
   };
   $("#ieTSave").onclick=async()=>{ // 제목만 따로 저장(v0.48.0, 서버 046). 칸 내용은 아래 [저장]으로
     const v=$("#ieTitle").value.trim();if(/[\r\n]/.test(v))return;
@@ -2991,12 +3029,12 @@ function bindInfoEdit(){
     const r=await rpc("admin_set_info_page",{p_key:k,p_sections:null});
     if(r.auth){adminExpired();return}
     if(!r.ok){A.infoMsg='<div class="msg err">'+esc(r.msg)+'</div>';redraw();return}
-    infoSaved=r.pages||{};removePhotos(before);A.infoUp=[];A.infoDraft=null;A.infoMsg='<div class="msg ok">기본 글로 되돌렸습니다.</div>';redraw();
+    infoSaved=r.pages||{};removePhotos(before);A.infoUp=[];A.infoDraft=null;A.infoStyle=null;A.infoMsg='<div class="msg ok">기본 글로 되돌렸습니다.</div>';redraw();
   };
 }
 function bindSettings(){
-  document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{setPage=b.dataset.sp;renderAdmin();if(setPage==="status"||setPage==="block"||setPage==="door"||setPage==="contact"||setPage==="lobby"||setPage==="pay"||setPage==="fee"||setPage==="roster"||setPage==="info"){if(setPage==="info"){A.infoKey=null;A.infoDraft=null;A.infoMsg="";A.infoSel={}}reloadAdmin()}});
-  const back=$("#setBack");if(back)back.onclick=()=>{if(setPage==="lobby"&&lobbyDirty()&&!confirm("저장하지 않은 내용이 있습니다. 나가시겠습니까?"))return;if(setPage==="lobby"){A.lobbyDraft=null;setPage="info";A.infoKey=null;A.infoDraft=null;A.infoMsg="";renderAdmin();reloadAdmin();window.scrollTo(0,0);return}if(setPage==="info"&&A.infoKey){if(window.infoLeave&&!window.infoLeave())return;A.infoKey=null;A.infoDraft=null;A.infoMsg="";renderAdmin();window.scrollTo(0,0);return}if(editUser!==null){editUser=null}else if(viewUser!==null){viewUser=null;A.detail=null}else if(viewRoster){if(viewRoster.edit)viewRoster.edit=false;else viewRoster=null}else{setPage=null}uFlash="";renderAdmin()};
+  document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{setPage=b.dataset.sp;renderAdmin();if(setPage==="status"||setPage==="block"||setPage==="door"||setPage==="contact"||setPage==="lobby"||setPage==="pay"||setPage==="fee"||setPage==="roster"||setPage==="info"){if(setPage==="info"){A.infoKey=null;A.infoDraft=null;A.infoStyle=null;A.infoMsg="";A.infoSel={}}reloadAdmin()}});
+  const back=$("#setBack");if(back)back.onclick=()=>{if(setPage==="lobby"&&lobbyDirty()&&!confirm("저장하지 않은 내용이 있습니다. 나가시겠습니까?"))return;if(setPage==="lobby"){A.lobbyDraft=null;setPage="info";A.infoKey=null;A.infoDraft=null;A.infoStyle=null;A.infoMsg="";renderAdmin();reloadAdmin();window.scrollTo(0,0);return}if(setPage==="info"&&A.infoKey){if(window.infoLeave&&!window.infoLeave())return;A.infoKey=null;A.infoDraft=null;A.infoStyle=null;A.infoMsg="";renderAdmin();window.scrollTo(0,0);return}if(editUser!==null){editUser=null}else if(viewUser!==null){viewUser=null;A.detail=null}else if(viewRoster){if(viewRoster.edit)viewRoster.edit=false;else viewRoster=null}else{setPage=null}uFlash="";renderAdmin()};
   if(setPage==="status"||setPage==="dormant"||setPage==="black"){if(editUser!==null&&A.detail)bindUserEdit();else if(viewUser!==null&&A.detail)bindUserView();else if(viewRoster)bindRosterView();else if(viewUser===null)(setPage==="dormant"?bindDormant():setPage==="black"?bindBlack():bindStatus())}
   if(setPage==="block")bindBlock2();
   if(setPage==="pw")bindSet();

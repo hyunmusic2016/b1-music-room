@@ -95,4 +95,23 @@ select test.ok(not ((public.info_pages())->'pages'->'room'->'sections'->0 ? 'hid
 select test.ok((public.admin_set_info_page('room', '[{"t":"","b":"","hide":true}]'::jsonb))->>'ok' = 'false', '빈 칸은 숨겨도 버림(053)');
 select public.admin_set_info_page('room', null);
 reset role; reset request.jwt.claims;
-select '모든 시험 통과(048~053)' as 결과;
+-- 054: 글자 모양
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((public.admin_set_info_page('room', '[{"t":"가","b":"한 줄 둘째 줄","lh":1.8,"fs":120},{"t":"나","b":"다","lh":"x","fs":100}]'::jsonb, '{"ls":0.03,"fs":110,"tfs":100}'::jsonb))->>'ok' = 'true', '글자 모양과 함께 저장(054)');
+select test.ok(((public.info_pages())->'pages'->'room'->'sections'->0->>'lh')::numeric = 1.8 and ((public.info_pages())->'pages'->'room'->'sections'->0->>'fs')::numeric = 120, '칸 행간·글씨 저장(054)');
+select test.ok(not ((public.info_pages())->'pages'->'room'->'sections'->1 ? 'lh') and not ((public.info_pages())->'pages'->'room'->'sections'->1 ? 'fs'), '잘못된 행간·기본 글씨는 넣지 않음(054)');
+select test.ok(((public.info_pages())->'pages'->'room'->'style'->>'ls')::numeric = 0.03 and ((public.info_pages())->'pages'->'room'->'style'->>'fs')::numeric = 110 and not ((public.info_pages())->'pages'->'room'->'style' ? 'tfs'), '창 글자 모양 저장(기본값은 뺌)(054)');
+select test.ok(((public.info_pages())->'pages'->'room'->'sections'->0->>'b') like '%' || chr(8232) || '%', '상자 안 줄바꿈 글자 그대로 저장(054)');
+select test.ok((public.admin_set_info_page('room', '[{"t":"가","b":"나","lh":9,"fs":999}]'::jsonb, '{"ls":5,"fs":10}'::jsonb))->>'ok' = 'true', '범위 밖 값도 저장(범위 안으로)(054)');
+select test.ok(((public.info_pages())->'pages'->'room'->'sections'->0->>'lh')::numeric = 2.5 and ((public.info_pages())->'pages'->'room'->'sections'->0->>'fs')::numeric = 160 and ((public.info_pages())->'pages'->'room'->'style'->>'ls')::numeric = 0.1 and ((public.info_pages())->'pages'->'room'->'style'->>'fs')::numeric = 70, '범위 안으로 맞춤(054)');
+select test.ok((public.admin_set_info_page('room', '[{"t":"가","b":"나"}]'::jsonb))->>'ok' = 'true', '글자 모양 없이 2인자로도 저장(054)');
+select test.ok(not ((public.info_pages())->'pages'->'room' ? 'style'), '글자 모양 없이 저장하면 style 없음(054)');
+select public.admin_set_info_page('room', null);
+select test.ok((public.admin_set_lobby_info('{"boxes":[{"type":"text","title":"t","body":"b","lh":1.6},{"type":"text","title":"u","body":"c"}],"ls":0,"fs":120,"tfs":130}'::jsonb))->>'ok' = 'true', '로비 글자 모양 저장(054)');
+select test.ok(((public.lobby_info())->>'fs')::numeric = 120 and ((public.lobby_info())->>'tfs')::numeric = 130 and ((public.lobby_info())->'boxes'->0->>'lh')::numeric = 1.6 and not ((public.lobby_info())->'boxes'->1 ? 'lh'), '로비 전체·제목 글씨, 상자 행간(054)');
+select public.admin_set_lobby_info(null);
+reset role; reset request.jwt.claims;
+set role anon; select test.ok(((public.lobby_info())->>'fs')::numeric = 100, '로비 기본 글씨 100(054)'); reset role;
+select test.ok(not has_function_privilege('anon', 'public.admin_set_info_page(text, jsonb, jsonb)', 'execute'), '익명은 안내 글 저장 못 함(054)');
+select test.ok(not exists (select 1 from pg_proc where proname = 'admin_set_info_page' and pronargs = 2), '옛 2인자 함수 없음(054)');
+select '모든 시험 통과(048~054)' as 결과;
