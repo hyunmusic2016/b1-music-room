@@ -144,6 +144,6 @@ grant execute on function public.admin_set_info_page(text, jsonb, jsonb) to auth
 grant execute on function public.lobby_info() to anon, authenticated;
 grant execute on function public.admin_set_lobby_info(jsonb) to authenticated;
 
--- 확인: 아래 두 숫자가 모두 1이면 정상입니다(새 함수가 있고, 옛 2인자 함수는 없음 → 0이어야 할 칸은 마지막 숫자).
+-- 확인: new_fn = 1, old_fn_should_be_0 = 0 이면 정상입니다(새 3인자 함수가 있고 옛 2인자 함수는 없음).
 select (select count(*) from pg_proc where proname = 'admin_set_info_page' and pronargs = 3) as new_fn,
        (select count(*) from pg_proc where proname = 'admin_set_info_page' and pronargs = 2) as old_fn_should_be_0;
