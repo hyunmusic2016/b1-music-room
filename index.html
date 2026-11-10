@@ -89,6 +89,7 @@ input:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px soli
 .stuchk.no .ic{background:var(--danger)}.stuchk.no b{color:var(--danger)}
 .rtag{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:999px;border:1px solid var(--stu-btn);color:var(--stu-text);vertical-align:1px;white-space:nowrap}
 .pwnote small{display:block;font-size:12px;color:var(--sub);margin-top:4px}
+.pwrow{display:flex;align-items:center;gap:10px}.pwrow b{flex:1;min-width:0;font-size:15px;letter-spacing:-.03em}.pwnote .pwi{width:24px;height:24px;font-size:13px;color:var(--stu-text)} /* v0.67.1: 보호자 번호·문의 안내는 ⓘ를 눌러야 보임 */
 .btn{min-height:50px;width:100%;border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;cursor:pointer;margin-top:14px}
 .btn.ext{background:var(--ext-btn);color:var(--ext-ink)}
 .btn.stu{background:var(--stu-btn);color:#fff}
@@ -616,7 +617,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.67.0";
+const APP_VERSION="v0.67.1";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -871,12 +872,13 @@ function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
    '<div><label for="rPw">비밀번호 4자리</label><input type="password" id="rPw" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="숫자 4자리"></div></div>'+
    (EXT?'':'<p class="hint warn" style="margin:6px 0 0">원생 본명을 입력하십시오.</p>')+ // 이름 칸 바로 아래 고정(v0.59.9)
    '<div id="rBadge"></div>'+
-   (EXT?'':'<div class="pwnote"><span class="pwk" aria-hidden="true">🔑</span><div><b>비밀번호 = 본인 휴대전화 번호 뒤 4자리</b><span>본인 휴대전화가 없으면 보호자 휴대전화 번호 뒤 4자리를 입력하십시오.</span><small>비밀번호가 맞지 않으면 학원으로 문의하십시오. ('+ASK_WHERE+')</small></div></div>')+
+   (EXT?'':'<div class="pwnote"><span class="pwk" aria-hidden="true">🔑</span><div style="flex:1;min-width:0"><div class="pwrow"><b>비밀번호 = 본인 휴대전화 번호 뒤 4자리</b><button type="button" class="info-i pwi" id="pwI" aria-label="비밀번호 안내 더 보기" aria-expanded="false">i</button></div><div class="hidden" id="pwH"><span>본인 휴대전화가 없으면 보호자 휴대전화 번호 뒤 4자리를 입력하십시오.</span><small>비밀번호가 맞지 않으면 학원으로 문의하십시오. ('+ASK_WHERE+')</small></div></div></div>')+
    ('<label class="check"><input type="checkbox" id="rC"><span>예약 확인·변경·취소를 위한 이름·비밀번호 수집에 동의합니다. 예약 기록은 이용일로부터 '+KEEP_DAYS+'일 뒤 삭제됩니다.</span></label>')+
    '<div id="rMsg"></div><button class="btn'+(EXT?' ext':' stu')+'" id="rGo">예약하기</button>';
   $("#bg").classList.add("open");$("#rName").focus();
   $("#backCh").onclick=openChooser;
   if(EXT)$("#firstGo").onclick=()=>openFirstGuide(h);
+  if(!EXT)$("#pwI").onclick=()=>{const open=$("#pwH").classList.toggle("hidden")===false;$("#pwI").setAttribute("aria-expanded",open);placeSheet()};
   /* 이름과 비밀번호가 모두 맞을 때만 서버가 상품 정보를 줍니다(결정 사항 2). 입력이 멈추면 한 번 물어봅니다. */
   let bt=null,bseq=0;
   let prodWarn="",prodWarnKind="",warnOk=false; // 이 날짜가 상품 기간 뒤면 안내 문구(완료 화면에도 다시 보여 줌)
