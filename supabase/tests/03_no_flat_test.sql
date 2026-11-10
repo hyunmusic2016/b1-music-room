@@ -137,4 +137,13 @@ select test.ok(((public.info_pages())->'style'->>'gap')::numeric = 40, '간격 �
 select public.admin_set_info_style('{"gap":12}'::jsonb);
 select test.ok((public.info_pages())->'style' = '{}'::jsonb, '기본 간격이면 지움(056)');
 reset role; reset request.jwt.claims;
-select '모든 시험 통과(048~056)' as 결과;
+-- 057: 가격 글씨
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((public.admin_set_info_style('{"pfs":130,"gap":12}'::jsonb))->>'ok' = 'true', '가격 글씨 저장(057)');
+select test.ok(((public.info_pages())->'style'->>'pfs')::numeric = 130 and not ((public.info_pages())->'style' ? 'gap'), '가격 글씨 저장·기본값 뺌(057)');
+select public.admin_set_info_style('{"pfs":999}'::jsonb);
+select test.ok(((public.info_pages())->'style'->>'pfs')::numeric = 160, '가격 글씨 범위 맞춤(057)');
+select public.admin_set_info_style(null);
+select test.ok((public.info_pages())->'style' = '{}'::jsonb, 'null이면 지움(057)');
+reset role; reset request.jwt.claims;
+select '모든 시험 통과(048~057)' as 결과;

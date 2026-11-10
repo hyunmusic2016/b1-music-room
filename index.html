@@ -142,15 +142,15 @@ textarea{resize:vertical;line-height:1.5;margin-bottom:8px} /* 지금은 아니�
 .onehr span{display:block;font-size:12px;margin-top:1px}
 .plcard .plwho{box-shadow:none}.plcard .plsubt{margin-top:4px}.plcard .ich{margin-bottom:2px}
 .plwho{margin:10px 0 0}.plwho+.plwho{margin-top:22px}
-.plwhot{font-size:16px;font-weight:800;margin-bottom:2px}.plwhot small{display:block;font-size:12px;font-weight:600;margin-top:2px}
+.plwhot{font-size:calc(16px * var(--pf,1));font-weight:800;margin-bottom:2px}.plwhot small{display:block;font-size:12px;font-weight:600;margin-top:2px}
 .plwhot+.plrow{border-top:0}
-.plsubt{font-size:16px;font-weight:800;margin:12px 4px 0}
-.plsubn{margin:2px 4px 0;font-size:13.5px;color:var(--sub)}.plsubn b{color:var(--ink)}
-.plexpt{font-size:16px;font-weight:800;margin:26px 4px 0;padding-top:14px;border-top:1px dashed var(--line)}
-.plrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-top:1px solid var(--line);padding:10px 0}
+.plsubt{font-size:calc(16px * var(--pf,1));font-weight:800;margin:12px 4px 0}
+.plsubn{margin:2px 4px 0;font-size:calc(13.5px * var(--pf,1));color:var(--sub)}.plsubn b{color:var(--ink)}
+.plexpt{font-size:calc(16px * var(--pf,1) * var(--tf,1));font-weight:800;margin:26px 4px 0;padding-top:14px;border-top:1px dashed var(--line)}
+.plrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-top:1px solid var(--line);padding:calc(var(--igh,6px) + 4px) 0}
 .plrow:first-of-type{border-top:0}
-.plrow b{font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.plrow>b{font-weight:800} /* 가격 글씨 한 단계 굵게(v0.60.5) */
+.plrow b{font-size:calc(17px * var(--pf,1));font-variant-numeric:tabular-nums;white-space:nowrap}
+.plrow>b{font-weight:800;font-size:calc(17px * var(--pf,1) * var(--ppf,1))} /* 가격 글씨 한 단계 굵게(v0.60.5) */
 .plrow.pick{width:100%;background:none;border:0;border-top:1px solid var(--line);font:inherit;color:var(--ink);text-align:left;cursor:pointer;border-radius:8px;padding:10px 6px}
 .plrow.pick:first-of-type{border-top:0}
 .plrow.pick:hover:not(:disabled),.plrow.pick:focus-visible{background:var(--line)}
@@ -649,7 +649,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.72.1";
+const APP_VERSION="v0.72.2";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1352,6 +1352,7 @@ async function openPriceSheet(){
   if(!feeHtml&&!passHtml)h+='<p class="hint">이용료가 아직 등록되지 않았습니다. 관리자에게 문의하십시오. ('+ASK_WHERE+')</p>';
   if(pi&&pi.ok&&pi.number)h+=group("입금 계좌","🏦",payBoxHtml(Object.assign({},pi,{fee:""})));
   h+='<p class="hint" style="text-align:center;margin-top:14px">이용권 구매와 문의는 관리자에게 하십시오.</p><button class="btn askbtn" id="plAsk" style="margin-top:6px">📞 관리자 문의</button>'; // v0.68.1: 맨 아래 [관리자 문의](뒤로 → 이용료 안내)
+  $("#plBody").setAttribute("style",infoThemeStyle("price")+pageStyleCss(infoPageStyle())); // v0.72.2: 안내 글 변경의 글자 모양을 이용료 보기 창 전체에도
   $("#plBody").innerHTML=h;bindPayCopy($("#plBody"));
   $("#plAsk").onclick=()=>openAskSheet(openPriceSheet);
 }
@@ -1673,8 +1674,8 @@ function stRow(l,cls,id,min,max,step,v,def,u){
 document.addEventListener("input",e=>{const t=e.target;if(t.classList&&t.classList.contains("strng")){const o=t.parentNode.querySelector("output");if(o)o.textContent=stFmt(t)}});
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest(".stdef");if(!b)return;const t=b.parentNode.querySelector(".strng");if(!t)return;t.value=t.dataset.def;t.dispatchEvent(new Event("input",{bubbles:true}))});
 function stNum(v,lo,hi){v=+v;return isFinite(v)&&v!==0?Math.max(lo,Math.min(hi,v)):null}
-function pageStyleCss(st){st=st||{};const ls=stNum(st.ls,-.1,.1),fs=stNum(st.fs,70,160),tf=stNum(st.tfs,70,160),g=st.gap!=null&&st.gap!==""&&isFinite(+st.gap)?Math.max(0,Math.min(40,+st.gap)):null;
-  return (g!=null&&g!==12?';--igh:'+(g/2)+'px':'')+(ls?';letter-spacing:'+ls+'em':'')+(fs&&fs!==100?';--pf:'+fs/100:'')+(tf&&tf!==100?';--tf:'+tf/100:'')}
+function pageStyleCss(st){st=st||{};const ls=stNum(st.ls,-.1,.1),fs=stNum(st.fs,70,160),tf=stNum(st.tfs,70,160),pp=stNum(st.pfs,70,160),g=st.gap!=null&&st.gap!==""&&isFinite(+st.gap)?Math.max(0,Math.min(40,+st.gap)):null;
+  return (g!=null&&g!==12?';--igh:'+(g/2)+'px':'')+(ls?';letter-spacing:'+ls+'em':'')+(fs&&fs!==100?';--pf:'+fs/100:'')+(tf&&tf!==100?';--tf:'+tf/100:'')+(pp&&pp!==100?';--ppf:'+pp/100:'')}
 function secStyleCss(x,em){const lh=stNum(x&&x.lh,1,2.5),fs=stNum(x&&x.fs,70,160);
   return (lh?'--lh:'+lh+';line-height:'+lh+';':'')+(fs&&fs!==100?(em?'font-size:'+fs/100+'em;':'--sf:'+fs/100+';'):'')}
 let infoStyleG={}; // v0.72.0(서버 055): 모든 안내 창 공용 글자 모양(info_pages().style)
@@ -2880,12 +2881,12 @@ function infoEditHtml(){
     return (infoSaved===null?'<div class="msg err">서버에서 안내 글을 불러오지 못했습니다. Supabase에 035를 실행했는지 확인하십시오.</div>':'')+
       (()=>{const line=kk=>{const v=infoSaved&&infoSaved[kk];return '<div class="item"><button type="button" data-ik="'+kk+'" class="ilist"><span style="flex:1;min-width:0"><b>'+esc(infoListName(kk))+'</b><small class="hint" style="display:block;margin:2px 0 0">'+(v?'✎ '+esc(priceDate(v.updated_at)||v.updated_at)+' 저장한 글':'기본 글')+'</small></span><span class="chev" aria-hidden="true">›</span></button></div>'};
         // v0.68.6: "처음 오시는 분 필독!"은 맨 위 따로 된 상자로(사용자 요청), 나머지는 그 아래 한 상자
-        if(!A.infoStyle)A.infoStyle=Object.assign({ls:0,fs:100,tfs:100,gap:12},infoStyleG||{});const S=A.infoStyle;
+        if(!A.infoStyle)A.infoStyle=Object.assign({ls:0,fs:100,tfs:100,gap:12,pfs:100},infoStyleG||{});const S=A.infoStyle;
         // v0.72.0(서버 055): 글자 모양은 모든 안내 창에 한꺼번에(사용자 요청)
         const sc='<div class="card"><div class="part" style="margin-top:0">글자 모양 <small class="hint">모든 안내 창에 함께 적용</small></div>'+
-          stRow("자간","","isLs",-.1,.1,.005,+S.ls||0,0,"em")+stRow("전체 글씨","","isFs",70,160,5,+S.fs||100,100,"%")+stRow("칸 제목 글씨","","isTfs",70,160,5,+S.tfs||100,100,"%")+stRow("줄 상자 간격","","isGap",0,40,2,S.gap!=null&&isFinite(+S.gap)?+S.gap:12,12,"px")+
-          '<p class="hint" style="margin:6px 0 0">처음 오시는 분 필독!·이용권 안내·오시는 길·시설 안내·재원생·일반회원 안내 창에 모두 같이 적용됩니다. 줄 상자 간격은 ✓ 항목과 항목 사이 간격입니다. 글자 행간·칸 글씨는 글마다 칸 아래에서 정합니다.</p>'+
-          '<div id="isMsg"></div><div class="btn2" style="margin-top:8px"><button class="btn" id="isSave">글자 모양 저장</button><button class="btn ghost" id="isPrev">미리 보기</button></div></div>';
+          stRow("자간","","isLs",-.1,.1,.005,+S.ls||0,0,"em")+stRow("전체 글씨","","isFs",70,160,5,+S.fs||100,100,"%")+stRow("칸 제목 글씨","","isTfs",70,160,5,+S.tfs||100,100,"%")+stRow("줄 상자 간격","","isGap",0,40,2,S.gap!=null&&isFinite(+S.gap)?+S.gap:12,12,"px")+stRow("가격 글씨","","isPfs",70,160,5,+S.pfs||100,100,"%")+
+          '<p class="hint" style="margin:6px 0 0">처음 오시는 분 필독!·오시는 길·시설 안내·재원생·일반회원 안내 창과 <b>[이용료 보기] 창 전체</b>에 모두 같이 적용됩니다. 가격 글씨는 [이용료 보기]의 금액(7,000원 등)만 따로 키웁니다. 줄 상자 간격은 ✓ 항목과 항목 사이 간격입니다. 글자 행간·칸 글씨는 글마다 칸 아래에서 정합니다.</p>'+
+          '<div id="isMsg"></div><div class="btn2" style="margin-top:8px"><button class="btn" id="isSave">글자 모양 저장</button><button class="btn ghost" id="isPrev">미리 보기</button></div><button class="btn ghost" id="isPrevP" style="margin-top:8px">[이용료 보기] 미리 보기</button></div>';
         return sc+'<div class="card">'+line("first")+'</div><div class="card">'+INFO_KEYS.filter(([kk])=>kk!=="first").map(([kk])=>line(kk)).join("")+'</div>'})()+
       // v0.68.3: 로비 PC 안내는 설정 메뉴에서 빼서 안내 글 변경 안의 따로 된 상자로(사용자 요청)
       '<div class="card"><div class="item"><button type="button" data-sp="lobby" class="ilist"><span style="flex:1;min-width:0"><b>학원 로비 PC 안내</b><small class="hint" style="display:block;margin:2px 0 0">room.hyunmusic.com/academy/ 오른쪽 안내 상자</small></span><span class="chev" aria-hidden="true">›</span></button></div></div>';
@@ -2955,14 +2956,15 @@ function readInfoDraft(){const d=A.infoDraft||[];return [...document.querySelect
 function bindInfoEdit(){
   if(A.infoKey&&!$("#ieSave"))return;
   if(!A.infoKey&&$("#isSave")){const S=A.infoStyle;
-    [["isLs","ls"],["isFs","fs"],["isTfs","tfs"],["isGap","gap"]].forEach(([id,f])=>$("#"+id).addEventListener("input",e=>{S[f]=+e.target.value}));
-    $("#isPrev").onclick=()=>{A.infoStylePv=Object.assign({},S);openInfo("first",infoSections("first"))}; // 창을 닫으면 미리 보기 글자 모양을 지움(closeSheet)
-    $("#isSave").onclick=async()=>{$("#isSave").disabled=true;const r=await rpc("admin_set_info_style",{p:{ls:+S.ls||0,fs:+S.fs||100,tfs:+S.tfs||100,gap:S.gap!=null?+S.gap:12}});
+    [["isLs","ls"],["isFs","fs"],["isTfs","tfs"],["isGap","gap"],["isPfs","pfs"]].forEach(([id,f])=>$("#"+id).addEventListener("input",e=>{S[f]=+e.target.value}));
+    $("#isPrev").onclick=()=>{A.infoStylePv=Object.assign({},S);openInfo("first",infoSections("first"))};
+    $("#isPrevP").onclick=()=>{A.infoStylePv=Object.assign({},S);openPriceSheet()}; // 창을 닫으면 미리 보기 글자 모양을 지움(closeSheet)
+    $("#isSave").onclick=async()=>{$("#isSave").disabled=true;const r=await rpc("admin_set_info_style",{p:{ls:+S.ls||0,fs:+S.fs||100,tfs:+S.tfs||100,gap:S.gap!=null?+S.gap:12,pfs:+S.pfs||100}});
       if(r.auth){adminExpired();return}
       if(!$("#isSave"))return;$("#isSave").disabled=false;
       if(!r.ok){$("#isMsg").innerHTML='<div class="msg err">'+esc(r.code==="PGRST202"?"글자 모양은 Supabase에 055를 실행해야 저장됩니다.":r.msg)+'</div>';return}
-      infoStyleG=r.style&&typeof r.style==="object"?r.style:{};const old=+S.gap!==12&&infoStyleG.gap==null; // 056 실행 전 서버는 간격을 버림
-      $("#isMsg").innerHTML='<div class="msg ok">저장했습니다. 모든 안내 창에 바로 반영됩니다.</div>'+(old?'<div class="msg err">줄 상자 간격은 저장되지 않았습니다. Supabase에 056을 실행하십시오.</div>':'')}}
+      infoStyleG=r.style&&typeof r.style==="object"?r.style:{};const old=(+S.gap!==12&&infoStyleG.gap==null)?"056":(+S.pfs!==100&&infoStyleG.pfs==null)?"057":""; // 실행 전 서버는 새 칸을 버림
+      $("#isMsg").innerHTML='<div class="msg ok">저장했습니다. 모든 안내 창에 바로 반영됩니다.</div>'+(old?'<div class="msg err">'+(old==="056"?'줄 상자 간격':'가격 글씨')+'은 저장되지 않았습니다. Supabase에 '+old+'을 실행하십시오.</div>':'')}}
   if(!A.infoKey){window.infoLeave=null;document.querySelectorAll("[data-ik]").forEach(b=>b.onclick=()=>{A.infoKey=b.dataset.ik;A.infoDraft=null;A.infoStyle=null;A.infoMsg="";A.infoSel={};renderAdmin();window.scrollTo(0,0)});return}
   const k=A.infoKey,redraw=()=>{renderAdmin()};
   const norm=a=>JSON.stringify(a.map(x=>({t:x.t||"",b:x.b||"",i:(x.imgs||[]).join(","),z:layOf(x).join(","),h:!!x.hide,l:stNum(x.lh,1,2.5)||"",f:stNum(x.fs,70,160)||""})));
