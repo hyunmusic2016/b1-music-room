@@ -421,9 +421,16 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .fxb:hover{border-color:var(--accent-strong)}.fxb:active{transform:scale(.96)}
 .fxsep{width:1px;height:22px;background:var(--line);margin:0 2px}
 .fxins{flex:none!important;max-width:170px;width:auto!important;min-height:34px!important;margin:0!important;padding:0 8px!important;font-size:13px!important;border-radius:8px!important}
-.fxprev{margin-top:10px}.fxprevh{font-size:12px;font-weight:700;color:var(--sub);margin:0 0 4px}
-.fxpv{border:1px dashed var(--line);border-radius:12px;padding:6px 8px 8px;background:var(--bg)}.fxpv .ibody .icard{margin:0}
-.fxpv.lbprev{width:auto;max-width:330px;--lfs:14px}
+.fxwrap textarea.fxsrc{display:none!important}
+.fxitems{display:flex;flex-direction:column}
+.fxit{display:flex;align-items:flex-start;gap:6px;padding:4px 6px 4px 8px;border-top:1px dashed var(--line)}.fxit:first-child{border-top:0}
+.fxmk{flex:none;width:16px;padding-top:11px;font-weight:900;color:var(--accent-text);text-align:center;font-size:13px}
+.fxit.blank .fxmk{opacity:.25}.fxit.hr .fxmk{color:var(--sub)}
+.fxwrap .fxit textarea.fxi{flex:1;min-width:0;width:auto;min-height:40px;padding:8px 6px;resize:none;overflow:hidden;background:transparent;border-radius:8px!important}
+.fxwrap .fxit textarea.fxi:focus{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.fxit.blank textarea.fxi{min-height:30px;padding:4px 6px}
+.fxdel{flex:none;width:32px;height:32px;margin-top:4px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--danger);font:inherit;font-size:13px;cursor:pointer}
+.fxadd{display:block;width:100%;border:0;border-top:1px solid var(--line);background:var(--bg);color:var(--accent-text);font:inherit;font-weight:700;font-size:14px;min-height:40px;cursor:pointer}
 .card.lbe.off{opacity:.62;border-style:dashed}
 .txred{color:#c0392b;font-weight:700}.txhl{background:#ffe97a;color:inherit;padding:0 .15em;border-radius:3px}
 .txbig{font-size:1.25em;font-weight:800}.txsm{font-size:.85em;opacity:.85}
@@ -633,7 +640,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.69.0";
+const APP_VERSION="v0.69.1";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1462,6 +1469,42 @@ function fxBarHtml(kind){
     '<i class="fxsep" aria-hidden="true"></i>'+B("link","🔗 링크","링크 넣기")+
     '<select class="fxins" aria-label="넣기"><option value="">＋ 넣기</option><option value="{이용권 기간}">이용권 기간</option><option value="{추가 이용료}">재원생 추가 이용료</option><option value="{주소}">예약 주소</option>'+(kind==="info"?'<option value="{일반회원 등록하기}">[일반회원 등록하기] 버튼</option>':'')+'</select></div>';
 }
+/* 내용을 줄(항목)마다 따로 된 상자로 편집(v0.69.1). 저장되는 글은 그대로: 안내 글은 줄을 "\n"으로, 로비는 항목을 빈 줄 "\n\n"으로 이어 숨긴 원본 칸(.fxsrc)에 넣음 */
+function fxSplit(kind,b){b=String(b||"").replace(/\r/g,"");
+  if(kind==="lobby"){const a=b.split(/\n\s*\n/).map(x=>x.replace(/^\n+|\n+$/g,"")).filter(x=>x.trim());return a.length?a:[""]}
+  const a=b.split("\n");while(a.length>1&&!a[a.length-1].trim())a.pop();return a.length?a:[""]}
+function fxRowHtml(kind,v){const blank=kind==="info"&&!v.trim(),hr=v.trim()==="---";
+  return '<div class="fxit'+(blank?' blank':'')+(hr?' hr':'')+'"><span class="fxmk" aria-hidden="true">'+(hr?'―':kind==="info"?'✓':'•')+'</span>'+
+    '<textarea class="fxi" rows="1" placeholder="'+(kind==="info"?'빈 줄 (칸 띄우기) · 글을 쓰면 항목이 됩니다':'항목 내용')+'" aria-label="'+(kind==="info"?'한 줄':'항목')+'">'+esc(v)+'</textarea>'+
+    '<button type="button" class="fxdel" aria-label="이 상자 삭제" title="이 상자 삭제">✕</button></div>'}
+function fxItemsHtml(kind,b){return '<div class="fxitems" data-kind="'+kind+'">'+fxSplit(kind,b).map(v=>fxRowHtml(kind,v)).join("")+'</div><button type="button" class="fxadd">+ '+(kind==="info"?'줄':'항목')+' 상자 추가</button>'}
+function fxAuto(t){t.style.height="auto";t.style.height=(t.scrollHeight+2)+"px"}
+function fxAutoAll(){requestAnimationFrame(()=>document.querySelectorAll(".fxi").forEach(fxAuto))}
+function fxSync(w){const box=w.querySelector(".fxitems"),src=w.querySelector(".fxsrc");if(!box||!src)return;const kind=box.dataset.kind;
+  const vals=[...box.querySelectorAll(".fxi")].map(t=>kind==="lobby"?t.value.replace(/\n\s*\n/g,"\n"):t.value);
+  let out=kind==="lobby"?vals.filter(v=>v.trim()).join("\n\n"):vals.join("\n").replace(/\n+$/,"");
+  if(src.value!==out){src.value=out;src.dispatchEvent(new Event("input",{bubbles:true}))}
+  box.querySelectorAll(".fxit").forEach(r=>{const v=r.querySelector(".fxi").value;r.classList.toggle("blank",kind==="info"&&!v.trim());r.classList.toggle("hr",v.trim()==="---");r.querySelector(".fxmk").textContent=v.trim()==="---"?"―":kind==="info"?"✓":"•"})}
+function fxRows(w,vals,fi,caret){const box=w.querySelector(".fxitems"),kind=box.dataset.kind;if(!vals.length)vals=[""];
+  box.innerHTML=vals.map(v=>fxRowHtml(kind,v)).join("");const ts=box.querySelectorAll(".fxi");ts.forEach(fxAuto);fxSync(w);
+  if(fi!=null){const t=ts[Math.max(0,Math.min(fi,ts.length-1))];if(t){t.focus();const c=caret==null?t.value.length:caret;t.setSelectionRange(c,c);w._last=t}}}
+const fxVals=w=>[...w.querySelectorAll(".fxi")].map(t=>t.value),fxIdx=t=>[...t.closest(".fxitems").querySelectorAll(".fxi")].indexOf(t);
+document.addEventListener("focusin",e=>{const t=e.target;if(t.classList&&t.classList.contains("fxi"))t.closest(".fxwrap")._last=t});
+document.addEventListener("input",e=>{const t=e.target;if(!t.classList||!t.classList.contains("fxi"))return;const w=t.closest(".fxwrap"),kind=w.querySelector(".fxitems").dataset.kind;
+  if(kind==="info"&&t.value.includes("\n")){const i=fxIdx(t),v=fxVals(w),parts=t.value.split("\n");v.splice(i,1,...parts);fxRows(w,v,i+parts.length-1,parts[parts.length-1].length);return} // 붙여 넣은 여러 줄은 상자 여러 개로
+  fxAuto(t);fxSync(w)});
+document.addEventListener("keydown",e=>{const t=e.target;if(!t.classList||!t.classList.contains("fxi")||e.isComposing)return;const w=t.closest(".fxwrap"),kind=w.querySelector(".fxitems").dataset.kind,i=fxIdx(t),v=fxVals(w);
+  if(e.key==="Enter"&&kind==="info"){e.preventDefault();const c=t.selectionStart;v.splice(i,1,t.value.slice(0,c),t.value.slice(t.selectionEnd));fxRows(w,v,i+1,0);return} // Enter = 아래에 새 상자
+  if(e.key==="Backspace"&&t.selectionStart===0&&t.selectionEnd===0&&!t.value&&v.length>1){e.preventDefault();v.splice(i,1);fxRows(w,v,i-1);return}}); // 빈 상자에서 지우기 = 상자 삭제
+document.addEventListener("click",e=>{const d=e.target.closest&&e.target.closest(".fxdel,.fxadd");if(!d)return;const w=d.closest(".fxwrap");
+  if(d.classList.contains("fxdel")){const t=d.parentNode.querySelector(".fxi"),i=fxIdx(t),v=fxVals(w);if(t.value.trim()&&!confirm("이 상자를 지우시겠습니까?"))return;v.splice(i,1);fxRows(w,v,Math.max(0,i-1))}
+  else{const v=fxVals(w);v.push("");fxRows(w,v,v.length-1)}});
+function fxItemCmd(w,fx,val){ // 줄 상자 편집기에서 [빈 줄]·[구분선]·[넣기 일반회원 등록하기]는 상자를 하나 더 만듦
+  const t=w._last&&w.contains(w._last)?w._last:w.querySelector(".fxi"),i=t?fxIdx(t):-1,v=fxVals(w),at=i<0?v.length:i+1;
+  if(fx==="gap"){v.splice(at,0,"");return fxRows(w,v,at)}
+  if(fx==="hr"){v.splice(at,0,"---");return fxRows(w,v,at)}
+  if(fx==="ins"&&/^\{\s*일반회원/.test(val)){v.splice(at,0,val);return fxRows(w,v,at)}
+  return t?fxApply(t,fx,val):null}
 function fxApply(ta,fx,val){
   const v=ta.value,s=ta.selectionStart,e=ta.selectionEnd,sel=v.slice(s,e);
   const put=(rs,re,rep,ns,ne)=>{ta.focus();ta.setSelectionRange(rs,re);let ok=false;try{ok=document.execCommand("insertText",false,rep)}catch(x){}
@@ -1484,11 +1527,12 @@ function fxApply(ta,fx,val){
     const t=(sel||prompt("링크에 보일 글자를 넣으십시오","여기를 누르십시오")||"").replace(/[\[\]\n]/g,"");if(!t)return;return ins("["+t+"]("+url+")")}
 }
 document.addEventListener("mousedown",e=>{if(e.target.closest&&e.target.closest(".fxb"))e.preventDefault()}); // 누를 때 글 칸의 고른 글자가 풀리지 않게
-document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-fx]");if(!b)return;const ta=b.closest(".fxwrap")&&b.closest(".fxwrap").querySelector("textarea");if(ta)fxApply(ta,b.dataset.fx)});
-document.addEventListener("change",e=>{const x=e.target.closest&&e.target.closest(".fxins");if(!x||!x.value)return;const val=x.value;x.value="";const ta=x.closest(".fxwrap").querySelector("textarea");if(ta)fxApply(ta,"ins",val)});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-fx]");if(!b)return;const w=b.closest(".fxwrap");if(!w)return;if(w.querySelector(".fxitems"))return fxItemCmd(w,b.dataset.fx);const ta=w.querySelector("textarea");if(ta)fxApply(ta,b.dataset.fx)});
+document.addEventListener("change",e=>{const x=e.target.closest&&e.target.closest(".fxins");if(!x||!x.value)return;const val=x.value;x.value="";const w=x.closest(".fxwrap");if(w.querySelector(".fxitems"))return fxItemCmd(w,"ins",val);const ta=w.querySelector("textarea");if(ta)fxApply(ta,"ins",val)});
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey&&e.key.toLowerCase()==="b"&&e.target.matches&&e.target.matches(".fxwrap textarea")){e.preventDefault();fxApply(e.target,"b")}});
+document.addEventListener("mousedown",e=>{if(e.target.closest&&e.target.closest(".fxins")){const w=e.target.closest(".fxwrap"),a=document.activeElement;if(a&&a.classList&&a.classList.contains("fxi")&&w.contains(a))w._last=a}});
 // 글 쓰는 법(안내 글·로비 공용 부분)
-function fxHelpLis(){return '<li>내용 칸 위 <b>도구 막대</b>: 글자를 고르고 <b>B</b>(굵게, Ctrl+B)·<span class="txred">가</span>(빨간 글씨)·<mark class="txhl">가</mark>(색 강조)·크게·작게를 누르면 표시가 붙고, 다시 누르면 떨어집니다. 바로 아래 <b>미리 보기</b>에 손님 화면 모양이 보입니다.</li>'+
+function fxHelpLis(){return '<li>내용은 <b>줄(항목)마다 따로 된 상자</b>에 씁니다. [+ 줄 상자 추가]로 늘리고 상자 오른쪽 [✕]로 지웁니다. 안내 글은 상자 안에서 Enter를 누르면 아래에 새 상자가 생기고, 빈 상자에서 ← 지우기를 누르면 그 상자가 지워집니다. 비워 둔 상자는 칸 띄우기(빈 줄)입니다.</li><li>내용 칸 위 <b>도구 막대</b>: 글자를 고르고 <b>B</b>(굵게, Ctrl+B)·<span class="txred">가</span>(빨간 글씨)·<mark class="txhl">가</mark>(색 강조)·크게·작게를 누르면 표시가 붙고, 다시 누르면 떨어집니다. [↵ 빈 줄]·[― 구분선]은 고른 상자 아래에 상자를 하나 더 만듭니다.</li>'+
   '<li>표시를 직접 써도 됩니다: **굵게** · !!빨간 글씨!! · ==색 강조== · ++크게++ · --작게-- · 줄 맨 앞 ! = 그 줄 전체 빨간 글씨 · "---"만 있는 줄 = 구분선 · [보일 글자](https://주소) = 링크</li>'+
   '<li>[＋ 넣기]: {이용권 기간}·{추가 이용료}는 이용료 변경에 저장된 값으로, {주소}는 room.hyunmusic.com 으로 바뀌어 보입니다.</li>'}
 const EXTREG_MARK=/^\{\s*일반회원\s*등록하기\s*\}$/; // 이 줄만 있으면 [일반회원 등록하기] 버튼(v0.51.5)
@@ -2692,8 +2736,7 @@ function lobbyEditHtml(){
     '<label>제목</label><input type="text" class="lbT" maxlength="60" placeholder="'+(b.type==="qr"?'없으면 비워 두십시오':'')+'" value="'+esc(b.title||"")+'">'+
     '<label>모양</label><div class="lbe-opt">'+(b.type==="qr"?'<b style="color:var(--ink)">QR 상자</b> (room.hyunmusic.com)':'<select class="lbS" aria-label="모양">'+LOBBY_STYLES.map(x=>'<option value="'+x[0]+'"'+(b.style===x[0]?' selected':'')+'>'+x[1]+'</option>').join("")+'</select>')+
       '<label style="display:flex;align-items:center;gap:6px;margin:0;font-weight:400">글씨 <input type="range" class="lbR" min="70" max="160" step="5" value="'+(b.scale||100)+'"><span class="lbRv">'+(b.scale||100)+'%</span></label></div>'+
-    '<label>내용</label><div class="fxwrap">'+fxBarHtml("lobby")+'<textarea class="lbB" maxlength="2000" rows="'+Math.min(12,Math.max(3,String(b.body||"").split("\n").length+1))+'">'+esc(b.body||"")+'</textarea></div>'+
-    '<div class="fxprev"><div class="fxprevh">미리 보기</div><div class="fxpv lbprev"></div></div></div>';
+    '<label>내용 <small class="hint">한 상자 = 한 항목</small></label><div class="fxwrap">'+fxBarHtml("lobby")+'<textarea class="lbB fxsrc" maxlength="2000">'+esc(b.body||"")+'</textarea>'+fxItemsHtml("lobby",b.body)+'</div></div>';
   return (A.lobbyMsg||'')+
     '<div class="card"><p class="hint" style="margin-top:0">학원 로비 PC에 켜 두는 화면 <b>room.hyunmusic.com/academy/</b> 의 오른쪽 안내 상자입니다. [저장]해야 로비 화면에 반영됩니다(로비 화면은 5분마다 새로 받아 옵니다).</p>'+
       '<a class="btn ghost" href="/academy/" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;text-decoration:none">로비 화면 새 탭으로 열기 ↗</a></div>'+
@@ -2709,10 +2752,10 @@ function lobbyEditHtml(){
 }
 function bindLobbyEdit(){
   if(!$("#lbGo"))return;
+  fxAutoAll();
   const D=A.lobbyDraft,redraw=()=>{const y=window.scrollY;A.lobbyMsg="";renderAdmin();window.scrollTo(0,y)};
   const lsTxt=v=>{v=Math.round(v*1000)/10;return (v>0?"+":"")+v+"%"};
-  const cardPv=()=>document.querySelectorAll("[data-lb]").forEach(c=>{const b=D.boxes[+c.dataset.lb],pv=c.querySelector(".fxpv");if(b&&pv){pv.style.setProperty("--lls",(+D.ls||0)+"em");pv.innerHTML=lobbyBoxHtml(Object.assign({},b,{hidden:false}))}}); // 상자마다 미리 보기(v0.69.0)
-  const prev=()=>{cardPv();const p=$("#lbPrev");p.style.setProperty("--lls",(+D.ls||0)+"em");p.innerHTML=lobbyRender(D.boxes)||'<p class="hint">보이는 상자가 없습니다.</p>';$("#lbLsv").textContent=lsTxt(+D.ls||0);$("#lbGo").disabled=!lobbyDirty();$("#lbUndo").disabled=!lobbyDirty()};
+  const prev=()=>{const p=$("#lbPrev");p.style.setProperty("--lls",(+D.ls||0)+"em");p.innerHTML=lobbyRender(D.boxes)||'<p class="hint">보이는 상자가 없습니다.</p>';$("#lbLsv").textContent=lsTxt(+D.ls||0);$("#lbGo").disabled=!lobbyDirty();$("#lbUndo").disabled=!lobbyDirty()};
   document.querySelectorAll("[data-lb]").forEach(c=>{const b=D.boxes[+c.dataset.lb];
     c.querySelector(".lbT").oninput=e=>{b.title=e.target.value;prev()};
     c.querySelector(".lbB").oninput=e=>{b.body=e.target.value;prev()};
@@ -2812,8 +2855,7 @@ function infoEditHtml(){
       '<button type="button" class="btn ghost small" data-ihd="'+i+'">'+(x.hide?'👁 보이기':'🙈 숨기기')+'</button>'+
       '<button type="button" class="btn ghost small" data-iu="'+i+'"'+(i?'':' disabled')+' aria-label="위로">↑</button><button type="button" class="btn ghost small" data-idn="'+i+'"'+(i<secs.length-1?'':' disabled')+' aria-label="아래로">↓</button><button type="button" class="btn ghost small" data-ix="'+i+'" style="color:var(--danger)">✕ 삭제</button></div>'+
       '<label>제목</label><input type="text" class="ie-t" maxlength="60" value="'+esc(x.t||"")+'">'+
-      '<label>내용</label><div class="fxwrap">'+fxBarHtml("info")+'<textarea class="ie-b" maxlength="3000" rows="'+Math.min(12,Math.max(3,String(x.b||"").split("\n").length+1))+'">'+esc(x.b||"")+'</textarea></div>'+
-      '<div class="fxprev"><div class="fxprevh">미리 보기</div><div class="fxpv" data-pvi="'+i+'"></div></div>'+
+      '<label>내용 <small class="hint">한 상자 = 한 줄(✓ 항목)</small></label><div class="fxwrap">'+fxBarHtml("info")+'<textarea class="ie-b fxsrc" maxlength="3000">'+esc(x.b||"")+'</textarea>'+fxItemsHtml("info",x.b)+'</div>'+
       '<label>사진 <small class="hint">'+((x.imgs||[]).length)+'장</small></label>'+
       '<div class="iethumbs">'+(x.imgs||[]).filter(photoOk).map((im,j)=>{const L=photoLay(x,j),sel=((A.infoSel||{})[i]||[]).includes(j);
         return '<div class="iethumb'+(sel?' sel':'')+'" data-ti="'+i+'" data-tj="'+j+'" title="누르면 고르기 · 끌어서 순서 바꾸기"><img src="'+PHOTO_BASE+im+'" alt="" draggable="false"><span class="ino2">'+(j+1)+'</span><span class="ilay">'+LAY_NAME[L]+'</span>'+(sel?'<span class="isel" aria-hidden="true">✓</span>':'')+'<button type="button" class="ix" data-ipx="'+i+':'+j+'" aria-label="사진 빼기">✕</button></div>'}).join("")+
@@ -2835,8 +2877,6 @@ function infoEditHtml(){
     // 데스크탑(v0.67.0): 오른쪽에 실제 손님 창과 같은 모양의 미리 보기가 붙어 있고, 쓰는 대로 바로 바뀜(휴대폰에서는 숨김, [미리 보기] 버튼 그대로)
     '</div><aside class="iepane" aria-label="미리 보기"><div class="iepane-h">미리 보기 <small>손님 화면에 이렇게 보입니다 · [저장]해야 반영</small></div><div class="ielive" id="ieLive"></div></aside></div>';
 }
-function fxInfoCard(c){const pv=c.querySelector(".fxpv");if(!pv)return;const t=c.querySelector(".ie-t").value.trim(),b=c.querySelector(".ie-b").value;
-  pv.innerHTML=(t||b.trim())?'<div class="ibody" style="'+infoThemeStyle(A.infoKey)+'"><div class="card info icard">'+(t?'<div class="ich"><span class="ici" aria-hidden="true">'+infoIcon(t)+'</span><h3>'+infoInline(t)+'</h3></div>':'')+infoBodyHtml(b)+'</div></div>':'<p class="hint" style="margin:0">빈 칸은 손님에게 보이지 않습니다.</p>'}
 /* 안내 글 변경 오른쪽 실시간 미리 보기(v0.67.0): 손님 안내 창(openInfo)과 같은 머리띠 + 칸. 숨긴 칸·빈 칸은 빼고 보여 줌 */
 function infoLivePaint(){
   const el=$("#ieLive"),k=A.infoKey;if(!el||!k||getComputedStyle(el.parentNode).display==="none")return;
@@ -2922,9 +2962,8 @@ function bindInfoEdit(){
   $("#ieAdd").onclick=()=>{const a=readInfoDraft();a.push({t:"",b:""});A.infoDraft=a;A.infoMsg="";redraw();const ts=document.querySelectorAll(".ie-t");if(ts.length)ts[ts.length-1].focus()};
   {let tm=null;const live=()=>{clearTimeout(tm);tm=setTimeout(infoLivePaint,150)};
    document.querySelectorAll(".card.ie .ie-t,.card.ie .ie-b,#ieTitle").forEach(x=>x.addEventListener("input",live));
-   infoLivePaint();loadLivePrice().then(()=>{infoLivePaint();document.querySelectorAll(".card.ie").forEach(fxInfoCard)})}
-  // 칸마다 미리 보기(v0.69.0): 그 칸 하나가 손님 안내 창에 보이는 모양(사진은 위 사진 칸 미리 보기에)
-  document.querySelectorAll(".card.ie").forEach(c=>{fxInfoCard(c);let tm=null;c.querySelectorAll(".ie-t,.ie-b").forEach(x=>x.addEventListener("input",()=>{clearTimeout(tm);tm=setTimeout(()=>fxInfoCard(c),120)}))}); // 사진·순서·숨기기 등은 다시 그릴 때마다 여기서 새로 그림
+   infoLivePaint();loadLivePrice().then(infoLivePaint)}
+  fxAutoAll(); // 사진·순서·숨기기 등은 다시 그릴 때마다 여기서 새로 그림
   $("#iePrev").onclick=()=>{const a=readInfoDraft();A.infoDraft=a;openInfo(k,a.filter(x=>x.t.trim()||x.b.trim()||(x.imgs||[]).length))};
   $("#ieSave").onclick=async()=>{
     const a=readInfoDraft();A.infoDraft=a;$("#ieSave").disabled=true;
