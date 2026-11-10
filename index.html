@@ -341,6 +341,10 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 /* 맨 아래 오른쪽: 버전 + 관리자 페이지 아이콘(v0.16.6) */
 /* 데스크탑 관리자 레이아웃(v0.66.0): 같은 주소, 화면 폭 1024px 이상 + 로그인한 관리자 화면에서만. 휴대폰은 그대로 */
 .adnav .adout{display:none}
+.iepane{display:none}.lbpane{display:block} /* 안내 글 실시간 미리 보기는 데스크탑에서만(v0.67.0). 로비 미리 보기는 휴대폰에서도 아래에 그대로 */
+@media (max-width:1023px){.lblay .iecol{display:contents}.lblay{display:flex;flex-direction:column}.lblay .lbsave{order:2}.lblay .lbpane{order:1}}
+.iepane-h{font-weight:800;font-size:14px;margin:0 2px 8px;color:var(--ink)}.iepane-h small{display:block;font-weight:400;color:var(--sub);font-size:12px;margin-top:2px}
+.ielive{background:var(--surface);border:1.5px solid var(--line);border-radius:18px;padding:18px 16px 22px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
 @media (min-width:1024px){
   body.admwide .wrap{max-width:1280px;padding:16px 28px 40px}
   body.admwide #v-admin>h2{display:none}
@@ -362,6 +366,10 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
   body.admwide .stseg,body.admwide #sec-block .hrow{max-width:760px}
   body.admwide .setcats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;max-width:980px}
   body.admwide .setcats>.card{margin:0}
+  body.admwide .ielay{display:grid;grid-template-columns:minmax(0,1fr) 470px;gap:24px;align-items:start}
+  body.admwide .iepane{display:block;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;overscroll-behavior:contain;border-radius:18px}
+  body.admwide .lblay{grid-template-columns:minmax(0,1fr) 380px}
+  body.admwide .lbpane .card{margin:0}
   body.admwide .ampm{display:grid;grid-template-columns:1fr 1fr;gap:22px}
   body.admwide .ampm .grid{grid-template-columns:repeat(4,1fr)}
 }
@@ -608,7 +616,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.66.0";
+const APP_VERSION="v0.67.0";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1086,7 +1094,7 @@ function openFirstGuide(h,back){ // back: 안내 창 등 다른 곳에서 열었
 }
 // 안내 글 속 [일반회원 등록하기](v0.51.5): 일반회원 예약 창의 버튼과 같은 화면, [← 뒤로]는 그 안내 창으로. 관리자 미리 보기 상자 안에서는 열지 않음
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-extreg]");if(!b)return;e.preventDefault();
-  const ib=b.closest("#infoBody"),k=ib&&ib.dataset.k;if(b.closest(".iesz-prev")||(ib&&$("#sheet").querySelector("h2 small")))return;
+  const ib=b.closest("#infoBody"),k=ib&&ib.dataset.k;if(b.closest(".iesz-prev,.ielive")||(ib&&$("#sheet").querySelector("h2 small")))return;
   openFirstGuide(null,k?()=>openInfo(k):(()=>openPriceSheet()))});
 /* 이용자 등록·수정 완료 화면(예약 확정 화면과 같은 효과, 재원생 청록 / 일반회원 테라코타) */
 function showUserDone(title,u){
@@ -1466,7 +1474,7 @@ function openLightbox(list,start){
   document.addEventListener("keydown",key,true);
   box.classList.add("open");show(false);
 }
-document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest(".iphotos a");if(!a||a.closest(".iesz-prev"))return;
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest(".iphotos a");if(!a||a.closest(".iesz-prev,.ielive"))return;
   e.preventDefault();const all=[...a.parentNode.querySelectorAll("a")];openLightbox(all.map(x=>x.href),all.indexOf(a))});
 // 사진마다 배치(v0.43.13, 서버 041): '1l' 한 줄 1장·크게 / '1m' 1장·보통 / '1s' 1장·작게 / '2' 한 줄 2장 / '3' 한 줄 3장. 예전 칸 전체 설정(size·cols)도 읽음
 const LAY_OK=["1l","1m","1s","2","3"];
@@ -2617,14 +2625,15 @@ function lobbyEditHtml(){
   return (A.lobbyMsg||'')+
     '<div class="card"><p class="hint" style="margin-top:0">학원 로비 PC에 켜 두는 화면 <b>room.hyunmusic.com/academy/</b> 의 오른쪽 안내 상자입니다. [저장]해야 로비 화면에 반영됩니다(로비 화면은 5분마다 새로 받아 옵니다).</p>'+
       '<a class="btn ghost" href="/academy/" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;text-decoration:none">로비 화면 새 탭으로 열기 ↗</a></div>'+
-    '<div class="card"><div class="part" style="margin-top:0">안내 상자</div>'+D.boxes.map(box).join("")+
+    '<div class="ielay lblay"><div class="iecol"><div class="card"><div class="part" style="margin-top:0">안내 상자</div>'+D.boxes.map(box).join("")+
       '<div class="btn2"><button type="button" class="btn ghost" id="lbAddT">+ 글 상자 추가</button>'+(D.boxes.some(b=>b.type==="qr")?'':'<button type="button" class="btn ghost" id="lbAddQ">+ QR 상자 추가</button>')+'</div>'+
       '<div class="lbe-opt" style="margin-top:12px"><label style="display:flex;align-items:center;gap:6px">전체 자간 <input type="range" id="lbLs" min="-0.1" max="0.05" step="0.005" value="'+D.ls+'"><span id="lbLsv"></span></label><button type="button" class="btn ghost" id="lbLs0" style="width:auto;margin:0;min-height:36px;padding:0 10px">기본</button></div>'+
       '<details class="hist" style="margin-top:10px"><summary>글 쓰는 법</summary><p class="hint">빈 줄 = 항목 나누기 · **글자** = 굵게 · 줄 맨 앞 ! = 빨간 글씨 · {주소} = room.hyunmusic.com<br>모양: 목록(·) / 가운데 빨강(유의사항) / 일반 / 가운데. 전화번호는 넣지 마십시오(문의는 [관리자 문의] 창 한 곳으로).</p></details></div>'+
-    '<div class="card"><div class="part" style="margin-top:0">미리 보기 <small>(로비 화면 오른쪽 칸 폭)</small></div><div class="lbprev" id="lbPrev"></div></div>'+
-    '<div class="card"><div id="lbMsg"></div><div class="btn2"><button class="btn" id="lbGo">저장</button><button class="btn ghost" id="lbUndo">변경 취소</button></div>'+
+    // 데스크탑(v0.67.0): 왼쪽 쓰기 + 오른쪽 미리 보기(붙어 있음). 휴대폰은 위아래 그대로(미리 보기 → 저장 순)
+    '<div class="card lbsave"><div id="lbMsg"></div><div class="btn2"><button class="btn" id="lbGo">저장</button><button class="btn ghost" id="lbUndo">변경 취소</button></div>'+
       (saved?'<button class="btn ghost" id="lbReset" style="margin-top:8px">기본 글로 되돌리기</button>':'')+
-      (A.lobby.updated_at?'<p class="hint">🗓 마지막 저장: '+priceDate(A.lobby.updated_at)+'</p>':'<p class="hint">아직 저장한 적이 없어 기본 글이 보이고 있습니다.</p>')+'</div>';
+      (A.lobby.updated_at?'<p class="hint">🗓 마지막 저장: '+priceDate(A.lobby.updated_at)+'</p>':'<p class="hint">아직 저장한 적이 없어 기본 글이 보이고 있습니다.</p>')+'</div>'+
+    '</div><aside class="iepane lbpane"><div class="card"><div class="part" style="margin-top:0">미리 보기 <small>(로비 화면 오른쪽 칸 폭)</small></div><div class="lbprev" id="lbPrev"></div></div></aside></div>';
 }
 function bindLobbyEdit(){
   if(!$("#lbGo"))return;
@@ -2681,7 +2690,7 @@ function settingsHtml(){
   if(setPage==="pay")return back+'<div class="adnarrow">'+payHtml()+'</div>';
   if(setPage==="fee")return back+'<div class="adnarrow">'+feeHtml()+'</div>';
   if(setPage==="roster")return back+'<div class="adnarrow">'+rosterHtml()+'</div>';
-  if(setPage==="info")return back+'<div class="adnarrow">'+infoEditHtml()+'</div>';
+  if(setPage==="info")return back+'<div class="'+(A.infoKey?'adwide2':'adnarrow')+'">'+infoEditHtml()+'</div>';
   const mi=(k,l)=>'<div class="item"><button data-sp="'+k+'" style="width:100%;text-align:left;border:0;background:none;color:var(--ink);font:inherit;font-weight:700;padding:12px 0;min-height:48px;cursor:pointer">'+l+'</button></div>';
   // 설정 메뉴를 세 묶음으로(v0.29.0, 묶음 이름은 사용자가 맡김)
   const cat=(t,items)=>'<div class="card"><div class="part" style="margin:0 0 2px">'+t+'</div>'+items+'</div>';
@@ -2742,10 +2751,19 @@ function infoEditHtml(){
     '<input type="text" id="ieTitle" maxlength="30" value="'+esc(own||"")+'" placeholder="'+esc(INFO_TITLE_DEF[k])+'" aria-label="안내 글 제목">'+
     '<p class="hint" style="margin:6px 0 0">'+(k==="price"?'[이용료 보기] 창 안 설명 상자의 제목입니다.':'홈 화면 버튼과 안내 창 맨 위에 보이는 제목입니다.')+' 비우고 저장하면 기본 제목(<b>'+esc(INFO_TITLE_DEF[k])+'</b>)으로 돌아갑니다. 30자까지.</p>'+
     '<div id="ieTMsg"></div><button type="button" class="btn ghost" id="ieTSave" style="margin-top:8px"'+(infoSaved===null?' disabled':'')+'>제목 저장</button></div>';
-  return tcard+'<div class="card">'+tabs+st+help+'</div>'+rows+
+  return '<div class="ielay"><div class="iecol">'+tcard+'<div class="card">'+tabs+st+help+'</div>'+rows+
     '<button type="button" class="btn ghost" id="ieAdd"'+(secs.length>=20?' disabled':'')+'>+ 칸 추가</button>'+
     '<div class="card"><div id="ieMsg">'+(A.infoMsg||'')+'</div><div class="btn2"><button class="btn" id="ieSave"'+(infoSaved===null?' disabled':'')+'>저장</button><button class="btn ghost" id="iePrev">미리 보기</button></div>'+
-    (sv?'<button class="btn ghost small" id="ieReset" style="margin-top:12px;color:var(--danger)">기본 글로 되돌리기</button>':'')+'</div>';
+    (sv?'<button class="btn ghost small" id="ieReset" style="margin-top:12px;color:var(--danger)">기본 글로 되돌리기</button>':'')+'</div>'+
+    // 데스크탑(v0.67.0): 오른쪽에 실제 손님 창과 같은 모양의 미리 보기가 붙어 있고, 쓰는 대로 바로 바뀜(휴대폰에서는 숨김, [미리 보기] 버튼 그대로)
+    '</div><aside class="iepane" aria-label="미리 보기"><div class="iepane-h">미리 보기 <small>손님 화면에 이렇게 보입니다 · [저장]해야 반영</small></div><div class="ielive" id="ieLive"></div></aside></div>';
+}
+/* 안내 글 변경 오른쪽 실시간 미리 보기(v0.67.0): 손님 안내 창(openInfo)과 같은 머리띠 + 칸. 숨긴 칸·빈 칸은 빼고 보여 줌 */
+function infoLivePaint(){
+  const el=$("#ieLive"),k=A.infoKey;if(!el||!k||getComputedStyle(el.parentNode).display==="none")return;
+  const a=readInfoDraft().filter(x=>x.t.trim()||x.b.trim()||(x.imgs||[]).length),ti=$("#ieTitle"),th=INFO_THEME[k]||INFO_THEME.way;
+  const t=esc((ti&&ti.value.trim())||INFO_TITLE_DEF[k]);
+  el.innerHTML='<div class="iband" style="'+infoThemeStyle(k)+'"><div><h2>'+t+'</h2><p>'+th[2]+'</p></div><span class="btn ghost small" aria-hidden="true">닫기</span></div><div class="ibody" style="'+infoThemeStyle(k)+'">'+infoPageHtml(k,a).replace(' id="infoAddrCopy"','')+'</div>';
 }
 const LAY_NAME={"1l":"1장","1m":"1장·보통","1s":"1장·작게","2":"2장","3":"3장"};
 // lay는 항상 사진 수와 같은 길이로 들고 다님(사진 빼기·순서 바꾸기·올리기 때 함께 움직임)
@@ -2823,6 +2841,9 @@ function bindInfoEdit(){
   // 칸 밖에 잘못 놓았을 때 브라우저가 사진 파일을 열어 버리지 않게
   if(!window.infoDropGuard){window.infoDropGuard=true;["dragover","drop"].forEach(t=>window.addEventListener(t,e=>{if(setPage==="info"&&e.dataTransfer&&[...e.dataTransfer.types].includes("Files")&&!(e.target.closest&&e.target.closest(".card.ie")))e.preventDefault()}))}
   $("#ieAdd").onclick=()=>{const a=readInfoDraft();a.push({t:"",b:""});A.infoDraft=a;A.infoMsg="";redraw();const ts=document.querySelectorAll(".ie-t");if(ts.length)ts[ts.length-1].focus()};
+  {let tm=null;const live=()=>{clearTimeout(tm);tm=setTimeout(infoLivePaint,150)};
+   document.querySelectorAll(".card.ie .ie-t,.card.ie .ie-b,#ieTitle").forEach(x=>x.addEventListener("input",live));
+   infoLivePaint();loadLivePrice().then(infoLivePaint)} // 사진·순서·숨기기 등은 다시 그릴 때마다 여기서 새로 그림
   $("#iePrev").onclick=()=>{const a=readInfoDraft();A.infoDraft=a;openInfo(k,a.filter(x=>x.t.trim()||x.b.trim()||(x.imgs||[]).length))};
   $("#ieSave").onclick=async()=>{
     const a=readInfoDraft();A.infoDraft=a;$("#ieSave").disabled=true;
