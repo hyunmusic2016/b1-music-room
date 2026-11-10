@@ -128,4 +128,13 @@ select public.admin_set_info_page('room', null);
 reset role; reset request.jwt.claims;
 set role anon; select test.ok((public.info_pages()) ? 'style', '익명 조회에도 style 칸(055)'); reset role;
 select test.ok(not has_function_privilege('anon', 'public.admin_set_info_style(jsonb)', 'execute'), '익명은 글자 모양 저장 못 함(055)');
-select '모든 시험 통과(048~055)' as 결과;
+-- 056: 전체 줄 상자 간격
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((public.admin_set_info_style('{"gap":24,"fs":100}'::jsonb))->>'ok' = 'true', '전체 줄 상자 간격 저장(056)');
+select test.ok(((public.info_pages())->'style'->>'gap')::numeric = 24 and not ((public.info_pages())->'style' ? 'fs'), '간격 저장·기본값 뺌(056)');
+select test.ok((public.admin_set_info_style('{"gap":99}'::jsonb))->>'ok' = 'true', '간격 범위 밖 저장(056)');
+select test.ok(((public.info_pages())->'style'->>'gap')::numeric = 40, '간격 범위 맞춤(056)');
+select public.admin_set_info_style('{"gap":12}'::jsonb);
+select test.ok((public.info_pages())->'style' = '{}'::jsonb, '기본 간격이면 지움(056)');
+reset role; reset request.jwt.claims;
+select '모든 시험 통과(048~056)' as 결과;

@@ -649,7 +649,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.72.0";
+const APP_VERSION="v0.72.1";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1673,10 +1673,10 @@ function stRow(l,cls,id,min,max,step,v,def,u){
 document.addEventListener("input",e=>{const t=e.target;if(t.classList&&t.classList.contains("strng")){const o=t.parentNode.querySelector("output");if(o)o.textContent=stFmt(t)}});
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest(".stdef");if(!b)return;const t=b.parentNode.querySelector(".strng");if(!t)return;t.value=t.dataset.def;t.dispatchEvent(new Event("input",{bubbles:true}))});
 function stNum(v,lo,hi){v=+v;return isFinite(v)&&v!==0?Math.max(lo,Math.min(hi,v)):null}
-function pageStyleCss(st){st=st||{};const ls=stNum(st.ls,-.1,.1),fs=stNum(st.fs,70,160),tf=stNum(st.tfs,70,160);
-  return (ls?';letter-spacing:'+ls+'em':'')+(fs&&fs!==100?';--pf:'+fs/100:'')+(tf&&tf!==100?';--tf:'+tf/100:'')}
-function secStyleCss(x,em){const lh=stNum(x&&x.lh,1,2.5),fs=stNum(x&&x.fs,70,160),g=x&&x.gap!=null&&x.gap!==""&&isFinite(+x.gap)?Math.max(0,Math.min(40,+x.gap)):null;
-  return (g!=null&&g!==12?'--igh:'+(g/2)+'px;':'')+(lh?'--lh:'+lh+';line-height:'+lh+';':'')+(fs&&fs!==100?(em?'font-size:'+fs/100+'em;':'--sf:'+fs/100+';'):'')}
+function pageStyleCss(st){st=st||{};const ls=stNum(st.ls,-.1,.1),fs=stNum(st.fs,70,160),tf=stNum(st.tfs,70,160),g=st.gap!=null&&st.gap!==""&&isFinite(+st.gap)?Math.max(0,Math.min(40,+st.gap)):null;
+  return (g!=null&&g!==12?';--igh:'+(g/2)+'px':'')+(ls?';letter-spacing:'+ls+'em':'')+(fs&&fs!==100?';--pf:'+fs/100:'')+(tf&&tf!==100?';--tf:'+tf/100:'')}
+function secStyleCss(x,em){const lh=stNum(x&&x.lh,1,2.5),fs=stNum(x&&x.fs,70,160);
+  return (lh?'--lh:'+lh+';line-height:'+lh+';':'')+(fs&&fs!==100?(em?'font-size:'+fs/100+'em;':'--sf:'+fs/100+';'):'')}
 let infoStyleG={}; // v0.72.0(서버 055): 모든 안내 창 공용 글자 모양(info_pages().style)
 function infoPageStyle(){let pv=null;try{pv=A.infoStylePv}catch(e){}return pv||infoStyleG||{}}
 function infoPageHtml(k,secs){
@@ -2880,11 +2880,11 @@ function infoEditHtml(){
     return (infoSaved===null?'<div class="msg err">서버에서 안내 글을 불러오지 못했습니다. Supabase에 035를 실행했는지 확인하십시오.</div>':'')+
       (()=>{const line=kk=>{const v=infoSaved&&infoSaved[kk];return '<div class="item"><button type="button" data-ik="'+kk+'" class="ilist"><span style="flex:1;min-width:0"><b>'+esc(infoListName(kk))+'</b><small class="hint" style="display:block;margin:2px 0 0">'+(v?'✎ '+esc(priceDate(v.updated_at)||v.updated_at)+' 저장한 글':'기본 글')+'</small></span><span class="chev" aria-hidden="true">›</span></button></div>'};
         // v0.68.6: "처음 오시는 분 필독!"은 맨 위 따로 된 상자로(사용자 요청), 나머지는 그 아래 한 상자
-        if(!A.infoStyle)A.infoStyle=Object.assign({ls:0,fs:100,tfs:100},infoStyleG||{});const S=A.infoStyle;
+        if(!A.infoStyle)A.infoStyle=Object.assign({ls:0,fs:100,tfs:100,gap:12},infoStyleG||{});const S=A.infoStyle;
         // v0.72.0(서버 055): 글자 모양은 모든 안내 창에 한꺼번에(사용자 요청)
         const sc='<div class="card"><div class="part" style="margin-top:0">글자 모양 <small class="hint">모든 안내 창에 함께 적용</small></div>'+
-          stRow("자간","","isLs",-.1,.1,.005,+S.ls||0,0,"em")+stRow("전체 글씨","","isFs",70,160,5,+S.fs||100,100,"%")+stRow("칸 제목 글씨","","isTfs",70,160,5,+S.tfs||100,100,"%")+
-          '<p class="hint" style="margin:6px 0 0">처음 오시는 분 필독!·이용권 안내·오시는 길·시설 안내·재원생·일반회원 안내 창에 모두 같이 적용됩니다. 줄 상자 간격·글자 행간·칸 글씨는 글마다 칸 아래에서 정합니다.</p>'+
+          stRow("자간","","isLs",-.1,.1,.005,+S.ls||0,0,"em")+stRow("전체 글씨","","isFs",70,160,5,+S.fs||100,100,"%")+stRow("칸 제목 글씨","","isTfs",70,160,5,+S.tfs||100,100,"%")+stRow("줄 상자 간격","","isGap",0,40,2,S.gap!=null&&isFinite(+S.gap)?+S.gap:12,12,"px")+
+          '<p class="hint" style="margin:6px 0 0">처음 오시는 분 필독!·이용권 안내·오시는 길·시설 안내·재원생·일반회원 안내 창에 모두 같이 적용됩니다. 줄 상자 간격은 ✓ 항목과 항목 사이 간격입니다. 글자 행간·칸 글씨는 글마다 칸 아래에서 정합니다.</p>'+
           '<div id="isMsg"></div><div class="btn2" style="margin-top:8px"><button class="btn" id="isSave">글자 모양 저장</button><button class="btn ghost" id="isPrev">미리 보기</button></div></div>';
         return sc+'<div class="card">'+line("first")+'</div><div class="card">'+INFO_KEYS.filter(([kk])=>kk!=="first").map(([kk])=>line(kk)).join("")+'</div>'})()+
       // v0.68.3: 로비 PC 안내는 설정 메뉴에서 빼서 안내 글 변경 안의 따로 된 상자로(사용자 요청)
@@ -2919,7 +2919,7 @@ function infoEditHtml(){
       '<button type="button" class="btn ghost small" data-iu="'+i+'"'+(i?'':' disabled')+' aria-label="위로">↑</button><button type="button" class="btn ghost small" data-idn="'+i+'"'+(i<secs.length-1?'':' disabled')+' aria-label="아래로">↓</button><button type="button" class="btn ghost small" data-ix="'+i+'" style="color:var(--danger)">✕ 삭제</button></div>'+
       '<label>제목</label><input type="text" class="ie-t" maxlength="60" value="'+esc(x.t||"")+'">'+
       '<label>내용 <small class="hint">한 상자 = 한 줄(✓ 항목)</small></label><div class="fxwrap">'+fxBarHtml("info")+'<textarea class="ie-b fxsrc" maxlength="3000">'+esc(x.b||"")+'</textarea>'+fxItemsHtml("info",x.b)+'</div>'+
-      '<div class="iest">'+stRow("줄 상자 간격","ie-gap","",0,40,2,x.gap!=null&&x.gap!==""?Math.max(0,Math.min(40,+x.gap)):12,12,"px")+stRow("글자 행간","ie-lh","",1,2.5,.05,stNum(x.lh,1,2.5)||LH_DEF,LH_DEF,"")+stRow("칸 글씨","ie-fs","",70,160,5,stNum(x.fs,70,160)||100,100,"%")+'</div>'+
+      '<div class="iest">'+stRow("글자 행간","ie-lh","",1,2.5,.05,stNum(x.lh,1,2.5)||LH_DEF,LH_DEF,"")+stRow("칸 글씨","ie-fs","",70,160,5,stNum(x.fs,70,160)||100,100,"%")+'</div>'+
       '<label>사진 <small class="hint">'+((x.imgs||[]).length)+'장</small></label>'+
       '<div class="iethumbs">'+(x.imgs||[]).filter(photoOk).map((im,j)=>{const L=photoLay(x,j),sel=((A.infoSel||{})[i]||[]).includes(j);
         return '<div class="iethumb'+(sel?' sel':'')+'" data-ti="'+i+'" data-tj="'+j+'" title="누르면 고르기 · 끌어서 순서 바꾸기"><img src="'+PHOTO_BASE+im+'" alt="" draggable="false"><span class="ino2">'+(j+1)+'</span><span class="ilay">'+LAY_NAME[L]+'</span>'+(sel?'<span class="isel" aria-hidden="true">✓</span>':'')+'<button type="button" class="ix" data-ipx="'+i+':'+j+'" aria-label="사진 빼기">✕</button></div>'}).join("")+
@@ -2951,20 +2951,21 @@ function infoLivePaint(){
 const LAY_NAME={"1l":"1장","1m":"1장·보통","1s":"1장·작게","2":"2장","3":"3장"};
 // lay는 항상 사진 수와 같은 길이로 들고 다님(사진 빼기·순서 바꾸기·올리기 때 함께 움직임)
 function readInfoDraft(){const d=A.infoDraft||[];return [...document.querySelectorAll(".card.ie")].map((c,i)=>{const o={t:c.querySelector(".ie-t").value,b:c.querySelector(".ie-b").value};if(d[i]&&d[i].hide)o.hide=true;
-  const lh=+c.querySelector(".ie-lh").value,fs=+c.querySelector(".ie-fs").value;if(Math.abs(lh-LH_DEF)>1e-9)o.lh=lh;if(fs!==100)o.fs=fs;const gp=+c.querySelector(".ie-gap").value;if(gp!==12)o.gap=gp;const im=(d[i]&&d[i].imgs)||[];if(im.length){o.imgs=im.slice();o.lay=layOf(d[i])}return o})}
+  const lh=+c.querySelector(".ie-lh").value,fs=+c.querySelector(".ie-fs").value;if(Math.abs(lh-LH_DEF)>1e-9)o.lh=lh;if(fs!==100)o.fs=fs;const im=(d[i]&&d[i].imgs)||[];if(im.length){o.imgs=im.slice();o.lay=layOf(d[i])}return o})}
 function bindInfoEdit(){
   if(A.infoKey&&!$("#ieSave"))return;
   if(!A.infoKey&&$("#isSave")){const S=A.infoStyle;
-    [["isLs","ls"],["isFs","fs"],["isTfs","tfs"]].forEach(([id,f])=>$("#"+id).addEventListener("input",e=>{S[f]=+e.target.value}));
+    [["isLs","ls"],["isFs","fs"],["isTfs","tfs"],["isGap","gap"]].forEach(([id,f])=>$("#"+id).addEventListener("input",e=>{S[f]=+e.target.value}));
     $("#isPrev").onclick=()=>{A.infoStylePv=Object.assign({},S);openInfo("first",infoSections("first"))}; // 창을 닫으면 미리 보기 글자 모양을 지움(closeSheet)
-    $("#isSave").onclick=async()=>{$("#isSave").disabled=true;const r=await rpc("admin_set_info_style",{p:{ls:+S.ls||0,fs:+S.fs||100,tfs:+S.tfs||100}});
+    $("#isSave").onclick=async()=>{$("#isSave").disabled=true;const r=await rpc("admin_set_info_style",{p:{ls:+S.ls||0,fs:+S.fs||100,tfs:+S.tfs||100,gap:S.gap!=null?+S.gap:12}});
       if(r.auth){adminExpired();return}
       if(!$("#isSave"))return;$("#isSave").disabled=false;
       if(!r.ok){$("#isMsg").innerHTML='<div class="msg err">'+esc(r.code==="PGRST202"?"글자 모양은 Supabase에 055를 실행해야 저장됩니다.":r.msg)+'</div>';return}
-      infoStyleG=r.style&&typeof r.style==="object"?r.style:{};$("#isMsg").innerHTML='<div class="msg ok">저장했습니다. 모든 안내 창에 바로 반영됩니다.</div>'}}
+      infoStyleG=r.style&&typeof r.style==="object"?r.style:{};const old=+S.gap!==12&&infoStyleG.gap==null; // 056 실행 전 서버는 간격을 버림
+      $("#isMsg").innerHTML='<div class="msg ok">저장했습니다. 모든 안내 창에 바로 반영됩니다.</div>'+(old?'<div class="msg err">줄 상자 간격은 저장되지 않았습니다. Supabase에 056을 실행하십시오.</div>':'')}}
   if(!A.infoKey){window.infoLeave=null;document.querySelectorAll("[data-ik]").forEach(b=>b.onclick=()=>{A.infoKey=b.dataset.ik;A.infoDraft=null;A.infoStyle=null;A.infoMsg="";A.infoSel={};renderAdmin();window.scrollTo(0,0)});return}
   const k=A.infoKey,redraw=()=>{renderAdmin()};
-  const norm=a=>JSON.stringify(a.map(x=>({t:x.t||"",b:x.b||"",i:(x.imgs||[]).join(","),z:layOf(x).join(","),h:!!x.hide,l:stNum(x.lh,1,2.5)||"",f:stNum(x.fs,70,160)||"",g:x.gap==null||x.gap===""||+x.gap===12?"":+x.gap})));
+  const norm=a=>JSON.stringify(a.map(x=>({t:x.t||"",b:x.b||"",i:(x.imgs||[]).join(","),z:layOf(x).join(","),h:!!x.hide,l:stNum(x.lh,1,2.5)||"",f:stNum(x.fs,70,160)||""})));
   const orig=norm(infoSections(k));A.infoUp=A.infoUp||[]; // infoUp: 이번에 올렸지만 아직 저장 안 한 사진
   const dropUnsaved=()=>{const keep=new Set(savedPhotos(k));removePhotos(A.infoUp.filter(x=>!keep.has(x)));A.infoUp=[]};
   // [← 안내 글 변경]으로 목록에 돌아갈 때: 저장 안 한 내용이 있으면 확인, 이번에 올린 사진은 지움
@@ -3044,7 +3045,7 @@ function bindInfoEdit(){
     const r=await rpc("admin_set_info_page",{p_key:k,p_sections:a});
     if(r.auth){adminExpired();return}
     if(!r.ok){A.infoMsg='<div class="msg err">'+esc(r.msg)+'</div>';redraw();return}
-    infoSaved=r.pages||{};if(r.style&&typeof r.style==="object")infoStyleG=r.style;{const now=new Set(savedPhotos(k));removePhotos(before.filter(x=>!now.has(x)));A.infoUp=[]} /* 빠진 사진은 저장 공간에서도 지움 */A.infoDraft=null;A.infoStyle=null;A.infoMsg='<div class="msg ok">저장했습니다. 손님 화면에 바로 반영됩니다.</div>'+(a.some(x=>x.gap!=null&&+x.gap!==12)&&!((r.pages||{})[k]||{sections:[]}).sections.some(x=>x.gap!=null)?'<div class="msg err">글은 저장했지만 줄 상자 간격은 저장되지 않았습니다. Supabase에 055를 실행하십시오.</div>':'');redraw();
+    infoSaved=r.pages||{};if(r.style&&typeof r.style==="object")infoStyleG=r.style;{const now=new Set(savedPhotos(k));removePhotos(before.filter(x=>!now.has(x)));A.infoUp=[]} /* 빠진 사진은 저장 공간에서도 지움 */A.infoDraft=null;A.infoStyle=null;A.infoMsg='<div class="msg ok">저장했습니다. 손님 화면에 바로 반영됩니다.</div>';redraw();
   };
   $("#ieTSave").onclick=async()=>{ // 제목만 따로 저장(v0.48.0, 서버 046). 칸 내용은 아래 [저장]으로
     const v=$("#ieTitle").value.trim();if(/[\r\n]/.test(v))return;
