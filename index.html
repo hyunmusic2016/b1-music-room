@@ -619,7 +619,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.68.0";
+const APP_VERSION="v0.68.1";
 const PAGE_TITLE="음악 연습실 예약 페이지 ・ 현실용음악학원"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(학원용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1318,8 +1318,9 @@ async function openPriceSheet(){
   else add(esc(infoTitle("price")),"📖",expHtml);
   if(!feeHtml&&!passHtml)h+='<p class="hint">이용료가 아직 등록되지 않았습니다. 관리자에게 문의하십시오. ('+ASK_WHERE+')</p>';
   if(pi&&pi.ok&&pi.number)h+=group("입금 계좌","🏦",payBoxHtml(Object.assign({},pi,{fee:""})));
-  h+='<p class="hint" style="text-align:center;margin-top:14px">이용권 구매와 문의는 관리자에게 하십시오. ('+ASK_WHERE+')</p>';
+  h+='<p class="hint" style="text-align:center;margin-top:14px">이용권 구매와 문의는 관리자에게 하십시오.</p><button class="btn askbtn" id="plAsk" style="margin-top:6px">📞 관리자 문의</button>'; // v0.68.1: 맨 아래 [관리자 문의](뒤로 → 이용료 안내)
   $("#plBody").innerHTML=h;bindPayCopy($("#plBody"));
+  $("#plAsk").onclick=()=>openAskSheet(openPriceSheet);
 }
 $("#priceBtn").onclick=openPriceSheet;
 /* 문의 가능 시간(v0.44.0, 서버 042): 관리자 > 설정 > 홈 화면 안내 > 문의 가능 시간에서 요일마다 저장.
