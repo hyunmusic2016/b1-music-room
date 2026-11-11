@@ -146,4 +146,20 @@ select test.ok(((public.info_pages())->'style'->>'pfs')::numeric = 160, '가격 
 select public.admin_set_info_style(null);
 select test.ok((public.info_pages())->'style' = '{}'::jsonb, 'null이면 지움(057)');
 reset role; reset request.jwt.claims;
-select '모든 시험 통과(048~057)' as 결과;
+-- 058: 칸 아이콘 직접 고르기 + 더한 아이콘 목록
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((public.admin_set_info_page('room', '[{"t":"가","b":"나","ic":"🎸"},{"t":"다","b":"라","ic":""},{"t":"마","b":"바"}]'::jsonb))->>'ok' = 'true', '칸 아이콘 저장(058)');
+select test.ok((public.info_pages())->'pages'->'room'->'sections'->0->>'ic' = '🎸' and not ((public.info_pages())->'pages'->'room'->'sections'->1 ? 'ic') and not ((public.info_pages())->'pages'->'room'->'sections'->2 ? 'ic'), '고른 아이콘만 저장, 자동은 저장 안 함(058)');
+select test.ok((public.admin_set_info_page('room', '[{"t":"가","b":"나","ic":"<b>x</b>"}]'::jsonb))->>'ok' = 'false', '잘못된 아이콘 막음(058)');
+select test.ok((public.admin_set_info_page('room', '[{"t":"가","b":"나","ic":"12345678901234567"}]'::jsonb))->>'ok' = 'false', '너무 긴 아이콘 막음(058)');
+select public.admin_set_info_page('room', null);
+select test.ok((public.admin_set_info_icons('["🎸"," 🎤 ","🎸",""]'::jsonb))->>'ok' = 'true', '아이콘 목록 저장(058)');
+select test.ok((public.info_pages())->'icons' = '["🎸","🎤"]'::jsonb, '아이콘 목록: 겹침·빈 값 뺌(058)');
+select test.ok((public.admin_set_info_icons('["a b"]'::jsonb))->>'ok' = 'false', '띄어쓰기 든 아이콘 막음(058)');
+select test.ok((public.admin_set_info_icons((select jsonb_agg(i::text) from generate_series(1,41) i)))->>'ok' = 'false', '41개 막음(058)');
+select test.ok((public.admin_set_info_icons('[]'::jsonb))->>'ok' = 'true', '목록 비우기 저장(058)');
+select test.ok((public.info_pages())->'icons' = '[]'::jsonb, '목록 비우면 빈 목록(058)');
+reset role; reset request.jwt.claims;
+set role anon; select test.ok((public.info_pages()) ? 'icons', '익명 조회에도 icons 칸(058)'); reset role;
+select test.ok(not has_function_privilege('anon', 'public.admin_set_info_icons(jsonb)', 'execute'), '익명은 아이콘 목록 저장 못 함(058)');
+select '모든 시험 통과(048~058)' as 결과;
