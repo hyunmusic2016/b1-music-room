@@ -127,4 +127,15 @@ select test.ok((select count(*) from pg_proc p join pg_namespace n on n.oid = p.
                  where n.nspname = 'public' and p.prosrc like '%재원생%') = 0, '서버 함수에 "재원생" 글자가 남지 않음(061)');
 select test.ok(has_function_privilege('anon', 'public.reserve(date, integer, text, text, boolean, text, text)', 'execute')
                and not has_function_privilege('anon', 'public.admin_reserve(date, integer, text, bigint, boolean, boolean, text, text)', 'execute'), '061 뒤에도 권한 그대로');
-select '모든 시험 통과(060~061)' as 결과;
+-- 062: 서버 문구에서 "학원" 빼기(061 다음)
+update public.settings set value = '{"pages":{"stu":{"sections":[{"t":"예약","b":"학원 제휴회원 명부와 맞지 않으면 학원에 문의하십시오."}]}}}' where key = 'info_pages';
+\i supabase/migrations/062_no_academy_wording.sql
+select test.ok((select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'public' and (p.prosrc like '%학원에 문의하십시오%' or p.prosrc like '%학원에 등록된%')) = 0, '서버 함수 문구에 "학원에 문의"·"학원에 등록된" 없음(062)');
+select test.ok((select value->'pages'->'stu'->'sections'->0->>'b' from public.settings where key = 'info_pages') = '제휴회원 명부와 맞지 않으면 관리자에게 문의하십시오.', '저장된 안내 글도 바뀜(062)');
+set app.fake_now = '2028-04-11 10:00'; set role anon;
+select test.ok((public.cancel_own((select null::bigint), 'x', '0000'))->>'ok' = 'false', '취소 함수 그대로 동작(062)');
+reset role; reset app.fake_now;
+select test.ok(has_function_privilege('anon', 'public.cancel_own(bigint, text, text)', 'execute'), '062 뒤에도 취소 권한 그대로');
+\i supabase/migrations/062_no_academy_wording.sql
+select '모든 시험 통과(060~062)' as 결과;

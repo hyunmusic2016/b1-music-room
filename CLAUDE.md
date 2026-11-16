@@ -32,7 +32,7 @@
 
 18. **사용량 아끼기(2026-11-11 사용자 요청).** 옛 기록은 `HISTORY.md`에 있다 — 필요할 때만 `grep`으로 찾고 통째로 읽지 않는다. `index.html`은 크므로 `grep -n`으로 위치를 찾아 그 부분만 읽는다. 사용자가 "간단히"라고 하면 브라우저 시험·캡처를 생략하고 문법 확인(`node --check`로 스크립트 부분)과 배포만 하며, 화면을 직접 확인하지 않았다고 보고한다.
 
-19. **"재원생"이라는 말을 쓰지 않고 "제휴회원"으로 쓴다(2026-11-16 사용자 요청: 학원이 운영하는 것처럼 보이면 안 됨, v0.80.0·서버 061).** 화면·서버 문구·기본 안내 글 모두. 코드 값(`stu`)·표 이름(`roster`)·함수 이름은 그대로. 새 문구에 "원생"·"재원생"을 쓰지 않는다. 화면의 `hoursMsg`가 서버 옛 문구의 그 단어도 바꿔 보여 준다. 구글 시트 Apps Script(`roster_sync.gs`) 메뉴 글자는 아직 옛 단어(관리자만 봄).
+19. **"재원생"이라는 말을 쓰지 않고 "제휴회원"으로 쓴다(2026-11-16 사용자 요청: 학원이 운영하는 것처럼 보이면 안 됨, v0.80.0·서버 061).** 화면·서버 문구·기본 안내 글 모두. 코드 값(`stu`)·표 이름(`roster`)·함수 이름은 그대로. 새 문구에 "원생"·"재원생"을 쓰지 않는다. 화면의 `hoursMsg`가 서버 옛 문구의 그 단어도 바꿔 보여 준다. 구글 시트 Apps Script(`roster_sync.gs`) 메뉴 글자는 아직 옛 단어(관리자만 봄). **손님에게 보이는 문구에 "학원"도 쓰지 않는다(v0.81.0·서버 062)**: 문의는 "관리자에게 문의하십시오", 어울리지 않으면 사용자에게 묻는다(예: "등록된 전화번호", "제휴회원 명부", "연습실 오시기 전", 로비 탭 "(로비용)"). 제휴 학원 이름 "현실용음악학원"(가격표 "제휴 할인"·예약 카드)과 관리자 메뉴 "학원 로비 PC 안내"는 그대로.
 
 ## 폴더 구조
 
@@ -48,8 +48,8 @@
 - `logo.png`: 학원 로고 원본(프로토타입에는 260px로 줄여 base64로 내장). **v0.79.0부터 실제 화면(`index.html`)에는 학원 로고를 쓰지 않음**(사용자 요청: 메인 제목 "부평역 B1 드럼・음악연습실", 재원생 예약 카드·가격표는 🎓, 가격표 재원생 칸 이름 "🎓 현실용음악학원 제휴 할인").
 - `.gitignore`: `.env` 등 비밀 키 파일을 커밋에서 제외.
 - `.env.example`: 필요한 설정 값의 이름만 적은 견본(실제 키 없음).
-- `supabase/tests/`: `00_local_shim.sql`(로컬 전용: anon/authenticated 역할, auth.uid(), extensions·storage 스키마 흉내), `01_rules_test.sql`(규칙 시험 475개, 047까지의 규칙), `03_no_flat_test.sql`(048~059 시험 97개: 01이 남긴 정액권 정리·이용권만 등록·문구·시간 문구), `04_daily_free_test.sql`(060·061 시험 48개: 이용권 제휴회원 하루 1시간 무료, "재원생" 문구 바꾸기), `run_local.sh`(빈 DB에 001~047 → 01 → 048~ → 03 → 04), `02_concurrency.sh`(동시 예약 시험), `041_convert_only.sql`(041의 옛 자료 변환 부분만, 01이 불러 씀). **Supabase에서는 실행하지 않음.** 로컬 실행: `PGHOST=<소켓폴더> PGPORT=<포트> bash supabase/tests/run_local.sh` → "모든 시험 통과"(01)와 마지막 줄 "모든 시험 통과(060~061)".
-- `supabase/migrations/001_…061_partner_wording.sql`: **Supabase SQL Editor에 번호 순서대로 한 번씩 실행(058까지 실행됨, 059·060·061은 2026-11-16 사용자 실행 대기, 061은 반드시 060 다음).** 파일마다 맨 위 주석에 설명, 목록 설명은 `HISTORY.md`. 새 마이그레이션에서 함수를 만들면 끝에 `revoke execute ... from public, anon, authenticated` 후 필요한 것만 grant. 함수 문구만 바꿀 때는 048·049처럼 함수 정의 글을 읽어 바꿔 다시 만드는 방식.
+- `supabase/tests/`: `00_local_shim.sql`(로컬 전용: anon/authenticated 역할, auth.uid(), extensions·storage 스키마 흉내), `01_rules_test.sql`(규칙 시험 475개, 047까지의 규칙), `03_no_flat_test.sql`(048~059 시험 97개: 01이 남긴 정액권 정리·이용권만 등록·문구·시간 문구), `04_daily_free_test.sql`(060~062 시험 52개: 이용권 제휴회원 하루 1시간 무료, "재원생" 문구 바꾸기), `run_local.sh`(빈 DB에 001~047 → 01 → 048~ → 03 → 04), `02_concurrency.sh`(동시 예약 시험), `041_convert_only.sql`(041의 옛 자료 변환 부분만, 01이 불러 씀). **Supabase에서는 실행하지 않음.** 로컬 실행: `PGHOST=<소켓폴더> PGPORT=<포트> bash supabase/tests/run_local.sh` → "모든 시험 통과"(01)와 마지막 줄 "모든 시험 통과(060~062)".
+- `supabase/migrations/001_…062_no_academy_wording.sql`: **Supabase SQL Editor에 번호 순서대로 한 번씩 실행(058까지 확인, 059~062는 2026-11-16 사용자 실행 대기·확인 전, 반드시 번호 순서).** 파일마다 맨 위 주석에 설명, 목록 설명은 `HISTORY.md`. 새 마이그레이션에서 함수를 만들면 끝에 `revoke execute ... from public, anon, authenticated` 후 필요한 것만 grant. 함수 문구만 바꿀 때는 048·049처럼 함수 정의 글을 읽어 바꿔 다시 만드는 방식.
 - `HISTORY.md`: 옛 CLAUDE.md 전체(버전 v0.1.0~v0.73.0 기록, 결정 과정, 인수인계 문서)와 이후 버전 기록.
 
 
@@ -79,6 +79,6 @@
 ## 작업 환경 메모
 
 - 컨테이너는 `github.io`·`hyunmusic.com`·`cdn.jsdelivr.net`에 접속 불가, `*.supabase.co`는 됨(공개용 키로 `curl` 확인 가능). 공개용 주소 `https://ibcvbnpqmlqmdwxkepbl.supabase.co`, Publishable 키는 `index.html`에 있음.
-- 로컬 DB 시험: `su postgres -c "/usr/lib/postgresql/16/bin/pg_ctl -D /var/lib/postgresql/drumtest/data -o '-p 54329 -k /var/lib/postgresql/drumtest' -l /var/lib/postgresql/drumtest/log.txt start"` 뒤 `PGHOST=/var/lib/postgresql/drumtest PGPORT=54329 bash supabase/tests/run_local.sh` → 마지막 줄 "모든 시험 통과(060~061)".
+- 로컬 DB 시험: `su postgres -c "/usr/lib/postgresql/16/bin/pg_ctl -D /var/lib/postgresql/drumtest/data -o '-p 54329 -k /var/lib/postgresql/drumtest' -l /var/lib/postgresql/drumtest/log.txt start"` 뒤 `PGHOST=/var/lib/postgresql/drumtest PGPORT=54329 bash supabase/tests/run_local.sh` → 마지막 줄 "모든 시험 통과(060~062)".
 - 브라우저 시험: Playwright Chromium, supabase-js는 npm 패키지를 가로채 넣고 서버 응답은 흉내 냄.
 - 배포: `main`에 push하면 GitHub Pages가 배포(`gh api repos/hyunmusic2016/b1-music-room/actions/runs?per_page=1`로 확인, 기다릴 때 `sleep` 대신 `timeout … until` 반복).
