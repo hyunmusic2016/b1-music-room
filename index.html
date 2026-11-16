@@ -663,7 +663,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.82.1";
+const APP_VERSION="v0.83.0";
 const PAGE_TITLE="부평역 B1 드럼・음악연습실 예약"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(로비용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -2032,7 +2032,8 @@ function readKindSlot(p,kind,cur){ // null(없음) 또는 {err} 또는 서버에
 
 /* 이용자 등록 탭 */
 function userHtml(){
-  return '<div class="card"><b>이용자 등록</b><span class="badge" style="color:var(--ext-text);border-color:currentColor;background:transparent">일반회원</span>'+(uFlash?'<div class="msg ok">'+esc(uFlash)+'</div>':'')+
+  return '<div class="titlerow"><h2>이용자 등록</h2><button class="btn ghost small" id="uBack">← 이용자 현황</button></div>'+ // v0.83.0: 이용자 현황 안으로
+    '<div class="card"><span class="badge" style="color:var(--ext-text);border-color:currentColor;background:transparent;margin-left:0">일반회원</span>'+(uFlash?'<div class="msg ok">'+esc(uFlash)+'</div>':'')+
     '<div hidden>'+typeChecks("u","ext")+'</div>'+ // v0.59.0: 제휴회원 체크박스 없앰(이용자 등록은 일반회원만, 제휴회원은 구글 시트 명부에서)
     userFields("u")+
     '<div class="part" style="margin-top:22px">이용권</div>'+kindSlotHtml("u","count")+
@@ -2908,6 +2909,8 @@ function settingsHtml(){
   // 큰 제목과 [← 뒤로]를 한 줄에(v0.18.11, 뒤로 버튼은 오른쪽)
   const UP=setPage==="status"||setPage==="dormant"||setPage==="black",LN={dormant:"휴면 이용자",black:"블랙리스트"}[setPage]||"이용자 현황";
   const title=UP?(editUser!==null||(viewRoster&&viewRoster.edit)?"이용자 수정":viewUser!==null||viewRoster?"이용자 정보":LN):{block:"이용 불가 시간 설정",pw:"관리자 비밀번호 변경",door:"출입 비밀번호 변경",contact:"문의 가능 시간",phone:"문의 전화번호",lobby:"학원 로비 PC 안내",pay:"입금 계좌 변경",fee:"이용료 변경",roster:"제휴회원 명부 연동",info:A.infoKey?esc(infoListName(A.infoKey)):"안내 글 변경"}[setPage];
+  if(setPage==="status"&&editUser===null&&viewUser===null&&!viewRoster) // v0.83.0: 이용자 현황 탭 맨 위는 [＋ 이용자 등록]
+    return '<div class="titlerow"><h2>이용자 현황</h2><button class="btn small" id="uAdd">＋ 이용자 등록</button></div>'+statusHtml();
   const back='<div class="titlerow"><h2>'+title+'</h2><button class="btn ghost small" id="setBack">'+(UP&&(editUser!==null||(viewRoster&&viewRoster.edit))?'← 이용자 정보':UP&&(viewUser!==null||viewRoster)?'← '+LN:(setPage==="info"&&A.infoKey)||setPage==="lobby"?'← 안내 글 변경':'← 설정')+'</button></div>';
   if(UP){
     if(viewUser!==null&&!A.detail)return back+'<p class="hint">불러오는 중입니다…</p>';
@@ -2926,7 +2929,7 @@ function settingsHtml(){
   const mi=(k,l)=>'<div class="item"><button data-sp="'+k+'" style="width:100%;text-align:left;border:0;background:none;color:var(--ink);font:inherit;font-weight:700;padding:12px 0;min-height:48px;cursor:pointer">'+l+'</button></div>';
   // 설정 메뉴를 세 묶음으로(v0.29.0, 묶음 이름은 사용자가 맡김)
   const cat=(t,items)=>'<div class="card"><div class="part" style="margin:0 0 2px">'+t+'</div>'+items+'</div>';
-  return '<div class="setcats">'+cat("이용자 관리",mi("status","이용자 현황")+mi("dormant","휴면 이용자 (90일 이상)")+mi("black","블랙리스트")+mi("roster","제휴회원 명부 연동"))+
+  return '<div class="setcats">'+cat("이용자 관리",mi("dormant","휴면 이용자 (90일 이상)")+mi("black","블랙리스트")+mi("roster","제휴회원 명부 연동"))+
     cat("이용료·출입 정보",mi("fee","이용료 변경")+mi("pay","입금 계좌 변경")+mi("door","출입 비밀번호 변경"))+
     cat("홈 화면 안내",mi("info","안내 글 변경")+mi("contact","문의 가능 시간")+mi("phone","문의 전화번호"))+
     cat("운영·보안",mi("block","이용 불가 시간 설정")+mi("pw","관리자 비밀번호 변경"))+'</div>';
@@ -3153,10 +3156,15 @@ function bindSettings(){
   if(setPage==="roster")bindRosterPage();
   if(setPage==="info")bindInfoEdit();
 }
-function tabBtns(){return [["list","예약 목록"],["ext","이용자 등록"],["proxy","관리자 예약"],["block","설정"]].map(([k,l])=>'<button class="tab" data-at="'+k+'" aria-selected="'+(adminTab===k)+'">'+l+'</button>').join("")}
+/* v0.83.0(사용자 요청): 탭 = 예약 목록 · 이용자 현황 · 관리자 예약 · 설정. 이용자 현황(users)은 설정 밖으로 빼고(화면은 #sec-block의 setPage "status"를 그대로 씀),
+   이용자 등록(ext)은 이용자 현황 안의 [＋ 이용자 등록] 버튼으로 들어감(탭은 이용자 현황이 선택된 채로) */
+function tabBtns(){return [["list","예약 목록"],["users","이용자 현황"],["proxy","관리자 예약"],["block","설정"]].map(([k,l])=>'<button class="tab" data-at="'+k+'" aria-selected="'+(adminTab===k||k==="users"&&adminTab==="ext")+'">'+l+'</button>').join("")}
 function applyAdminTab(){
-  ["list","ext","proxy","block"].forEach(k=>$("#sec-"+k).classList.toggle("hidden",k!==adminTab));
-  document.querySelectorAll("[data-at]").forEach(b=>{b.onclick=()=>{adminTab=b.dataset.at;setPage=null;editUser=null;viewUser=null;viewRoster=null;A.detail=null;uFlash="";renderAdmin();if(adminTab==="list"||adminTab==="proxy")reloadAdmin()}});
+  const sec=adminTab==="users"?"block":adminTab;
+  ["list","ext","proxy","block"].forEach(k=>$("#sec-"+k).classList.toggle("hidden",k!==sec));
+  document.querySelectorAll("[data-at]").forEach(b=>{b.onclick=()=>{adminTab=b.dataset.at;setPage=adminTab==="users"?"status":null;editUser=null;viewUser=null;viewRoster=null;A.detail=null;uFlash="";renderAdmin();if(adminTab==="list"||adminTab==="proxy"||adminTab==="users")reloadAdmin()}});
+  const ua=$("#uAdd");if(ua)ua.onclick=()=>{adminTab="ext";uFlash="";renderAdmin();window.scrollTo(0,0)};
+  const ub=$("#uBack");if(ub)ub.onclick=()=>{adminTab="users";setPage="status";uFlash="";renderAdmin();reloadAdmin();window.scrollTo(0,0)};
 }
 /* 관리자 예약(시간표에서 빈 칸을 눌러 대신 예약). 예약된 칸에는 본명이 보입니다. */
 function proxyHtml(){return '<div class="admin-warn" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18v.01"/></svg><div><b>관리자 예약 페이지입니다</b></div></div><div id="pBox"><div class="tabs" id="pTabs" role="tablist"></div><div class="legend"><span>예약 가능</span><span class="lg stu">제휴회원 예약</span><span class="lg ext">일반회원 예약</span><span>▨ 이용 불가</span><span style="display:inline-flex;gap:6px"><i class="badge count">이용권</i></span></div><div class="ampm"><div><div class="part">오전<small>00:00–12:00</small></div><div class="grid" id="pGrid"></div></div><div><div class="part">오후<small>12:00–24:00</small></div><div class="grid" id="pGrid2"></div></div></div></div>'}
