@@ -84,7 +84,7 @@ select test.ok((public.admin_reserve('2028-04-11', 20, '보통학생', :nu, fals
 select test.ok((public.admin_find_users('보통학생', '2028-04-11'))->'users'->0->>'day_taken' = 'false', '슈퍼패스는 무료 1시간으로 안 셈');
 select public.admin_reserve('2028-04-11', 21, '보통학생', :nu, false, false) as a \gset
 select test.ok((:'a'::jsonb)->>'free' = 'true' and (:'a'::jsonb)->>'free_pass' = 'false', '슈퍼패스가 있어도 일반예약 무료 1시간 가능(이용권 없음)');
-select test.ok((public.admin_reserve('2028-04-11', 22, '보통학생', :nu, false, false))->>'msg' like '재원생은 하루 1시간만%', '이용권 없는 재원생 두 번째는 막음');
+select test.ok((public.admin_reserve('2028-04-11', 22, '보통학생', :nu, false, false))->>'msg' like '제휴회원은 하루 1시간만%', '이용권 없는 재원생 두 번째는 막음');
 reset role; reset request.jwt.claims;
 set role anon;
 select test.ok((public.reserve('2028-04-11', 23, '보통학생', '6002', true, 'stu'))->>'msg' like '하루 1시간만 예약할 수 있습니다.%', '손님 예약도 두 번째는 막음');
@@ -117,4 +117,14 @@ select test.ok(not has_function_privilege('authenticated', 'public.stu_rebalance
 select test.ok(has_function_privilege('anon', 'public.reserve(date, integer, text, text, boolean, text, text)', 'execute'), '익명 예약 권한 유지');
 select test.ok(has_function_privilege('anon', 'public.move_own(bigint, text, text, date, integer)', 'execute'), '익명 시간 변경 권한 유지');
 select test.ok(not has_function_privilege('anon', 'public.admin_reserve(date, integer, text, bigint, boolean, boolean, text, text)', 'execute'), '익명은 관리자 예약 못 함');
-select '모든 시험 통과(060)' as 결과;
+-- 061: 서버 문구 "재원생" → "제휴회원"(060 다음에 실행)
+insert into public.settings (key, value) values ('lobby_info', '{"boxes":[{"id":"a","title":"재원생 안내","body":"재원생은 하루 1시간"}]}')
+  on conflict (key) do update set value = excluded.value;
+\i supabase/migrations/061_partner_wording.sql
+select test.ok((select value->'boxes'->0->>'body' from public.settings where key = 'lobby_info') = '제휴회원은 하루 1시간', '저장된 로비 글도 바뀜(061)');
+select test.ok((select count(*) from public.settings where value::text like '%재원생%') = 0, '저장된 글에 "재원생" 없음(061)');
+select test.ok((select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'public' and p.prosrc like '%재원생%') = 0, '서버 함수에 "재원생" 글자가 남지 않음(061)');
+select test.ok(has_function_privilege('anon', 'public.reserve(date, integer, text, text, boolean, text, text)', 'execute')
+               and not has_function_privilege('anon', 'public.admin_reserve(date, integer, text, bigint, boolean, boolean, text, text)', 'execute'), '061 뒤에도 권한 그대로');
+select '모든 시험 통과(060~061)' as 결과;
