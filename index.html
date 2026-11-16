@@ -46,8 +46,8 @@ h2{font-size:18px;font-weight:700;margin:20px 0 8px}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 @media(min-width:400px){.grid{grid-template-columns:repeat(3,1fr)}}
 .slot{min-height:64px;border:1.5px solid var(--line);border-radius:10px;background:var(--free);color:var(--ink);font:inherit;text-align:left;padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;justify-content:center;gap:2px}
-.slot b{font-size:14px;letter-spacing:0;white-space:nowrap} /* 페이퍼로지는 숫자가 넓어 한 줄에 들어가게 줄임(v0.60.0), 자간 -0.03em → 0(v0.60.6) */
-.slot span{font-size:13px}
+.slot b{font-size:15.5px;letter-spacing:0;white-space:nowrap} /* 페이퍼로지는 숫자가 넓어 한 줄에 들어가게 줄임(v0.60.0), 자간 -0.03em → 0(v0.60.6) */
+.slot span{font-size:14px} /* v0.87.0: 시간 14→15.5px, 예약 가능·이름 13→14px(사용자 요청) */
 .slot.free{border-color:var(--accent-strong)}
 .slot.free span{color:var(--accent-text);font-weight:700}
 .slot.taken{background:var(--taken);cursor:not-allowed}
@@ -525,9 +525,9 @@ body.lobby .grid{grid-template-columns:repeat(4,1fr);gap:5px}
 body.lobby .slot{min-height:68px;padding:5px 7px;border-radius:8px} /* v0.74.0: 빠진 버튼 줄만큼 오전·오후 칸을 세로로 늘림(48px → 68px) */
 #v-book .slot{min-height:68px}body.lobby #v-book .slot{min-height:72px} /* v0.75.0: 범례를 뺀 만큼 홈 화면 오전·오후 칸을 더 늘림(손님 64 → 68px, 로비 68 → 72px). 관리자 화면 칸은 그대로 */
 body.lobby .infogrid .btn{margin:0}body.lobby .infogrid .askbtn{margin:0}
-body.lobby .slot b{font-size:13px;letter-spacing:-.02em}
-body.lobby .slot span{font-size:11.5px}
-@media (max-width:760px){body.lobby h1{font-size:18px}body.lobby .lclock{font-size:12.5px}body.lobby .lclock i{display:none}body.lobby .mustread{font-size:14px}body.lobby .slot{padding:5px}body.lobby .slot b{font-size:12px;white-space:nowrap;letter-spacing:-.03em}}
+body.lobby .slot b{font-size:14.5px;letter-spacing:-.02em}
+body.lobby .slot span{font-size:12.5px}
+@media (max-width:760px){body.lobby h1{font-size:18px}body.lobby .lclock{font-size:12.5px}body.lobby .lclock i{display:none}body.lobby .mustread{font-size:14px}body.lobby .slot{padding:5px}body.lobby .slot b{font-size:13px;white-space:nowrap;letter-spacing:-.03em}}
 .lbox{--fs:calc(var(--lfs) * var(--bs,1) * var(--gfs,1));background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:calc(var(--lfs)*.8) 13px;font-size:var(--fs);line-height:1.55;flex:none}
 .lbox h2{margin:0 0 calc(var(--lfs)*.6);font-size:calc((var(--fs) + 3px) * var(--gtf,1));font-weight:800;text-align:center;padding-bottom:calc(var(--lfs)*.6);border-bottom:1px solid var(--line)}
 .lbox ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:calc(var(--fs)*.5)}
@@ -664,7 +664,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.86.0";
+const APP_VERSION="v0.87.0";
 const PAGE_TITLE="부평역 B1 드럼・음악연습실 예약"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(로비용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
