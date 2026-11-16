@@ -438,6 +438,7 @@ select:focus-visible{outline:3px solid var(--accent-strong);outline-offset:2px}
 .fxwrap .fxit textarea.fxi:focus{background:color-mix(in srgb,var(--accent) 14%,transparent)}
 .fxit.blank textarea.fxi{min-height:30px;padding:4px 6px}
 .fxdel{flex:none;width:32px;height:32px;margin-top:4px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--danger);font:inherit;font-size:13px;cursor:pointer}
+.fxmv{flex:none;display:flex;flex-direction:column;gap:2px;margin-top:4px}.fxmv button{width:30px;height:19px;padding:0;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--accent-text);font:inherit;font-size:10px;line-height:1;cursor:pointer}.fxmv button:disabled{opacity:.3;cursor:default} /* 줄 상자 ▲▼(v0.88.0) */
 .fxadd{display:block;width:100%;border:0;border-top:1px solid var(--line);background:var(--bg);color:var(--accent-text);font:inherit;font-weight:700;font-size:14px;min-height:40px;cursor:pointer}
 .card.lbe.off{opacity:.62;border-style:dashed}
 .tc{color:var(--c1)}.tc-stu{--c1:#0a6f72;--c2:#5fd4d6}.tc-ext{--c1:#9C5238;--c2:#e0a48c}.tc-sky{--c1:#2d6596;--c2:#A0C6E9}.tc-tmr{--c1:#5446ad;--c2:#CDBFF2}.tc-gold{--c1:#85590f;--c2:#e0a94d}.tc-red{--c1:#b3261e;--c2:#ff8a80}.tc-green{--c1:#1f6b45;--c2:#7fd6a4}.tc-gray{--c1:#6b7280;--c2:#b0b7c3}
@@ -664,7 +665,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.87.0";
+const APP_VERSION="v0.88.0";
 const PAGE_TITLE="부평역 B1 드럼・음악연습실 예약"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(로비용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1538,11 +1539,12 @@ function fxBarHtml(kind){
 function fxSplit(kind,b){b=String(b||"").replace(/\r/g,"");
   if(kind==="lobby"){const a=b.split(/\n\s*\n/).map(x=>x.replace(/^\n+|\n+$/g,"")).filter(x=>x.trim());return a.length?a:[""]}
   const a=b.split("\n").map(x=>x.replace(/\u2028/g,"\n"));while(a.length>1&&!a[a.length-1].trim())a.pop();return a.length?a:[""]}
-function fxRowHtml(kind,v){const ctr=CTR_RE.test(v);if(ctr)v=v.replace(CTR_RE,"");const blank=kind==="info"&&!v.trim(),hr=v.trim()==="---";
+function fxRowHtml(kind,v,first,last){const ctr=CTR_RE.test(v);if(ctr)v=v.replace(CTR_RE,"");const blank=kind==="info"&&!v.trim(),hr=v.trim()==="---";
   return '<div class="fxit'+(blank?' blank':'')+(hr?' hr':'')+(ctr?' ctr':'')+'"><span class="fxmk" aria-hidden="true">'+(hr?'―':kind==="info"?'✓':'•')+'</span>'+
     '<textarea class="fxi" rows="1" placeholder="'+(kind==="info"?'빈 줄 (칸 띄우기) · 글을 쓰면 항목이 됩니다 · Enter = 상자 안 줄바꿈':'항목 내용')+'" aria-label="'+(kind==="info"?'한 줄':'항목')+'">'+esc(v)+'</textarea>'+
+    '<span class="fxmv"><button type="button" class="fxup" aria-label="위로 옮기기" title="위로"'+(first?' disabled':'')+'>▲</button><button type="button" class="fxdn" aria-label="아래로 옮기기" title="아래로"'+(last?' disabled':'')+'>▼</button></span>'+ // v0.88.0: 줄 상자 순서 바꾸기
     '<button type="button" class="fxdel" aria-label="이 상자 삭제" title="이 상자 삭제">✕</button></div>'}
-function fxItemsHtml(kind,b){return '<div class="fxitems" data-kind="'+kind+'">'+fxSplit(kind,b).map(v=>fxRowHtml(kind,v)).join("")+'</div><button type="button" class="fxadd">+ '+(kind==="info"?'줄':'항목')+' 상자 추가</button>'}
+function fxItemsHtml(kind,b){return '<div class="fxitems" data-kind="'+kind+'">'+fxSplit(kind,b).map((v,i,a)=>fxRowHtml(kind,v,i===0,i===a.length-1)).join("")+'</div><button type="button" class="fxadd">+ '+(kind==="info"?'줄':'항목')+' 상자 추가</button>'}
 function fxAuto(t){t.style.height="auto";t.style.height=(t.scrollHeight+2)+"px"}
 function fxAutoAll(){requestAnimationFrame(()=>document.querySelectorAll(".fxi").forEach(fxAuto))}
 /* 가운데 정렬(v0.72.3): 줄 상자 맨 앞 "^^ " 표시. 편집 화면에서는 표시를 숨기고 상자(.fxit.ctr)를 가운데 정렬로 보여 줌 */
@@ -1552,9 +1554,10 @@ function fxSync(w){const box=w.querySelector(".fxitems"),src=w.querySelector(".f
   const vals=[...box.querySelectorAll(".fxi")].map(t=>kind==="lobby"?fxVal(t).replace(/\n\s*\n/g,"\n"):fxVal(t).replace(/\r/g,"").replace(/\n/g,"\u2028")); // 안내 글: 상자 안 줄바꿈은 \u2028로 저장(v0.70.0)
   let out=kind==="lobby"?vals.filter(v=>v.trim()).join("\n\n"):vals.join("\n").replace(/\n+$/,"");
   if(src.value!==out){src.value=out;src.dispatchEvent(new Event("input",{bubbles:true}))}
-  box.querySelectorAll(".fxit").forEach(r=>{const v=r.querySelector(".fxi").value;r.classList.toggle("blank",kind==="info"&&!v.trim());r.classList.toggle("hr",v.trim()==="---");r.querySelector(".fxmk").textContent=v.trim()==="---"?"―":kind==="info"?"✓":"•"})}
+  box.querySelectorAll(".fxit").forEach(r=>{const v=r.querySelector(".fxi").value;r.classList.toggle("blank",kind==="info"&&!v.trim());r.classList.toggle("hr",v.trim()==="---");r.querySelector(".fxmk").textContent=v.trim()==="---"?"―":kind==="info"?"✓":"•"});
+  const rs=box.querySelectorAll(".fxit");rs.forEach((r,i)=>{const u=r.querySelector(".fxup"),d=r.querySelector(".fxdn");if(u)u.disabled=i===0;if(d)d.disabled=i===rs.length-1})}
 function fxRows(w,vals,fi,caret){const box=w.querySelector(".fxitems"),kind=box.dataset.kind;if(!vals.length)vals=[""];
-  box.innerHTML=vals.map(v=>fxRowHtml(kind,v)).join("");const ts=box.querySelectorAll(".fxi");ts.forEach(fxAuto);fxSync(w);
+  box.innerHTML=vals.map((v,i,a)=>fxRowHtml(kind,v,i===0,i===a.length-1)).join("");const ts=box.querySelectorAll(".fxi");ts.forEach(fxAuto);fxSync(w);
   if(fi!=null){const t=ts[Math.max(0,Math.min(fi,ts.length-1))];if(t){t.focus();const c=caret==null?t.value.length:caret;t.setSelectionRange(c,c);w._last=t}}}
 const fxVals=w=>[...w.querySelectorAll(".fxi")].map(fxVal),fxIdx=t=>[...t.closest(".fxitems").querySelectorAll(".fxi")].indexOf(t);
 document.addEventListener("focusin",e=>{const t=e.target;if(t.classList&&t.classList.contains("fxi"))t.closest(".fxwrap")._last=t});
@@ -1563,7 +1566,9 @@ document.addEventListener("input",e=>{const t=e.target;if(!t.classList||!t.class
 document.addEventListener("keydown",e=>{const t=e.target;if(!t.classList||!t.classList.contains("fxi")||e.isComposing)return;const w=t.closest(".fxwrap"),kind=w.querySelector(".fxitems").dataset.kind,i=fxIdx(t),v=fxVals(w);
   // v0.70.0: Enter는 상자 안에서 줄바꿈(새 상자를 만들지 않음, 사용자 요청)
   if(e.key==="Backspace"&&t.selectionStart===0&&t.selectionEnd===0&&!t.value&&v.length>1){e.preventDefault();v.splice(i,1);fxRows(w,v,i-1);return}}); // 빈 상자에서 지우기 = 상자 삭제
-document.addEventListener("click",e=>{const d=e.target.closest&&e.target.closest(".fxdel,.fxadd");if(!d)return;const w=d.closest(".fxwrap");
+document.addEventListener("click",e=>{const d=e.target.closest&&e.target.closest(".fxdel,.fxadd,.fxup,.fxdn");if(!d)return;const w=d.closest(".fxwrap");
+  if(d.classList.contains("fxup")||d.classList.contains("fxdn")){const t=d.closest(".fxit").querySelector(".fxi"),i=fxIdx(t),v=fxVals(w),j=i+(d.classList.contains("fxup")?-1:1);
+    if(j<0||j>=v.length)return;[v[i],v[j]]=[v[j],v[i]];fxRows(w,v);const b=w.querySelectorAll(".fxit")[j];if(b){const nb=b.querySelector(d.classList.contains("fxup")?".fxup":".fxdn");(nb&&!nb.disabled?nb:b.querySelector(".fxi")).focus();b.scrollIntoView({block:"nearest"})}return}
   if(d.classList.contains("fxdel")){const t=d.parentNode.querySelector(".fxi"),i=fxIdx(t),v=fxVals(w);if(t.value.trim()&&!confirm("이 상자를 지우시겠습니까?"))return;v.splice(i,1);fxRows(w,v,Math.max(0,i-1))}
   else{const v=fxVals(w);v.push("");fxRows(w,v,v.length-1)}});
 function fxItemCmd(w,fx,val){ // 줄 상자 편집기에서 [빈 줄]·[구분선]·[넣기 일반회원 등록하기]는 상자를 하나 더 만듦
