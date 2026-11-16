@@ -138,4 +138,14 @@ select test.ok((public.cancel_own((select null::bigint), 'x', '0000'))->>'ok' = 
 reset role; reset app.fake_now;
 select test.ok(has_function_privilege('anon', 'public.cancel_own(bigint, text, text)', 'execute'), '062 뒤에도 취소 권한 그대로');
 \i supabase/migrations/062_no_academy_wording.sql
-select '모든 시험 통과(060~062)' as 결과;
+-- 063: 예약 목록에 super
+\i supabase/migrations/063_my_res_super.sql
+set app.fake_now = '2028-04-11 10:00'; set role anon;
+select test.ok((select bool_and(x ? 'super') from jsonb_array_elements((public.my_reservations('무료학생', '6001'))->'list') x), '내 예약 목록에 super 칸(063)');
+reset role;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((select bool_or((x->>'super')::boolean) from jsonb_array_elements((public.admin_user(:nu))->'reservations') x), '관리자 이용자 정보: 슈퍼패스 예약은 super true(063)');
+reset role; reset request.jwt.claims; reset app.fake_now;
+select test.ok(has_function_privilege('anon', 'public.my_reservations(text, text)', 'execute'), '063 뒤에도 내 예약 권한 그대로');
+\i supabase/migrations/063_my_res_super.sql
+select '모든 시험 통과(060~063)' as 결과;

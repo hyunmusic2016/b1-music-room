@@ -61,6 +61,7 @@ h2{font-size:18px;font-weight:700;margin:20px 0 8px}
 .badge{display:inline-block;background:var(--brass-bg);color:var(--brass);border:1px solid var(--brass);border-radius:999px;font-size:11px;padding:0 7px;font-weight:700;margin-left:4px}
 .badge.flat{color:var(--flat);border-color:var(--flat)}
 .badge.count{background:var(--cnt-bg);color:var(--cnt);border-color:var(--cnt)}
+.badge.free{background:transparent;color:var(--stu-text);border-color:currentColor} /* 제휴회원 하루 무료 1시간(v0.82.0) */
 .legend .badge{margin-left:0}
 .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--sub);margin:10px 0}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0}
@@ -662,7 +663,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.81.0";
+const APP_VERSION="v0.82.0";
 const PAGE_TITLE="부평역 B1 드럼・음악연습실 예약"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(로비용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -1166,10 +1167,12 @@ function showUserDone(title,u){
 }
 /* 예약 기록·만료된 이용권(펼쳐 보기). 관리자 이용자 정보와 내 예약에서 함께 씁니다. 최신순.
    서버가 보관 기간(30일) 안의 기록만 보내 줍니다. */
+/* v0.82.0: 제휴회원의 하루 무료 1시간 예약(이용권도 슈퍼패스도 아님)에 "무료" 배지. super는 서버 063부터 옴 */
+function freeBadge(x,pre){return !x.ext&&!x.prod&&!x.super?pre+'<span class="badge free">무료</span>':''}
 function histHtml(resList,oldProds){
   const rs=[...resList].sort((a,b)=>(b.date+String(b.hour).padStart(2,"0")).localeCompare(a.date+String(a.hour).padStart(2,"0")));
   const st=x=>x.status==="cancelled"?'<span class="status-cancel">취소</span>'+(x.reason?' · '+esc(x.reason):''):(x.ended?'이용 시간 지남':'예약 확정');
-  const rItems=rs.map(x=>'<div class="item"><b>'+dateLabel(x.date)+' '+hourLabel(x.hour)+'</b>'+(x.prod==="count"?'<span class="badge count">'+PROD.count+'</span>':'')+'<div class="hint">'+st(x)+'</div></div>').join("");
+  const rItems=rs.map(x=>'<div class="item"><b>'+dateLabel(x.date)+' '+hourLabel(x.hour)+'</b>'+(x.prod==="count"?'<span class="badge count">'+PROD.count+'</span>':'')+freeBadge(x,'')+'<div class="hint">'+st(x)+'</div></div>').join("");
   const ps=[...oldProds].sort((a,b)=>b.end.localeCompare(a.end));
   const pItems=ps.map(q=>'<div class="item"><span class="badge '+q.kind+'" style="margin-left:0">'+PROD[q.kind]+'</span> <b>'+q.start+' ~ '+q.end+'</b><div class="hint">총 '+q.total+'시간 중 '+q.used+'시간 사용 · 만료</div></div>').join("");
   return '<p class="hint" style="margin-top:14px">예약 기록과 만료된 이용권은 '+KEEP_DAYS+'일 동안 보관된 뒤 삭제됩니다.</p>'+
@@ -1304,7 +1307,7 @@ $("#mFind").onclick=async()=>{
   const ds=allowedDates();
   h+=now.map(x=>{const c=x.ext?'ext':'stu',dw=x.date===ds[0]?'오늘':x.date===ds[1]?'내일':'';
     return '<div class="myres '+c+(x.date===ds[1]?' tmr':'')+'"><div><div class="md">'+(dw?'<span class="dw">'+dw+'</span>':'')+dateLabel(x.date)+'</div>'+
-    '<div class="mt">'+hourLabel(x.hour)+(x.prod==="count"?' <span class="badge count">'+PROD.count+'</span>':'')+'</div></div>'+
+    '<div class="mt">'+hourLabel(x.hour)+(x.prod==="count"?' <span class="badge count">'+PROD.count+'</span>':'')+freeBadge(x,' ')+'</div></div>'+
     (!x.started?'<div class="mb"><button class="btn ghost small" data-m="'+x.id+'">예약 변경</button><button class="btn danger small" data-c="'+x.id+'">취소</button></div>':'<div class="note">이용 중인 예약입니다. 변경·취소는 관리자에게 문의하십시오. ('+ASK_WHERE+')</div>')+'</div>'}).join("");
   const hasUp=now.some(x=>x.status==="confirmed");
   // 일반회원의 상품 없는(일반) 확정 예약이 끝나기 전까지 입금 계좌·1시간 이용료(출입 비밀번호처럼, v0.25.0)
