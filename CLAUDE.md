@@ -43,7 +43,7 @@
 - `prototype.html`: 서버 없는 프로토타입(v0.13.6에서 멈춤, 모의 서버가 브라우저 안에 있음). 화면·규칙의 옛 기준으로만 참고한다.
 - `fonts/`: **화면 글꼴 페이퍼로지(Paperlogy)**(v0.60.0) `Paperlogy-4Regular`~`7Bold.woff2`(굵기 4개, 각 약 160KB, v0.60.1·v0.60.2에서 9Black·8ExtraBold 삭제)와 라이선스 `OFL.txt`(SIL OFL 1.1 — 글꼴 파일과 함께 재배포 가능, 파일 단독 판매 금지, 라이선스 글을 함께 둘 것). `index.html`이 `/fonts/…`로 직접 불러옴(`@font-face`, 4Regular만 미리 받기 `preload`). 출처: 글꼴 파일 안 정보(© 2024 PT&, 이주임, 한글 G마켓산스·라틴 Montserrat), 웹 폰트 파일은 github.com/fonts-archive/Paperlogy. **지우지 말 것**(지우면 기기 기본 글꼴로 보임).
 - `favicon-32.png`·`icon-192.png`·`icon-512.png`·`apple-touch-icon.png`·`favicon.svg`: 파비콘·홈 화면 아이콘(v0.39.6, 달력 + B1).
-- `logo.png`: 학원 로고 원본(프로토타입에는 260px로 줄여 base64로 내장).
+- `logo.png`: 학원 로고 원본(프로토타입에는 260px로 줄여 base64로 내장). **v0.79.0부터 실제 화면(`index.html`)에는 학원 로고를 쓰지 않음**(사용자 요청: 메인 제목 "부평역 B1 드럼・음악연습실", 재원생 예약 카드·가격표는 🎓, 가격표 재원생 칸 이름 "🎓 현실용음악학원 제휴 할인").
 - `.gitignore`: `.env` 등 비밀 키 파일을 커밋에서 제외.
 - `.env.example`: 필요한 설정 값의 이름만 적은 견본(실제 키 없음).
 - `supabase/tests/`: `00_local_shim.sql`(로컬 전용: anon/authenticated 역할, auth.uid(), extensions·storage 스키마 흉내), `01_rules_test.sql`(규칙 시험 475개, 047까지의 규칙), `03_no_flat_test.sql`(048~059 시험 97개: 01이 남긴 정액권 정리·이용권만 등록·문구·시간 문구), `04_daily_free_test.sql`(060 시험 44개: 이용권 재원생 하루 1시간 무료), `run_local.sh`(빈 DB에 001~047 → 01 → 048~ → 03 → 04), `02_concurrency.sh`(동시 예약 시험), `041_convert_only.sql`(041의 옛 자료 변환 부분만, 01이 불러 씀). **Supabase에서는 실행하지 않음.** 로컬 실행: `PGHOST=<소켓폴더> PGPORT=<포트> bash supabase/tests/run_local.sh` → "모든 시험 통과"(01)와 마지막 줄 "모든 시험 통과(060)".
