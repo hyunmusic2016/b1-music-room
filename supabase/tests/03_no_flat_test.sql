@@ -162,4 +162,20 @@ select test.ok((public.info_pages())->'icons' = '[]'::jsonb, '목록 비우면 �
 reset role; reset request.jwt.claims;
 set role anon; select test.ok((public.info_pages()) ? 'icons', '익명 조회에도 icons 칸(058)'); reset role;
 select test.ok(not has_function_privilege('anon', 'public.admin_set_info_icons(jsonb)', 'execute'), '익명은 아이콘 목록 저장 못 함(058)');
-select '모든 시험 통과(048~058)' as 결과;
+-- 059: 문의 전화번호
+set role anon;
+select test.ok((public.contact_phone())->>'phone' = '01083284984', '처음 전화번호(059)');
+reset role;
+select test.ok(not has_function_privilege('anon', 'public.admin_set_contact_phone(text)', 'execute'), '익명 실행 권한 없음(059)');
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((public.admin_set_contact_phone('010-1234-5678'))->>'phone' = '01012345678', '하이픈 빼고 저장(059)');
+select test.ok((public.admin_set_contact_phone('032 506 1073'))->>'phone' = '0325061073', '지역번호 저장(059)');
+select test.ok((public.admin_set_contact_phone('02-123-4567'))->>'phone' = '021234567', '서울 9자리 저장(059)');
+select test.ok((public.admin_set_contact_phone('1234'))->>'ok' = 'false', '짧은 번호 막음(059)');
+select test.ok((public.admin_set_contact_phone('11012345678'))->>'ok' = 'false', '0으로 시작 안 하면 막음(059)');
+select test.ok((public.admin_set_contact_phone('010123456789'))->>'ok' = 'false', '12자리 막음(059)');
+select test.ok((public.admin_set_contact_phone(null))->>'ok' = 'false', '빈 값 막음(059)');
+select test.ok((public.contact_phone())->>'phone' = '021234567', '실패해도 이전 번호 그대로(059)');
+select public.admin_set_contact_phone('01083284984');
+reset role; reset request.jwt.claims;
+select '모든 시험 통과(048~059)' as 결과;
