@@ -107,6 +107,7 @@ details.hist .item b{font-size:15px}
 .kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:15px}
 .kv:first-child{border-top:0}.kv span{color:var(--sub)}.kv b{text-align:right}
 .uitem{cursor:pointer}.uitem:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.uitem.newhl{outline:2px solid var(--accent-strong);outline-offset:3px;border-radius:10px;animation:newhl 1.2s ease-in-out 3}@keyframes newhl{50%{background:color-mix(in srgb,var(--accent) 30%,transparent)}} /* 방금 등록한 이용자(v0.85.0) */
 .uitem .chev{font-size:22px;color:var(--sub);line-height:1;padding-left:2px}
 a.btn{display:flex;align-items:center;justify-content:center;text-decoration:none}
 .btn.first{background:transparent;color:var(--ext-text);border:1.5px solid var(--ext-line);margin-top:14px}
@@ -663,7 +664,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.84.0";
+const APP_VERSION="v0.85.0";
 const PAGE_TITLE="부평역 B1 드럼・음악연습실 예약"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(로비용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -2061,7 +2062,11 @@ function bindUser(){
     if($("#uGo"))$("#uGo").disabled=false;
     if(r.auth){adminExpired();return}
     if(!r.ok){err(r.msg);return}
-    uFlash="";await reloadAdmin();showUserDone("등록하였습니다",r.user);
+    // v0.85.0(사용자 요청): 등록하면 이용자 현황으로 가서 그 이용자 칸을 펼치고 그 줄로 이동해 잠깐 강조
+    const nu=r.user||{};adminTab="users";setPage="status";stQ="";stPassOnly=false;stOpen.add(nu.type==="stu"?"stu":"ext");
+    uFlash=(nu.name||"이용자")+" 님을 등록하였습니다.";await reloadAdmin();uFlash="";
+    const row=nu.id!=null&&document.querySelector('#sec-block .uitem[data-sv="'+nu.id+'"]');
+    if(row){row.scrollIntoView({block:"center",behavior:"smooth"});row.classList.add("newhl");setTimeout(()=>row.classList.remove("newhl"),4000)}else window.scrollTo(0,0);
   };
 }
 
