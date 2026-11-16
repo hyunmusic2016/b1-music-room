@@ -25,12 +25,12 @@ select public.reserve('2028-04-10', 12, '무료학생', '6001', true, 'stu') as 
 select test.ok((:'r'::jsonb)->>'prod' = 'count' and (:'r'::jsonb)->>'free' = 'false', '두 번째는 이용권');
 select (:'r'::jsonb)->>'id' as r12 \gset
 select test.ok((public.reserve('2028-04-10', 13, '무료학생', '6001', true, 'stu'))->>'prod' = 'count', '세 번째도 이용권');
-select test.ok((public.reserve('2028-04-10', 14, '무료학생', '6001', true, 'stu'))->>'msg' like '이용권 2시간을 모두 사용했습니다.%', '이용권 다 쓰면 막음');
+select test.ok((public.reserve('2028-04-10', 14, '무료학생', '6001', true, 'stu'))->>'msg' like '하루 1시간만%', '이용권 다 쓰면 막음');
 -- 이용권을 다 써도 다른 날 첫 1시간은 무료
 select public.reserve('2028-04-11', 11, '무료학생', '6001', true, 'stu') as r \gset
 select test.ok((:'r'::jsonb)->>'free' = 'true', '이용권 다 써도 내일 첫 1시간은 무료');
 select (:'r'::jsonb)->>'id' as t11 \gset
-select test.ok((public.reserve('2028-04-11', 12, '무료학생', '6001', true, 'stu'))->>'msg' like '이용권 2시간을 모두 사용했습니다.%', '내일 두 번째는 막음(이용권 다 씀)');
+select test.ok((public.reserve('2028-04-11', 12, '무료학생', '6001', true, 'stu'))->>'msg' like '하루 1시간만%', '내일 두 번째는 막음(이용권 다 씀)');
 reset role;
 select test.ok(public.product_used(:fp) = 2, '이용권 2시간 사용');
 
@@ -47,7 +47,7 @@ select test.ok(public.product_used(:fp) = 2, '다시 2시간 사용');
 
 -- 3. ② 시간 변경: 옮길 날짜 기준으로 다시 계산
 set role anon;
-select test.ok((public.move_own(:t11, '무료학생', '6001', '2028-04-10', 16))->>'msg' like '이용권 2시간을 모두 사용했습니다.%', '무료가 있는 날로 옮기면 이용권 필요 → 다 써서 막힘');
+select test.ok((public.move_own(:t11, '무료학생', '6001', '2028-04-10', 16))->>'msg' like '하루 1시간만%', '무료가 있는 날로 옮기면 이용권 필요 → 다 써서 막힘');
 select test.ok((public.move_own(:r12, '무료학생', '6001', '2028-04-10', 17))->>'free' = 'true', '같은 날 무료 예약 시간 변경은 무료 그대로');
 reset role;
 select id as r13 from public.reservations where user_id = :fu and date = '2028-04-10' and hour = 13 and status = 'confirmed' \gset
@@ -148,4 +148,38 @@ select test.ok((select bool_or((x->>'super')::boolean) from jsonb_array_elements
 reset role; reset request.jwt.claims; reset app.fake_now;
 select test.ok(has_function_privilege('anon', 'public.my_reservations(text, text)', 'execute'), '063 뒤에도 내 예약 권한 그대로');
 \i supabase/migrations/063_my_res_super.sql
-select '모든 시험 통과(060~063)' as 결과;
+-- 064: 이용권 시간을 모두 쓰면 종료
+\i supabase/migrations/064_pass_used_up.sql
+set app.fake_now = '2028-05-10 10:00';
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select (public.admin_create_user('{"type":"ext","name":"다씀회원","pw":"6401","phone":"01064010000","prods":[{"kind":"count","start":"2028-05-10","days":30,"total":1}]}'))->'user'->>'id' as du \gset
+select (public.admin_create_user('{"type":"stu","name":"다씀학생","pw":"6402","prods":[{"kind":"count","start":"2028-05-10","days":30,"total":1}]}'))->'user'->>'id' as ds \gset
+reset role; reset request.jwt.claims;
+select id as dup from public.products where user_id = :du \gset
+set role anon;
+select public.reserve('2028-05-10', 11, '다씀회원', '6401', true, 'ext') as r \gset
+select test.ok((:'r'::jsonb)->>'prod' = 'count' and ((:'r'::jsonb)->'product'->>'used_up')::boolean, '마지막 1시간 예약: 응답 이용권 used_up true(064)');
+select (:'r'::jsonb)->>'id' as d11 \gset
+select test.ok((public.product_info('ext', '다씀회원', '6401'))->'products' = '[]'::jsonb, '다 쓴 이용권은 사용 중 목록에서 빠짐(064)');
+select test.ok(((public.product_info('ext', '다씀회원', '6401'))->'used_up'->>'id')::bigint = :dup, 'product_info에 다 쓴 이용권 used_up(064)');
+select public.reserve('2028-05-10', 12, '다씀회원', '6401', true, 'ext') as r \gset
+select test.ok((:'r'::jsonb)->>'ok' = 'true' and (:'r'::jsonb)->>'prod' is null, '일반회원: 다 쓴 뒤 예약은 1시간 이용료 예약(064)');
+select test.ok(exists (select 1 from jsonb_array_elements((public.my_reservations('다씀회원', '6401'))->'old_products') x where (x->>'id')::bigint = :dup), '내 예약: 다 쓴 이용권은 만료된 이용권 목록에(064)');
+select test.ok((public.cancel_own(:d11, '다씀회원', '6401'))->>'ok' = 'true', '이용권 예약 취소(064)');
+select test.ok(jsonb_array_length((public.product_info('ext', '다씀회원', '6401'))->'products') = 1, '취소해서 1시간 돌려받으면 다시 사용 중(064)');
+select test.ok((public.reserve('2028-05-10', 13, '다씀회원', '6401', true, 'ext'))->>'prod' = 'count', '돌려받은 1시간으로 이용권 예약(064)');
+-- 제휴회원: 무료 → 이용권 → 다 쓰면 이용권 없는 제휴회원과 같음
+select test.ok((public.reserve('2028-05-10', 15, '다씀학생', '6402', true, 'stu'))->>'free' = 'true', '제휴회원 첫 예약 무료(064)');
+select test.ok((public.reserve('2028-05-10', 16, '다씀학생', '6402', true, 'stu'))->>'prod' = 'count', '제휴회원 두 번째 이용권(064)');
+select test.ok((public.reserve('2028-05-10', 17, '다씀학생', '6402', true, 'stu'))->>'msg' like '하루 1시간만%', '제휴회원 다 쓴 뒤 세 번째는 하루 1시간 안내(064)');
+select test.ok((public.reserve('2028-05-11', 17, '다씀학생', '6402', true, 'stu'))->>'free' = 'true', '다음 날 첫 1시간은 무료(064)');
+reset role;
+-- 관리자: 다 쓴 이용권이 있어도 새 이용권 추가
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}'; set role authenticated;
+select test.ok((public.admin_user(:du))->'user'->'current' = 'null'::jsonb or (public.admin_user(:du))->'user'->>'current' is null, '관리자 이용자 정보: 사용 중 이용권 없음(064)');
+select test.ok((public.admin_update_user(jsonb_build_object('id', :du, 'type', 'ext', 'name', '다씀회원', 'phone', '01064010000',
+                 'prods', '[{"kind":"count","start":"2028-05-11","days":30,"total":5}]'::jsonb)))->>'ok' = 'true', '다 쓴 이용권이 있어도 새 이용권 추가(064)');
+reset role; reset request.jwt.claims; reset app.fake_now;
+select test.ok(not has_function_privilege('anon', 'public.prod_live(bigint)', 'execute'), '익명은 prod_live 직접 실행 못 함(064)');
+\i supabase/migrations/064_pass_used_up.sql
+select '모든 시험 통과(060~064)' as 결과;

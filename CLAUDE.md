@@ -48,8 +48,8 @@
 - `logo.png`: 학원 로고 원본(프로토타입에는 260px로 줄여 base64로 내장). **v0.79.0부터 실제 화면(`index.html`)에는 학원 로고를 쓰지 않음**(사용자 요청: 메인 제목 "부평역 B1 드럼・음악연습실", 재원생 예약 카드·가격표는 🎓, 가격표 재원생 칸 이름 "🎓 현실용음악학원 제휴 할인").
 - `.gitignore`: `.env` 등 비밀 키 파일을 커밋에서 제외.
 - `.env.example`: 필요한 설정 값의 이름만 적은 견본(실제 키 없음).
-- `supabase/tests/`: `00_local_shim.sql`(로컬 전용: anon/authenticated 역할, auth.uid(), extensions·storage 스키마 흉내), `01_rules_test.sql`(규칙 시험 475개, 047까지의 규칙), `03_no_flat_test.sql`(048~059 시험 97개: 01이 남긴 정액권 정리·이용권만 등록·문구·시간 문구), `04_daily_free_test.sql`(060~063 시험 55개: 이용권 제휴회원 하루 1시간 무료, "재원생" 문구 바꾸기), `run_local.sh`(빈 DB에 001~047 → 01 → 048~ → 03 → 04), `02_concurrency.sh`(동시 예약 시험), `041_convert_only.sql`(041의 옛 자료 변환 부분만, 01이 불러 씀). **Supabase에서는 실행하지 않음.** 로컬 실행: `PGHOST=<소켓폴더> PGPORT=<포트> bash supabase/tests/run_local.sh` → "모든 시험 통과"(01)와 마지막 줄 "모든 시험 통과(060~063)".
-- `supabase/migrations/001_…063_my_res_super.sql`: **Supabase SQL Editor에 번호 순서대로 한 번씩 실행(058까지 확인, 059~063은 2026-11-16 사용자 실행 대기·확인 전, 반드시 번호 순서).** 파일마다 맨 위 주석에 설명, 목록 설명은 `HISTORY.md`. 새 마이그레이션에서 함수를 만들면 끝에 `revoke execute ... from public, anon, authenticated` 후 필요한 것만 grant. 함수 문구만 바꿀 때는 048·049처럼 함수 정의 글을 읽어 바꿔 다시 만드는 방식.
+- `supabase/tests/`: `00_local_shim.sql`(로컬 전용: anon/authenticated 역할, auth.uid(), extensions·storage 스키마 흉내), `01_rules_test.sql`(규칙 시험 475개, 047까지의 규칙), `03_no_flat_test.sql`(048~059 시험 97개: 01이 남긴 정액권 정리·이용권만 등록·문구·시간 문구), `04_daily_free_test.sql`(060~064 시험 70개: 이용권 제휴회원 하루 1시간 무료, "재원생" 문구 바꾸기), `run_local.sh`(빈 DB에 001~047 → 01 → 048~ → 03 → 04), `02_concurrency.sh`(동시 예약 시험), `041_convert_only.sql`(041의 옛 자료 변환 부분만, 01이 불러 씀). **Supabase에서는 실행하지 않음.** 로컬 실행: `PGHOST=<소켓폴더> PGPORT=<포트> bash supabase/tests/run_local.sh` → "모든 시험 통과"(01)와 마지막 줄 "모든 시험 통과(060~064)".
+- `supabase/migrations/001_…064_pass_used_up.sql`: **Supabase SQL Editor에 번호 순서대로 한 번씩 실행(058까지 확인, 059~064는 2026-11-16 사용자 실행 대기·확인 전, 반드시 번호 순서).** 파일마다 맨 위 주석에 설명, 목록 설명은 `HISTORY.md`. 새 마이그레이션에서 함수를 만들면 끝에 `revoke execute ... from public, anon, authenticated` 후 필요한 것만 grant. 함수 문구만 바꿀 때는 048·049처럼 함수 정의 글을 읽어 바꿔 다시 만드는 방식.
 - `HISTORY.md`: 옛 CLAUDE.md 전체(버전 v0.1.0~v0.73.0 기록, 결정 과정, 인수인계 문서)와 이후 버전 기록.
 
 
@@ -59,7 +59,7 @@
 - 공개 현황은 가린 이름(홍*동)만. 재원생 이름 청록, 일반회원(코드 `ext`) 테라코타. 내일 색 보라, 오늘 하늘.
 - **재원생**: 구글 시트 "수강생대장" 명부(Apps Script가 1시간마다)로만 들어옴, 관리자 화면에서 등록하지 않음. 이름 + 전화번호 뒤 4자리(없으면 보호자). 명부 확인을 켜면 명부와 맞아야 예약(예외: 그날 쓸 이용권이 있는 등록 재원생). **하루 1시간 무료(이용권이 있어도, 2026-11-16 A안·서버 060)**: 그날 첫 1시간은 무료, 이용권이 있으면 2시간째부터 이용권 차감(다 쓰면 막음, 기간이 남아도 첫 1시간은 무료), 이용권이 없으면 그 이상은 추가 이용료(`price_list.stu_extra`, 관리자 슈퍼패스로 잡음). "그날 무료 1시간"(`stu_day_taken`)은 이용권·슈퍼패스가 아닌 확정 예약만 셈. 무료 예약을 취소·날짜 이동하면 그날 가장 이른 이용권 예약이 무료로 바뀌고 1시간 돌려받음(트리거 `stu_rebalance`), 시간 변경은 옮길 날짜 기준으로 다시 계산. 이용자 현황 > 재원생 > 학생 > [수정]으로 이용권·전화번호 등을 넣음(명부 학생은 그때 이용자 칸이 생김).
 - **일반회원**: 관리자가 등록한 사람만(비밀번호 = 전화번호 뒤 4자리). 이용권이 없으면 시간 제한 없음 + 1시간 이용료 입금(관리자가 예약 목록에서 [입금 확인]).
-- **이용권**(코드 `count`, 유일한 상품): 시작일부터 `pass_days`일(관리자 이용료 변경에서 정함, 기본 30) 안에 총 N시간, 하루 제한 없음, 예약 1건 = 1시간 차감(재원생은 그날 첫 1시간 무료라 2시간째부터), 취소하면 돌려받음, 다 쓰면 막음.
+- **이용권**(코드 `count`, 유일한 상품): 시작일부터 `pass_days`일(관리자 이용료 변경에서 정함, 기본 30) 안에 총 N시간, 하루 제한 없음, 예약 1건 = 1시간 차감(재원생은 그날 첫 1시간 무료라 2시간째부터), 취소하면 돌려받음. **시간을 다 쓰면 기간이 남아도 종료(2026-11-16, 서버 064 `prod_live`)**: 일반회원은 1시간 이용료 예약, 제휴회원은 이용권 없는 제휴회원과 같음, 취소로 돌려받으면 기간 안에서 다시 사용 중, 관리자는 새 이용권 추가 가능. 남은 시간 3시간 이하·기간 7일 안이면 예약 창·확정 화면·내 예약에 한 상자로 안내(`soonHtml`).
 - **관리자 예약**: 이름으로 찾기(비밀번호 없음). 일반예약 = 손님 규칙 그대로, 슈퍼패스 = 확인·차감 없이 확정.
 - **블랙리스트**: 일반회원만, 등록하면 앞으로의 예약 자동 취소, 관리자 슈퍼패스만 가능.
 - 예약 기록·만료 이용권은 30일 뒤 자동 삭제(pg_cron 매일 03:10). 등록 이용자 정보는 자동 삭제 안 함.
@@ -79,6 +79,6 @@
 ## 작업 환경 메모
 
 - 컨테이너는 `github.io`·`hyunmusic.com`·`cdn.jsdelivr.net`에 접속 불가, `*.supabase.co`는 됨(공개용 키로 `curl` 확인 가능). 공개용 주소 `https://ibcvbnpqmlqmdwxkepbl.supabase.co`, Publishable 키는 `index.html`에 있음.
-- 로컬 DB 시험: `su postgres -c "/usr/lib/postgresql/16/bin/pg_ctl -D /var/lib/postgresql/drumtest/data -o '-p 54329 -k /var/lib/postgresql/drumtest' -l /var/lib/postgresql/drumtest/log.txt start"` 뒤 `PGHOST=/var/lib/postgresql/drumtest PGPORT=54329 bash supabase/tests/run_local.sh` → 마지막 줄 "모든 시험 통과(060~063)".
+- 로컬 DB 시험: `su postgres -c "/usr/lib/postgresql/16/bin/pg_ctl -D /var/lib/postgresql/drumtest/data -o '-p 54329 -k /var/lib/postgresql/drumtest' -l /var/lib/postgresql/drumtest/log.txt start"` 뒤 `PGHOST=/var/lib/postgresql/drumtest PGPORT=54329 bash supabase/tests/run_local.sh` → 마지막 줄 "모든 시험 통과(060~064)".
 - 브라우저 시험: Playwright Chromium, supabase-js는 npm 패키지를 가로채 넣고 서버 응답은 흉내 냄.
 - 배포: `main`에 push하면 GitHub Pages가 배포(`gh api repos/hyunmusic2016/b1-music-room/actions/runs?per_page=1`로 확인, 기다릴 때 `sleep` 대신 `timeout … until` 반복).

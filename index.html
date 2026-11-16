@@ -664,7 +664,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.85.0";
+const APP_VERSION="v0.86.0";
 const PAGE_TITLE="부평역 B1 드럼・음악연습실 예약"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(로비용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -798,11 +798,20 @@ function leftText(q){const t=seoulDate();if(q.start>t)return "시작 예정";con
 /* 상품 기간이 7일 안에 끝나면 미리 안내(v0.35.0, 사용자 요청): 예약 창·내 예약. 시작 전 상품은 안내하지 않음. */
 const SOON_DAYS=7;
 function mdw(ds){const [y,m,d]=ds.split("-").map(Number);return m+"/"+d+"("+DAYS_KO[new Date(Date.UTC(y,m-1,d)).getUTCDay()]+")"}
-function soonHtml(q){
+/* 이용권 안내 상자(v0.86.0, 사용자 요청): 기간이 7일 안에 끝나거나(⏰) 남은 시간이 3시간 이하(⏳)면 한 상자에 둘 다.
+   after=true면 예약 확정 뒤(이번 예약을 뺀 남은 시간). 남은 시간이 0이면 이용권 종료 안내(서버 064: 다 쓰면 종료) */
+const LOW_HOURS=3;
+function soonHtml(q,after){
   if(!q)return "";const t=seoulDate();if(q.start>t)return "";
-  const n=spanDays(t,q.end);if(n<1||n>SOON_DAYS)return "";
-  return '<div class="msg warn" style="margin:8px 0 0;text-align:left">⏰ '+PROD[q.kind]+' 기간이 <b>'+mdw(q.end)+'</b>에 끝납니다('+(n===1?'오늘까지':n+'일 남음')+'). 계속 이용하시려면 관리자에게 연장을 문의하십시오. ('+ASK_WHERE+')</div>';
+  const L=q.kind==="count"&&q.left&&typeof q.left.total==="number"?q.left.total:null,out=L===0||q.used_up,lines=[];
+  const n=spanDays(t,q.end);
+  if(!out&&n>=1&&n<=SOON_DAYS)lines.push('⏰ '+PROD[q.kind]+' 기간이 <b>'+mdw(q.end)+'</b>에 끝납니다('+(n===1?'오늘까지':n+'일 남음')+').');
+  if(out)lines.push('⏳ '+(after?'이번 예약으로 ':'')+PROD[q.kind]+' 시간을 모두 사용하여 '+PROD[q.kind]+'이 <b>종료'+(after?'됩니다':'되었습니다')+'</b>.');
+  else if(L!==null&&L<=LOW_HOURS)lines.push('⏳ '+PROD[q.kind]+' 남은 시간이 <b>'+L+'시간</b>입니다.');
+  if(!lines.length)return "";
+  return '<div class="msg warn" style="margin:8px 0 0;text-align:left">'+lines.join('<br>')+'<br>계속 이용하시려면 관리자에게 '+PROD[q.kind]+' 연장·추가를 문의하십시오. ('+ASK_WHERE+')</div>';
 }
+function lastLine(q,full){return q.used_up&&q.end>=seoulDate()?PROD[q.kind]+' 시간 모두 사용(종료) · '+(full?q.start+' ~ ':'')+q.end+'까지였음':'만료된 '+PROD[q.kind]+': '+(full?q.start+' ~ '+q.end:q.end+' 종료')} // v0.86.0
 function prodLeftText(p){return "총 "+p.total+"시간 중 "+p.left.total+"시간 남음"}
 /* 이용자 현황 줄의 이용권 표시(v0.59.6): 예약 창과 같은 모양 — "총 N시간 중 M시간 남음"(굵게, 구분 색) + "11/9(월) ~ 1/7(목) · 60일 남음"(작은 회색) */
 function shDate(ds){const [y,m,d]=ds.split("-").map(Number);return m+"/"+d+"("+DAYS_KO[new Date(Date.UTC(y,m-1,d)).getUTCDay()]+")"}
@@ -958,8 +967,13 @@ function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
       if(!$("#rBadge"))return;
       const pre=EXT?"":stuCheckHtml(r,D); // 제휴회원 명부 확인 결과(v0.37.0, 서버 026)
       $("#rBadge").innerHTML=pre;
+      // v0.86.0(서버 064): 그 날짜에 쓸 이용권이 다 쓴 것뿐이면 종료 안내(일반회원은 1시간 이용료 예약, 제휴회원은 하루 1시간 무료만)
+      const uu=r&&r.used_up&&r.used_up.start<=D&&D<=r.used_up.end&&!prodsOf(r).some(p=>p.start<=D&&D<=p.end)?r.used_up:null;
+      const uuNote=uu?'<div class="msg warn" style="margin:6px 0 0;text-align:left">⚠ '+PROD.count+' 시간을 모두 사용하여 '+PROD.count+'이 종료되었습니다. '+
+        (EXT?'이 예약은 <b>1시간 이용료 예약</b>으로 잡힙니다.':'하루 1시간 무료 예약만 할 수 있습니다.')+' 계속 이용하시려면 관리자에게 '+PROD.count+' 연장·추가를 문의하십시오. ('+ASK_WHERE+')</div>':'';
+      if(uu&&!EXT){$("#rBadge").innerHTML=pre+uuNote;return}
       if(kindOf(r)==="general"){ // 상품 없는 등록 일반회원도 이름+비밀번호가 맞으면 배지(v0.23.0)
-        $("#rBadge").innerHTML=pre+'<i class="badge" style="color:var(--ext-text);border-color:currentColor;background:transparent;margin-left:0">일반회원</i>';return}
+        $("#rBadge").innerHTML=pre+'<i class="badge" style="color:var(--ext-text);border-color:currentColor;background:transparent;margin-left:0">일반회원</i>'+uuNote;return}
       if(!r||!r.product)return;
       if(kindOf(r)==="expired"){
         const p=r.product; // 상품이 이 날짜 전에 끝남(끝난 뒤 7일까지) → 일반 예약으로 잡힌다고 미리 알림(v0.21.15, 7일은 v0.21.19·서버 017)
@@ -968,6 +982,7 @@ function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
         return;
       }
       const on=prodsOf(r).filter(p=>p.start<=D&&D<=p.end);
+
       $("#rBadge").innerHTML=pre+on.map(p=>{
         const remain=prodLeftText(p);
         return '<div class="pline"><i class="badge '+p.kind+'">'+PROD[p.kind]+'</i><b style="font-size:13px;margin-left:6px;color:var('+(EXT?'--ext-text':'--stu-text')+')">'+remain+'</b><span style="font-weight:400;font-size:12px;color:var(--sub);margin-left:6px">'+sh(p.start)+' ~ '+sh(p.end)+' · '+leftText(p)+'</span>'+soonHtml(p)+'</div>'}).join("")+freeNote(r,D,on.length);
@@ -1022,7 +1037,10 @@ function openSheet(h,mode){const D=curDate;const EXT=mode==="ext";
     const pk=!r.prod&&info&&info.key===name.trim()+"|"+pw?kindOf(info.r):null;
     const payBox=pk?payCardHtml("donePay"):"";
     const warn=!r.prod&&prodWarn?'<div class="msg warn" style="text-align:left">⚠ '+esc(prodWarn.replace(/잡힙니다\.$/,"확정되었습니다."))+'</div>':"";
-    $("#sheet").innerHTML=doneHtml("예약이 확정되었습니다",r.name,r.prod,r.date,r.hour,warn+payBox+(r.free_pass?'<p style="text-align:center;margin:12px 0 0"><span class="badge" style="font-size:14px;padding:2px 10px;color:var(--stu-text);border-color:currentColor;background:transparent">이 날 무료 1시간 · 이용권 차감 없음</span></p>':'')+'<div id="codesBox"></div>'+DONE_NOTE);
+    // v0.86.0: 이용권 안내(기간·남은 시간). 이용권 예약이면 이번 예약을 뺀 값, 제휴회원 무료 예약이면 그 날짜의 이용권
+    const ip=info&&info.key===name.trim()+"|"+pw?prodsOf(info.r).find(p=>p.start<=r.date&&r.date<=p.end):null;
+    const soon=r.product?soonHtml(r.product,true):r.free_pass&&ip?soonHtml(ip):"";
+    $("#sheet").innerHTML=doneHtml("예약이 확정되었습니다",r.name,r.prod,r.date,r.hour,soon+warn+payBox+(r.free_pass?'<p style="text-align:center;margin:12px 0 0"><span class="badge" style="font-size:14px;padding:2px 10px;color:var(--stu-text);border-color:currentColor;background:transparent">이 날 무료 1시간 · 이용권 차감 없음</span></p>':'')+'<div id="codesBox"></div>'+DONE_NOTE);
     burst(kind);$("#ok").onclick=closeSheet;
     if(pk)loadPayBox("#donePay");
     showCodes("#codesBox",name,pw);
@@ -1122,7 +1140,7 @@ function openAdminSheet(h){const D=curDateA;
     }
     const kind=doneKind(r.ext);
     $("#sheet").innerHTML=doneHtml("예약이 확정되었습니다",r.name,r.prod,r.date,r.hour,
-      (r.note?'<div class="msg warn" style="text-align:left">ℹ '+esc(r.note)+'</div>':'')+(r.free_pass?'<p style="text-align:center;margin:12px 0 0"><span class="badge" style="font-size:14px;padding:2px 10px;color:var(--stu-text);border-color:currentColor;background:transparent">이 날 무료 1시간 · 이용권 차감 없음</span></p>':'')+(r.super?'<p style="text-align:center;margin:12px 0 0"><span class="badge super" style="font-size:14px;padding:2px 10px">슈퍼패스 · 이용권 차감 없음</span></p>':'')+
+      (r.product?soonHtml(r.product,true):'')+(r.note?'<div class="msg warn" style="text-align:left">ℹ '+esc(r.note)+'</div>':'')+(r.free_pass?'<p style="text-align:center;margin:12px 0 0"><span class="badge" style="font-size:14px;padding:2px 10px;color:var(--stu-text);border-color:currentColor;background:transparent">이 날 무료 1시간 · 이용권 차감 없음</span></p>':'')+(r.super?'<p style="text-align:center;margin:12px 0 0"><span class="badge super" style="font-size:14px;padding:2px 10px">슈퍼패스 · 이용권 차감 없음</span></p>':'')+
       '<p class="hint">'+(typeof pick==="string"?'학생 본인이 ‘내 예약’에서 이름과 비밀번호(전화번호 뒤 4자리)로 확인·취소할 수 있습니다.':pick>0?'예약자는 ‘내 예약’에서 등록된 이름과 비밀번호로 확인·취소할 수 있습니다.':'등록되지 않은 이름이라 ‘내 예약’에서는 보이지 않습니다. 취소는 관리자 예약 목록에서 하십시오.')+'</p>');
     burst(kind);$("#ok").onclick=closeSheet;
     reloadAdmin();
@@ -1175,7 +1193,7 @@ function histHtml(resList,oldProds){
   const st=x=>x.status==="cancelled"?'<span class="status-cancel">취소</span>'+(x.reason?' · '+esc(x.reason):''):(x.ended?'이용 시간 지남':'예약 확정');
   const rItems=rs.map(x=>'<div class="item"><b>'+dateLabel(x.date)+' '+hourLabel(x.hour)+'</b>'+(x.prod==="count"?'<span class="badge count">'+PROD.count+'</span>':'')+freeBadge(x,'')+'<div class="hint">'+st(x)+'</div></div>').join("");
   const ps=[...oldProds].sort((a,b)=>b.end.localeCompare(a.end));
-  const pItems=ps.map(q=>'<div class="item"><span class="badge '+q.kind+'" style="margin-left:0">'+PROD[q.kind]+'</span> <b>'+q.start+' ~ '+q.end+'</b><div class="hint">총 '+q.total+'시간 중 '+q.used+'시간 사용 · 만료</div></div>').join("");
+  const pItems=ps.map(q=>'<div class="item"><span class="badge '+q.kind+'" style="margin-left:0">'+PROD[q.kind]+'</span> <b>'+q.start+' ~ '+q.end+'</b><div class="hint">총 '+q.total+'시간 중 '+q.used+'시간 사용 · '+(q.used_up?'모두 사용':'만료')+'</div></div>').join("");
   return '<p class="hint" style="margin-top:14px">예약 기록과 만료된 이용권은 '+KEEP_DAYS+'일 동안 보관된 뒤 삭제됩니다.</p>'+
     '<details class="hist"><summary>예약 기록 <small>'+rs.length+'건</small></summary><p class="hint" style="margin:8px 0 4px">최근 '+KEEP_DAYS+'일 안의 예약만 볼 수 있습니다.</p>'+(rItems||'<p class="hint">예약 기록이 없습니다.</p>')+'</details>'+
     '<details class="hist"><summary>만료된 이용권 <small>'+ps.length+'건</small></summary>'+(pItems||'<p class="hint">만료된 이용권이 없습니다.</p>')+'</details>';
@@ -1295,6 +1313,9 @@ $("#mFind").onclick=async()=>{
   setServerNow(r.now);mine={name,pw,r};
   let ph="",h=""; // ph: 위 칸(이름·상품), h: 아래 칸(예약 현황)
   const myProds=prodsOf(r); // 이용권(정액권은 v0.53.0에서 없어짐)
+  // v0.86.0: 사용 중 이용권이 없고 기간 안에서 다 쓴 이용권이 있으면 종료 안내
+  const uuP=!myProds.length&&(r.old_products||[]).find(q=>q.used_up&&q.end>=seoulDate());
+  if(uuP)ph+='<div class="kslot count"><span class="badge count" style="margin-left:0">'+PROD.count+'</span><div class="hint" style="margin-top:6px">'+uuP.start+' ~ '+uuP.end+' · 총 '+uuP.total+'시간 모두 사용</div>'+soonHtml(uuP)+'</div>';
   myProds.forEach(P=>{
     const col=P.target==="ext"?"--ext-text":"--stu-text";
     ph+='<div class="kslot '+P.kind+'"><span class="badge '+P.kind+'" style="margin-left:0">'+PROD[P.kind]+'</span>'+
@@ -2089,7 +2110,7 @@ function rosterItem(r,u){
   const ps=u?prodsOf(u):[];
   const st=ps.map(x=>'<span class="badge '+x.kind+'">'+PROD[x.kind]+'</span>').join('');
   const line=u?(u.phone||u.part?'<div class="hint">'+esc(fmtPhone(u.phone)||u.phone||"전화번호 없음")+(u.part?' · '+esc(u.part):'')+'</div>':'')+(u.memo?'<div class="hint">'+esc(u.memo)+'</div>':'')+
-    (ps.length?prodRich(ps[0],'--stu-text'):(u.last?'<div class="hint">만료된 '+PROD[u.last.kind]+': '+u.last.end+' 종료</div>':'')):'';
+    (ps.length?prodRich(ps[0],'--stu-text'):(u.last?'<div class="hint">'+lastLine(u.last)+'</div>':'')):'';
   return '<div class="item uitem" '+(u?'data-sv="'+u.id+'"':'data-rreg="'+esc(r.no)+'" data-rname="'+esc(r.name)+'"')+(ps.length?' data-pass="1"':'')+' data-n="'+esc(normName(r.name))+'" role="button" tabindex="0" aria-label="'+esc(r.name)+' 정보 보기">'+
     '<div class="row" style="align-items:center"><div style="flex:1;min-width:0"><b style="color:var(--stu-text)">'+esc(r.name)+'</b><span class="hint" style="margin:0 0 0 6px;display:inline">등록번호 '+esc(r.no)+'</span>'+st+line+'</div>'+
     '<div style="display:flex;gap:6px;flex:none;align-items:center"><span class="chev" aria-hidden="true">›</span></div></div></div>';
@@ -2097,7 +2118,7 @@ function rosterItem(r,u){
 function curOf(u,kind){return prodsOf(u).find(q=>q.kind===kind)||null}
 function statusItem(u,kind,extra,btn){
   const col=u.type==="ext"?'--ext-text':'--stu-text',q=kind==="none"?u.last:(curOf(u,kind)||u.current);
-  const line=kind==="none"?(q?'<div class="hint">만료된 '+PROD[q.kind]+': '+q.end+' 종료</div>':''):prodRich(q,col);
+  const line=kind==="none"?(q?'<div class="hint">'+lastLine(q)+'</div>':''):prodRich(q,col);
   // 제휴회원은 [통화] 버튼 없음(v0.59.0)
   const call=u.type==="ext"?'<button class="btn small" style="background:#1e8e4e;color:#fff" data-sc="'+u.id+'"'+(u.phone?'':' disabled')+'>통화</button>':'';
   return '<div class="item uitem" data-sv="'+u.id+'"'+(kind!=="none"?' data-pass="1"':'')+' data-n="'+esc(normName(u.name))+'" role="button" tabindex="0" aria-label="'+esc(u.name)+' 정보 보기"><div class="row" style="align-items:center"><div style="flex:1;min-width:0"><b style="color:var('+col+')">'+esc(u.name)+'</b>'+(u.type==="stu"&&u.roster_no?'<span class="hint" style="margin:0 0 0 6px;display:inline">등록번호 '+esc(u.roster_no)+'</span>':'')+(kind!=="none"?prodsOf(u).map(x=>'<span class="badge '+x.kind+'">'+PROD[x.kind]+'</span>').join(''):'')+(u.status==="blacklisted"?'<span class="badge black">블랙리스트</span>':u.black_count>0?'<span class="badge black hist">블랙리스트 이력</span>':'')+
@@ -2274,7 +2295,7 @@ function userViewHtml(){
     // v0.59.11: 예약 창·이용자 현황과 같은 모양(총 N시간 중 M시간 남음 + 날짜·남은 기간)
     prod=cs.map(c=>'<div class="kslot"><div style="margin-bottom:6px"><span class="badge '+c.kind+'" style="margin-left:0">'+PROD[c.kind]+'</span></div>'+prodRich(c,col)+'</div>').join("");
   }else{
-    prod='<p class="hint" style="margin:0">사용 중인 이용권이 없습니다.</p>'+(q?'<p class="hint">만료된 '+PROD[q.kind]+': '+q.start+' ~ '+q.end+'</p>':'');
+    prod='<p class="hint" style="margin:0">사용 중인 이용권이 없습니다.</p>'+(q?'<p class="hint">'+lastLine(q,true)+'</p>':'');
   }
   // 상자 나눔(v0.21.14): 큰 상자 안에 ① 이용자 정보 ② 이용권 ③ [수정], 그 아래 간격을 두고 예약 기록 상자(이용자 수정과 같은 느낌)
   return '<div class="cardgroup"><div class="card"><div class="part" style="margin-top:0">이용자 정보</div><div><span class="badge" style="color:var('+col+');border-color:currentColor;background:transparent;margin-left:0">'+tgtLabel(u.type)+'</span>'+cs.map(c=>'<span class="badge '+c.kind+'">'+PROD[c.kind]+'</span>').join('')+(u.status==="blacklisted"?'<span class="badge black">블랙리스트</span>':u.black_count>0?'<span class="badge black hist">블랙리스트 이력</span>':'')+'</div>'+
@@ -2285,7 +2306,7 @@ function userViewHtml(){
     '<label>메모</label><div class="ro">'+(u.memo?esc(u.memo):'<span class="hint" style="margin:0">없음</span>')+'</div>'+
     '</div><div class="card"><div class="part" style="margin-top:0">이용권<small>'+(c?'사용 중':'없음')+'</small></div>'+prod+
     '</div><div class="card"><button class="btn edit" id="vEdit" style="margin:0">수정</button></div></div>'+
-    '<div class="card farbox">'+histHtml(D.reservations,D.products.filter(x=>x.end<t))+'</div>'; // 예약 기록·만료된 상품은 따로 된 상자(v0.21.7)
+    '<div class="card farbox">'+histHtml(D.reservations,D.products.filter(x=>x.end<t||x.used_up))+'</div>'; // 예약 기록·만료된 상품은 따로 된 상자(v0.21.7)
 }
 function bindUserView(){
   $("#vEdit").onclick=()=>{editUser=viewUser;renderAdmin()};
@@ -2294,7 +2315,7 @@ function bindUserView(){
 function userEditHtml(){
   const u=A.detail.user,cs=prodsOf(u),t=seoulDate();
   // 그 종류의 만료된 상품(안내만): 이용자 정보 화면이 받은 상품 목록에서 가장 최근 것
-  const lastOf=k=>((A.detail.products||[]).filter(x=>x.kind===k&&x.end<t).sort((a,b)=>b.end.localeCompare(a.end))[0])||(u.last&&u.last.kind===k&&u.last.end<t?u.last:null);
+  const lastOf=k=>((A.detail.products||[]).filter(x=>x.kind===k&&(x.end<t||x.used_up)).sort((a,b)=>b.end.localeCompare(a.end))[0])||(u.last&&u.last.kind===k&&(u.last.end<t||u.last.used_up)?u.last:null);
   const prod=["count"].map(k=>{const cur=curOf(u,k);return kindSlotHtml("ue",k,cur,cur?null:lastOf(k))}).join("");
   // 상자 나눔(v0.21.10): ① 이용자 정보(메모까지) ② 이용권(종료 버튼 포함) ③ [블랙리스트 사유] ④ 저장 | 수정 취소 ⑤ 블랙리스트 등록
   return '<div class="cardgroup"><div class="card"><div class="part" style="margin-top:0">이용자 정보</div>'+
