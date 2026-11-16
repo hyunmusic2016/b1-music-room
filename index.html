@@ -665,7 +665,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.88.2";
+const APP_VERSION="v0.88.3";
 const PAGE_TITLE="부평역 B1 드럼・음악연습실 예약"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(로비용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -806,7 +806,7 @@ function soonHtml(q,after){
   if(!q)return "";const t=seoulDate();if(q.start>t)return "";
   const L=q.kind==="count"&&q.left&&typeof q.left.total==="number"?q.left.total:null,out=L===0||q.used_up,lines=[];
   const n=spanDays(t,q.end);
-  if(!out&&n>=1&&n<=SOON_DAYS)lines.push('⏰ '+PROD[q.kind]+' 기간이 <b>'+mdw(q.end)+'</b>에 끝납니다('+(n===1?'오늘까지':n+'일 남음')+').');
+  if(!out&&n>=1&&n<=SOON_DAYS)lines.push(n===1?'⏰ '+PROD[q.kind]+' 기간은 <b>오늘('+mdw(q.end)+')까지</b>입니다.':'⏰ 남은 '+PROD[q.kind]+' 기간은 <b>'+n+'일</b>입니다. ('+mdw(q.end)+'까지)'); // v0.88.3: 시간 줄과 같은 틀(사용자 선택 A)
   if(out)lines.push('⏳ '+(after?'이번 예약으로 ':'')+PROD[q.kind]+' 시간을 모두 사용하여 '+PROD[q.kind]+'이 <b>종료'+(after?'됩니다':'되었습니다')+'</b>.');
   else if(L!==null&&L<=LOW_HOURS)lines.push('⏳ 남은 '+PROD[q.kind]+' 시간은 <b>'+L+'시간</b>입니다.');
   if(!lines.length)return "";
