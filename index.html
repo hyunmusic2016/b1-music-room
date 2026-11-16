@@ -663,7 +663,7 @@ body.priceonly .wrap{max-width:820px;padding:8px 8px 8px}
 <script>
 "use strict";
 /* 화면 버전: 프런트엔드를 고칠 때마다 올립니다(작은 수정은 마지막 숫자, 기능 추가는 가운데 숫자). */
-const APP_VERSION="v0.82.0";
+const APP_VERSION="v0.82.1";
 const PAGE_TITLE="부평역 B1 드럼・음악연습실 예약"; // 탭 제목(v0.56.2). 앞에 (관리자)·(이용료)·(학원용)이 붙음
 if(/[?&]academy(=|&|$)/.test(location.search))document.title="(로비용) "+PAGE_TITLE;
 /* Supabase 연결 정보: 공개용 주소와 공개용 키(Publishable)만 넣습니다. secret·service_role 키는 절대 넣지 않습니다.
@@ -3191,7 +3191,7 @@ function resItem(r){
 function resBadges(r){
   const t=r.ext?"ext":"stu",u=r.user_id&&A.users?A.users.find(x=>x.id===r.user_id):null;
   return '<span class="badge" style="color:var('+(r.ext?'--ext-text':'--stu-text')+');border-color:currentColor;background:transparent">'+tgtLabel(t)+'</span>'+
-    (r.prod==="count"?'<span class="badge count">'+PROD.count+'</span>':'')+(r.super?'<span class="badge super">슈퍼패스</span>':'')+
+    (r.prod==="count"?'<span class="badge count">'+PROD.count+'</span>':'')+freeBadge(r,'')+(r.super?'<span class="badge super">슈퍼패스</span>':'')+ // v0.82.1: 제휴회원 무료 1시간도 "무료"(내 예약과 같게)
     (u&&u.status==="blacklisted"?'<span class="badge black">블랙리스트</span>':u&&u.black_count>0?'<span class="badge black hist">블랙리스트 이력</span>':'');
 }
 /* 입금 확인 대상: 서버(032)가 pay_need로 알려 줌(일반회원·이용권 없음·슈퍼패스 아님). 032 전에는 값이 없어 아무것도 안 보임 */
