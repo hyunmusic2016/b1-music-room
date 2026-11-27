@@ -37,7 +37,7 @@
 ## 폴더 구조
 
 - `index.html`: **실제 서비스 화면(v0.14.0부터).** Supabase에 연결(공개용 주소·Publishable 키만 포함, `supabase-js@2.117.0` CDN 고정). 주소 **`https://room.hyunmusic.com/`**(관리자 `https://room.hyunmusic.com/#admin`, 2026-11-03부터 개인 도메인, GitHub Pages + 저장소의 `CNAME` 파일 — 지우지 말 것). **앞으로 화면 수정은 이 파일에 한다.**
-- `version.json`: **새 버전 자동 확인용**(v0.90.0) `{"v":"v0.90.0"}`. 화면이 저장된 복사본 없이 받아 `APP_VERSION`과 다르면 새로 고침(로비 5분마다, 손님은 열 때·다시 볼 때·30분마다, 창이 열려 있거나 입력 중·관리자 화면이면 기다림, 같은 버전으로 10분 안에 두 번 새로 고치지 않음). **배포할 때마다 `APP_VERSION`과 같게.**
+- `version.json`: **새 버전 자동 확인용**(v0.90.0) `{"v":"v1.0.0"}`. 화면이 저장된 복사본 없이 받아 `APP_VERSION`과 다르면 새로 고침(로비 5분마다, 손님은 열 때·다시 볼 때·30분마다, 창이 열려 있거나 입력 중·관리자 화면이면 기다림, 같은 버전으로 10분 안에 두 번 새로 고치지 않음). **배포할 때마다 `APP_VERSION`과 같게.**
 - `academy/index.html`: **학원 로비 PC 화면 주소 `room.hyunmusic.com/academy/`**(v0.47.0). `/?academy`로 넘기기만 하는 파일(화면은 `index.html`의 로비 모드).
 - `price/index.html`·`price-embed-snippet.html`: **가격표만 보이는 페이지 `room.hyunmusic.com/price/`**(v0.49.0, `/?price`로 넘김)와 블로그·홈페이지에 붙여 넣는 iframe 코드(실시간 가격, 높이 자동).
 - `imweb-snippet.html`: 아임웹 코드 칸에 붙여 넣는 코드(iframe + 스크립트). 예약 화면 → 아임웹: 높이(`drum-room-height`), 맨 위로(`drum-room-top`), 위치 요청(`drum-room-ask`), 보이게 스크롤(`drum-room-need`) — `https://room.hyunmusic.com`에서 온 것만 받음. 아임웹 → 예약 화면: 칸 위치(`drum-room-view`). **이 파일을 바꾸면 사용자가 아임웹 코드 칸을 다시 바꿔야 한다.**
@@ -51,6 +51,7 @@
 - `.env.example`: 필요한 설정 값의 이름만 적은 견본(실제 키 없음).
 - `supabase/tests/`: `00_local_shim.sql`(로컬 전용: anon/authenticated 역할, auth.uid(), extensions·storage 스키마 흉내), `01_rules_test.sql`(규칙 시험 475개, 047까지의 규칙), `03_no_flat_test.sql`(048~059 시험 97개: 01이 남긴 정액권 정리·이용권만 등록·문구·시간 문구), `04_daily_free_test.sql`(060~064 시험 70개: 이용권 제휴회원 하루 1시간 무료, "재원생" 문구 바꾸기), `run_local.sh`(빈 DB에 001~047 → 01 → 048~ → 03 → 04), `02_concurrency.sh`(동시 예약 시험), `041_convert_only.sql`(041의 옛 자료 변환 부분만, 01이 불러 씀). **Supabase에서는 실행하지 않음.** 로컬 실행: `PGHOST=<소켓폴더> PGPORT=<포트> bash supabase/tests/run_local.sh` → "모든 시험 통과"(01)와 마지막 줄 "모든 시험 통과(060~064)".
 - `supabase/migrations/001_…064_pass_used_up.sql`: **Supabase SQL Editor에 번호 순서대로 한 번씩 실행(058까지 확인, 059~064는 2026-11-16 사용자 실행 대기·확인 전, 반드시 번호 순서).** 파일마다 맨 위 주석에 설명, 목록 설명은 `HISTORY.md`. 새 마이그레이션에서 함수를 만들면 끝에 `revoke execute ... from public, anon, authenticated` 후 필요한 것만 grant. 함수 문구만 바꿀 때는 048·049처럼 함수 정의 글을 읽어 바꿔 다시 만드는 방식.
+- `README.md`: 저장소 소개(v1.0.0, 주소·구성·주의).
 - `HISTORY.md`: 옛 CLAUDE.md 전체(버전 v0.1.0~v0.73.0 기록, 결정 과정, 인수인계 문서)와 이후 버전 기록.
 
 
@@ -75,7 +76,7 @@
 3. 실제 휴대폰 확인: 페이퍼로지 글꼴, 이미지 저장 글꼴, 안내 창 새 디자인, 칸 숨기기, 아이콘 고르기(v0.73.0, 실제 관리자 저장 아직 확인 못 함), 갤럭시.
 4. 새 출석부 웹앱과 재원생 명부 연결(구글 시트 대체): ① 같은 Supabase 프로젝트(추천) / ② 따로 된 프로젝트 + Edge Function 중 사용자 선택 대기. 지금은 안 함.
 5. "돌발 상황"(서버 멈춤·잘못된 예약·계정 문제·명부 오류 등) 대처 정리 — 대화로.
-6. 정식 오픈 준비: 시험 데이터(시험외부·휴면시험 등) 정리, v1.0.0, README. 결정 대기: 문자 알림, 아임웹용 코드 정리, 개인정보 동의 방식·만 14세 미만(학원 확인).
+6. 정식 오픈: v1.0.0·README 완료(2026-11-27). 남은 것: 시험 데이터(시험외부·휴면시험 등) 정리(사용자 확인 대기). 결정 대기: 문자 알림, 아임웹용 코드 정리, 개인정보 동의 방식·만 14세 미만(학원 확인).
 
 ## 작업 환경 메모
 
